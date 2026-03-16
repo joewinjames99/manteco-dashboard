@@ -608,6 +608,7 @@ input.cell-input{width:100%;font-size:12px;font-family:var(--mono);padding:2px 6
 <script>
 
 
+
 var RAILWAY_URL = 'https://manteco-dashboard-production.up.railway.app';
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -725,6 +726,19 @@ function startPolling(){
   }, 10000);
 }
 
+
+
+// ── NAVIGATION ─────────────────────────────────────────────────
+function showView(name){
+  var views = ['overview','products','pairs','stage2','stage3','stage4','scraper'];
+  for(var i=0;i<views.length;i++){
+    document.getElementById('view-'+views[i]).classList.remove('active');
+    document.getElementById('tab-'+views[i]).classList.remove('active');
+  }
+  document.getElementById('view-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  refreshAll();
+}
 
 // ── REFRESH ───────────────────────────────────────────────────────────────────
 function refreshAll(){
@@ -1533,6 +1547,7 @@ if(savedKey){
 } else {
   refreshAll();
 }
+
 
 
 </script>
