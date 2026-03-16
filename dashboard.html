@@ -171,9 +171,95 @@ textarea.url-box:focus{outline:none;border-color:var(--manteco)}
 .preview-row:last-child{border-bottom:none}
 .preview-label{font-size:11px;color:var(--ink3)}
 .preview-val{font-size:12px;font-weight:500;font-family:var(--mono)}
+
+/* ── LOGIN SCREEN ── */
+#login-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+}
+#login-screen.hidden { display: none; }
+.login-box {
+  width: 380px; padding: 40px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  text-align: center;
+}
+.login-mark {
+  width: 48px; height: 48px; background: var(--manteco);
+  border-radius: 10px; margin: 0 auto 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; color: #fff; letter-spacing: 0.5px;
+  font-family: var(--sans);
+}
+.login-title {
+  font-family: var(--serif); font-size: 22px;
+  color: var(--paper); margin-bottom: 4px;
+}
+.login-sub {
+  font-size: 12px; color: rgba(245,243,238,0.4);
+  margin-bottom: 32px; line-height: 1.5;
+}
+.login-field { margin-bottom: 14px; text-align: left; }
+.login-field label {
+  display: block; font-size: 10px; font-weight: 500;
+  color: rgba(245,243,238,0.45); letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.login-field input {
+  width: 100%; font-size: 13px; padding: 11px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px; color: var(--paper);
+  font-family: var(--sans);
+  transition: border-color 0.15s;
+}
+.login-field input:focus {
+  outline: none; border-color: var(--manteco);
+}
+.login-field input::placeholder { color: rgba(245,243,238,0.2); }
+.login-btn {
+  width: 100%; padding: 12px; font-size: 14px; font-weight: 500;
+  background: var(--manteco); color: #fff;
+  border: none; border-radius: 8px; cursor: pointer;
+  font-family: var(--sans); transition: opacity 0.15s;
+  margin-top: 8px;
+}
+.login-btn:hover { opacity: 0.88; }
+.login-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.login-error {
+  font-size: 12px; color: #e88a7e;
+  margin-top: 10px; min-height: 18px;
+}
+.login-meta {
+  font-size: 11px; color: rgba(245,243,238,0.2);
+  margin-top: 24px; line-height: 1.5;
+}
+
 </style>
 </head>
 <body>
+
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-mark">MTC</div>
+    <div class="login-title">Manteco Price Resilience</div>
+    <div class="login-sub">Research dashboard &nbsp;&middot;&nbsp; Baruch College &amp; UniBz<br>Enter your server URL and team password to continue</div>
+    <div class="login-field" style="display:none;">
+      <label>Server URL</label>
+      <input type="text" id="login-server" placeholder="https://your-app.up.railway.app" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label>Team password</label>
+      <input type="password" id="login-password" placeholder="Enter team password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in &rarr;</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-meta">Your data is stored securely on your team&rsquo;s server.<br>Contact your project lead for the server URL and password.</div>
+  </div>
+</div>
 
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:8px;">
@@ -184,6 +270,7 @@ textarea.url-box:focus{outline:none;border-color:var(--manteco)}
     <span><strong id="top-pairs">0</strong> pairs</span>
     <span><strong id="top-conf">0</strong> confirmed</span>
     <span>Avg premium <strong id="top-premium">—</strong></span>
+    <button onclick="signOut()" style="font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(245,243,238,0.5);cursor:pointer;font-family:var(--sans);margin-left:8px;">Sign out</button>
   </div>
 </div>
 
@@ -260,7 +347,7 @@ textarea.url-box:focus{outline:none;border-color:var(--manteco)}
   </div>
   <div class="card">
     <div class="card-title">Retail price detail</div>
-    <div class="pairs-table-wrap"><table class="pairs"><thead><tr><th>Pair</th><th>Brand</th><th>Tier</th><th>Manteco Product</th><th>M: Retail</th><th>Control Product</th><th>C: Retail</th><th>Premium $</th><th>Premium %</th><th>Conf.</th></tr></thead><tbody id="s2-tbody"></tbody></table></div>
+    <div class="pairs-table-wrap"><table class="pairs"><thead><tr><th>Pair</th><th>Brand</th><th>Tier</th><th>Manteco Product</th><th>M: Retail</th><th>Control Product</th><th>C: Retail</th><th>Premium $</th><th>Premium %</th><th>Conf.</th><th style="min-width:130px;"></th></tr></thead><tbody id="s2-tbody"></tbody></table></div>
   </div>
 </div>
 
@@ -352,7 +439,7 @@ textarea.url-box:focus{outline:none;border-color:var(--manteco)}
           <th>Pair</th><th>Brand / Tier</th><th>Cat</th>
           <th style="background:#f0f8f0;">Manteco Product</th><th style="background:#f0f8f0;">M: Retail</th><th style="background:#f0f8f0;">M: Sale</th>
           <th style="background:#eaf4fb;">Control Product</th><th style="background:#eaf4fb;">C: Retail</th><th style="background:#eaf4fb;">C: Sale</th>
-          <th>Retail &#916;%</th><th>MD &#916;%</th><th>Conf.</th><th></th>
+          <th>Retail &#916;%</th><th>MD &#916;%</th><th>Conf.</th><th style="min-width:130px;"></th>
         </tr></thead>
         <tbody id="pairs-tbody"></tbody>
       </table>
@@ -364,63 +451,108 @@ textarea.url-box:focus{outline:none;border-color:var(--manteco)}
 <!-- SCRAPER -->
 <div class="view" id="view-scraper">
   <div class="section-hdr">
-    <div><div class="section-title">Data Collection</div><div class="section-sub">Scrape product URLs and assign to matched pairs</div></div>
+    <div><div class="section-title">Data Collection</div><div class="section-sub">Scrape Manteco and Control URLs separately, then pair them up</div></div>
   </div>
-  <div class="scraper-layout">
-    <div class="scraper-sidebar">
+
+  <!-- Server connection -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;">
       <div>
         <div class="field-label">Server URL</div>
         <div class="server-row">
           <input type="text" id="server-url" placeholder="https://your-app.up.railway.app">
           <div class="status-dot" id="server-dot"></div>
         </div>
-        <div style="margin-top:6px;">
-          <div class="field-label">Team password</div>
-          <input type="password" id="secret-key" placeholder="Enter team password" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-family:var(--mono);background:var(--paper);color:var(--ink);">
-        </div>
-        <div style="margin-top:6px;display:flex;gap:8px;">
-          <button class="btn btn-dark" onclick="connectAndLoad()" style="flex:1;">Connect &amp; load data</button>
-        </div>
-        <div style="font-size:10px;color:var(--ink3);margin-top:4px;" id="server-hint">Enter URL and password above</div>
       </div>
       <div>
-        <div class="field-label">URLs to scrape</div>
-        <textarea class="url-box" id="url-input" placeholder="https://www.karenmillen.com/us/product/...&#10;One per line"></textarea>
+        <div class="field-label">Team password</div>
+        <input type="password" id="secret-key" placeholder="Enter team password" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-family:var(--mono);background:var(--paper);color:var(--ink);">
+      </div>
+      <button class="btn btn-dark" onclick="connectAndLoad()" style="white-space:nowrap;">Connect &amp; load</button>
+    </div>
+    <div style="font-size:10px;color:var(--ink3);margin-top:6px;" id="server-hint">Enter URL and password above</div>
+  </div>
+
+  <!-- Two-column scrape area -->
+  <div class="grid-2" style="margin-bottom:16px;">
+    <!-- Manteco URLs -->
+    <div class="card" style="border-top:3px solid var(--manteco);">
+      <div class="card-title" style="color:var(--manteco);">Manteco products</div>
+      <div class="field-label" style="margin-bottom:4px;">Paste Manteco product URLs</div>
+      <textarea class="url-box" id="url-input-m" placeholder="https://www.karenmillen.com/us/product/karen-millen-italian-manteco-wool...&#10;https://www.woolrich.com/us/en/coat-in-manteco...&#10;https://shop.mango.com/us/en/p/women/coats/manteco...&#10;&#10;One URL per line"></textarea>
+      <button class="scrape-btn" id="scrape-btn-m" onclick="startScrape('M')" style="margin-top:10px;background:var(--manteco);">Scrape Manteco URLs</button>
+    </div>
+
+    <!-- Control URLs -->
+    <div class="card" style="border-top:3px solid var(--control);">
+      <div class="card-title" style="color:var(--control);">Control products (non-Manteco)</div>
+      <div class="field-label" style="margin-bottom:4px;">Paste control product URLs</div>
+      <textarea class="url-box" id="url-input-c" placeholder="https://www.karenmillen.com/us/italian-wool-fitted-coat---/BKK06546.html&#10;https://www.woolrich.com/us/en/coat-in-recycled-italian-wool...&#10;https://shop.mango.com/us/en/p/women/coats/wool-coat...&#10;&#10;One URL per line"></textarea>
+      <button class="scrape-btn" id="scrape-btn-c" onclick="startScrape('C')" style="margin-top:10px;background:var(--control);">Scrape Control URLs</button>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-wrap" id="progress-wrap" style="margin-bottom:16px;">
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="progress-msg" id="progress-msg">Initializing...</div>
+  </div>
+
+  <!-- Results: Manteco + Control side by side, with pair builder -->
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="card" style="border-top:3px solid var(--manteco);">
+      <div class="card-title" style="color:var(--manteco);">Scraped Manteco products</div>
+      <div id="results-m"><div class="empty"><div style="font-size:12px;color:var(--ink3);">Scrape Manteco URLs above</div></div></div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--control);">
+      <div class="card-title" style="color:var(--control);">Scraped control products</div>
+      <div id="results-c"><div class="empty"><div style="font-size:12px;color:var(--ink3);">Scrape control URLs above</div></div></div>
+    </div>
+  </div>
+
+  <!-- Pair builder -->
+  <div class="card" id="pair-builder-card" style="display:none;margin-bottom:16px;">
+    <div class="card-title">Create matched pair</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;">
+      <div>
+        <div class="field-label" style="color:var(--manteco);margin-bottom:6px;">Manteco product</div>
+        <select id="pb-manteco" style="width:100%;padding:8px 10px;border:1px solid var(--manteco-m);border-radius:var(--radius);font-size:12px;background:var(--manteco-l);color:var(--ink);font-family:var(--sans);">
+          <option value="">Select scraped Manteco product...</option>
+        </select>
       </div>
       <div>
-        <div class="field-label">Quick-add</div>
-        <div class="chips">
-          <span class="chip" onclick="addUrl('km1')">Karen Millen 1</span>
-          <span class="chip" onclick="addUrl('km2')">Karen Millen 2</span>
-          <span class="chip" onclick="addUrl('woolrich1')">Woolrich 1</span>
-          <span class="chip" onclick="addUrl('mango')">Mango</span>
-          <span class="chip" onclick="addUrl('naadam')">NAADAM</span>
-          <span class="chip" onclick="addUrl('24s')">24S</span>
-        </div>
-      </div>
-      <div>
-        <div class="field-label">Assign to pair</div>
-        <div style="display:flex;gap:8px;">
-          <select id="assign-pair" style="flex:1;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--sans);"><option value="">Auto-detect</option></select>
-          <select id="assign-side" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--sans);"><option value="M">Manteco</option><option value="C">Control</option></select>
-        </div>
-      </div>
-      <button class="scrape-btn" id="scrape-btn" onclick="startScrape()">Scrape &amp; collect</button>
-      <div class="progress-wrap" id="progress-wrap">
-        <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-        <div class="progress-msg" id="progress-msg">Initializing...</div>
+        <div class="field-label" style="color:var(--control);margin-bottom:6px;">Control product</div>
+        <select id="pb-control" style="width:100%;padding:8px 10px;border:1px solid var(--control-m);border-radius:var(--radius);font-size:12px;background:var(--control-l);color:var(--ink);font-family:var(--sans);">
+          <option value="">Select scraped control product...</option>
+        </select>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      <div class="card">
-        <div class="card-title">Scraped results</div>
-        <div id="scraper-results"><div class="empty"><div class="empty-title">No results yet</div><div style="font-size:12px;color:var(--ink3);">Run a scrape to collect product data</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div class="form-field">
+        <label>Brand</label>
+        <input type="text" id="pb-brand" placeholder="e.g. Karen Millen" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--sans);">
       </div>
-      <div class="card">
-        <div class="card-title">Log</div>
-        <div id="scrape-log" style="max-height:200px;overflow-y:auto;"><div style="font-size:11px;color:var(--ink3);padding:4px 0;">Activity will appear here</div></div>
+      <div class="form-field">
+        <label>Market tier</label>
+        <select id="pb-tier" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;background:var(--paper);color:var(--ink);font-family:var(--sans);">
+          <option>Premium</option>
+          <option>Contemporary Premium</option>
+          <option selected>Contemporary</option>
+          <option>Fast Fashion Premium</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Season</label>
+        <input type="text" id="pb-season" value="FW24" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--sans);">
       </div>
     </div>
+    <button class="btn btn-dark" onclick="createPair()" style="width:100%;padding:11px;font-size:13px;">Create matched pair &rarr; Add to analysis</button>
+  </div>
+
+  <!-- Log -->
+  <div class="card">
+    <div class="card-title">Scrape log</div>
+    <div id="scrape-log" style="max-height:180px;overflow-y:auto;"><div style="font-size:11px;color:var(--ink3);padding:4px 0;">Activity will appear here</div></div>
   </div>
 </div>
 
@@ -474,18 +606,7 @@ textarea.url-box:focus{outline:none;border-color:var(--manteco)}
 
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────────
-var pairs = [
-  {id:"P01",brand:"Woolrich",tier:"Premium",cat:"Coat",season:"FW24",m_name:"Coat in Manteco Recycled Wool Blend",m_retail:null,m_sale:null,m_url:"https://www.woolrich.com/us/en/coat-in-manteco-recycled-wool-blend-CFWOOU0821MRUT3518_734.html",c_name:"Coat in Recycled Italian Wool Blend",c_retail:null,c_sale:null,c_url:"https://www.woolrich.com/us/en/coat-in-recycled-italian-wool-blend-CFWOOU0827MRUT3109_3989A.html"},
-  {id:"P02",brand:"Woolrich",tier:"Premium",cat:"Coat",season:"FW24",m_name:"2-in-1 Sideline Coat in Manteco Recycled Wool Blend",m_retail:1320,m_sale:925,m_url:"https://www.woolrich.com/us/en/2-in-1-sideline-coat-in-manteco-recycled-wool-blend-CFWWOU0943FRUT3492_7391.html",c_name:"Standard Wool Coat (control TBD)",c_retail:null,c_sale:null,c_url:""},
-  {id:"P03",brand:"Karen Millen",tier:"Contemporary Premium",cat:"Coat",season:"FW24",m_name:"Italian Manteco Wool Blend High Neck Belted Midaxi Coat",m_retail:null,m_sale:null,m_url:"https://www.karenmillen.com/us/product/karen-millen-italian-manteco-wool-blend-high-neck-belted-midaxi-coat_bkk13810",c_name:"Italian Wool Fitted Coat (non-Manteco)",c_retail:null,c_sale:null,c_url:"https://www.karenmillen.com/us/italian-wool-fitted-coat---/BKK06546.html"},
-  {id:"P04",brand:"Karen Millen",tier:"Contemporary Premium",cat:"Coat",season:"FW24",m_name:"Premium Italian Manteco Wool Double Breasted Tailored Midi Coat",m_retail:null,m_sale:null,m_url:"https://www.karenmillen.com/us/product/karen-millen-premium-italian-manteco-wool-double-breasted-tailored-midi-coat_bkk21774",c_name:"Italian Virgin Wool Hourglass Midi Coat",c_retail:null,c_sale:null,c_url:"https://www.karenmillen.com/us/italian-virgin-wool-hourglass-midi-coat-/BKK06905.html"},
-  {id:"P05",brand:"Mango",tier:"Contemporary",cat:"Coat",season:"FW24",m_name:"Manteco Wool Coat with Lapels (Men)",m_retail:399.99,m_sale:279.99,m_url:"https://shop.mango.com/us/en/p/men/coats/coats/manteco-wool-coat-with-lapels_77097782",c_name:"Herringbone Wool-Blend Coat Men (non-Manteco)",c_retail:null,c_sale:null,c_url:""},
-  {id:"P06",brand:"Mango",tier:"Contemporary",cat:"Coat",season:"FW24",m_name:"Manteco Wool Coat with Belt (Women)",m_retail:null,m_sale:null,m_url:"https://shop.mango.com/us/en/p/women/coats/coats/manteco-wool-coat-with-belt_17066744",c_name:"Belted Wool Coat Women (non-Manteco)",c_retail:null,c_sale:null,c_url:""},
-  {id:"P07",brand:"Karen Millen",tier:"Contemporary Premium",cat:"Coat",season:"FW24",m_name:"Premium Italian Manteco Wool Military Double Breasted Midaxi Coat",m_retail:null,m_sale:null,m_url:"https://www.karenmillen.com/us/product/karen-millen-premium-italian-manteco-wool-military-double-breasted-tailored-midi-coat_bkk21818",c_name:"Italian Wool Fitted Coat (non-Manteco)",c_retail:null,c_sale:null,c_url:"https://www.karenmillen.com/us/italian-wool-fitted-coat---/BKK06546.html"},
-  {id:"P08",brand:"Karen Millen",tier:"Contemporary Premium",cat:"Coat",season:"FW24",m_name:"Italian Manteco Wool Maxi Double Breasted Tailored Coat",m_retail:null,m_sale:null,m_url:"https://www.karenmillen.com/italian-manteco-wool-maxi-double-breasted-tailored-coat/BKK14749.html",c_name:"Italian Virgin Wool Hourglass Midi Coat",c_retail:null,c_sale:null,c_url:"https://www.karenmillen.com/us/italian-virgin-wool-hourglass-midi-coat-/BKK06905.html"},
-  {id:"P09",brand:"Woolrich via 24S",tier:"Premium",cat:"Coat",season:"FW24",m_name:"Coat in Manteco Recycled Wool Blend (24S)",m_retail:null,m_sale:null,m_url:"https://www.24s.com/en-us/coat-in-manteco-recycled-wool-blend-woolrich_WOO4AB22",c_name:"Control TBD",c_retail:null,c_sale:null,c_url:""},
-  {id:"P10",brand:"Samsoe Samsoe",tier:"Contemporary Premium",cat:"Coat",season:"AW24",m_name:"Alma Coat (Manteco MWool)",m_retail:null,m_sale:null,m_url:"https://www.samsoe.com/en-US/product/alma-coat-14895-salute",c_name:"Samolly Coat (non-Manteco)",c_retail:null,c_sale:null,c_url:"https://www.samsoe.com/en-US/product/samolly-coat-15343-black-mel"}
-];
+var pairs = [];
 
 var resaleListings = [];
 var scrapedProducts = [];
@@ -753,6 +874,7 @@ function renderS2() {
     rows += '<td class="'+pc+'">'+fmtUSD(premAmt)+'</td>';
     rows += '<td class="'+pc+'">'+fmtPct(prem)+'</td>';
     rows += '<td>'+confBadge(confStatus(p))+'</td>';
+    rows += '<td><button onclick="deletePair('+i+')" title="Delete pair" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:13px;padding:2px 6px;">&#10005;</button></td>';
     rows += '</tr>';
   }
   document.getElementById('s2-tbody').innerHTML = rows;
@@ -940,7 +1062,10 @@ function renderPairsTable() {
     rows += '<td class="'+pc+'">'+fmtPct(prem)+'</td>';
     rows += '<td class="'+mdc_class+'">'+(mdD!==null?'+'+Math.round(mdD*100)+'pp':'&#x2014;')+'</td>';
     rows += '<td>'+confBadge(confStatus(p))+'</td>';
-    rows += '<td><button onclick="openControlModal('+i+')" style="font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--white);cursor:pointer;color:var(--control);white-space:nowrap;font-family:var(--sans);">'+btnLabel+'</button></td>';
+    rows += '<td style="display:flex;gap:6px;align-items:center;">';
+    rows += '<button onclick="openControlModal('+i+')" style="font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--white);cursor:pointer;color:var(--control);white-space:nowrap;font-family:var(--sans);">'+btnLabel+'</button>';
+    rows += '<button onclick="deletePair('+i+')" title="Delete pair" style="font-size:11px;padding:4px 8px;border-radius:20px;border:1px solid var(--border2);background:var(--white);cursor:pointer;color:var(--red);font-family:var(--sans);">&#10005;</button>';
+    rows += '</td>';
     rows += '</tr>';
   }
   document.getElementById('pairs-tbody').innerHTML = rows || '<tr><td colspan="13" style="text-align:center;padding:20px;color:var(--ink3);">No pairs match filters</td></tr>';
@@ -951,6 +1076,15 @@ function addNewPair() {
   var np = {id:id,brand:'New Brand',tier:'Contemporary',cat:'Coat',season:'FW24',m_name:'Manteco product',m_retail:null,m_sale:null,m_url:'',c_name:'Control product',c_retail:null,c_sale:null,c_url:''};
   pairs.push(np);
   saveToServer('/data/pairs','POST',np);
+  refreshAll();
+}
+
+function deletePair(idx) {
+  var p = pairs[idx];
+  if(!confirm('Delete pair ' + p.id + ' (' + p.brand + ')? This cannot be undone.')) return;
+  pairs.splice(idx, 1);
+  // Save full pairs array to server
+  saveToServer('/data/pairs', 'PUT', pairs);
   refreshAll();
 }
 
@@ -979,98 +1113,151 @@ function populateSelects() {
   document.getElementById('assign-pair').innerHTML = aopts;
 }
 
-// ── SCRAPER ───────────────────────────────────────────────────────────────────
-function addUrl(key) {
-  var ta = document.getElementById('url-input');
-  ta.value = (ta.value.trim()?ta.value.trim()+'\n':'')+QUICK_URLS[key];
-}
-function addLog(msg,type) {
-  var t=new Date().toTimeString().slice(0,8);
-  logs.push({t:t,msg:msg,type:type||'info'});
-  var b=document.getElementById('scrape-log');
-  var html='';
-  for(var i=logs.length-1;i>=Math.max(0,logs.length-20);i--) {
-    html+='<div class="log-entry"><span class="log-time">'+logs[i].t+'</span><span class="log-'+logs[i].type+'">'+esc(logs[i].msg)+'</span></div>';
+// ── SCRAPER ──────────────────────────────────────────────────
+var scrapedM = [];
+var scrapedC = [];
+
+function addLog(msg, type) {
+  var t = new Date().toTimeString().slice(0,8);
+  logs.push({t:t, msg:msg, type:type||'info'});
+  var b = document.getElementById('scrape-log');
+  var h = '';
+  for(var i=logs.length-1; i>=Math.max(0,logs.length-30); i--) {
+    h += '<div class="log-entry"><span class="log-time">'+logs[i].t+'</span><span class="log-'+logs[i].type+'">'+esc(logs[i].msg)+'</span></div>';
   }
-  b.innerHTML=html;
+  b.innerHTML = h;
 }
 
-async function startScrape() {
-  var urls=document.getElementById('url-input').value.trim().split('\n').map(function(u){return u.trim();}).filter(function(u){return u.indexOf('http')===0;});
-  if(!urls.length){alert('Paste at least one URL.');return;}
-  var btn=document.getElementById('scrape-btn');
+async function startScrape(side) {
+  var inputId = side==='M' ? 'url-input-m' : 'url-input-c';
+  var btnId   = side==='M' ? 'scrape-btn-m' : 'scrape-btn-c';
+  var urls = document.getElementById(inputId).value.trim()
+    .split('\n').map(function(u){return u.trim();})
+    .filter(function(u){return u.indexOf('http')===0;});
+  if(!urls.length){ alert('Paste at least one URL in the '+(side==='M'?'Manteco':'Control')+' box.'); return; }
+  var btn = document.getElementById(btnId);
   btn.disabled=true; btn.textContent='Scraping...';
   document.getElementById('progress-wrap').style.display='';
-  addLog('Starting scrape \u2014 '+urls.length+' URL(s)');
+  addLog('Scraping '+(side==='M'?'Manteco':'Control')+' — '+urls.length+' URL(s)');
+  var server = getServer();
+  if(!server){ addLog('No server connected — connect first','err'); btn.disabled=false; btn.textContent=side==='M'?'Scrape Manteco URLs':'Scrape Control URLs'; return; }
   try {
-    var res=await fetch(getServer()+'/scrape',{method:'POST',headers:authHdrs(),body:JSON.stringify({urls:urls})});
+    var res=await fetch(server+'/scrape',{method:'POST',headers:authHdrs(),body:JSON.stringify({urls:urls})});
     if(!res.ok){var e=await res.json();throw new Error(e.error||res.statusText);}
     var reader=res.body.getReader(),decoder=new TextDecoder(),buf='';
     while(true){
-      var rd=await reader.read();
-      if(rd.done) break;
+      var rd=await reader.read(); if(rd.done) break;
       buf+=decoder.decode(rd.value,{stream:true});
       var lines=buf.split('\n'); buf=lines.pop();
       for(var li=0;li<lines.length;li++){
         if(lines[li].indexOf('data: ')!==0) continue;
-        try{var evt=JSON.parse(lines[li].slice(6));handleScrapeEvt(evt,urls.length);}catch(pe){}
+        try{var evt=JSON.parse(lines[li].slice(6));handleScrapeEvt(evt,urls.length,side);}catch(pe){}
       }
     }
-  } catch(e){addLog('Error: '+e.message,'err');alert('Scrape failed: '+e.message);}
-  btn.disabled=false; btn.textContent='Scrape & collect';
+  } catch(e){ addLog('Error: '+e.message,'err'); alert('Scrape failed: '+e.message); }
+  btn.disabled=false;
+  btn.textContent=side==='M'?'Scrape Manteco URLs':'Scrape Control URLs';
 }
 
-function handleScrapeEvt(evt,total) {
+function handleScrapeEvt(evt,total,side) {
   if(evt.type==='progress'){
     document.getElementById('progress-fill').style.width=Math.round((evt.index-1)/total*100)+'%';
     document.getElementById('progress-msg').textContent=evt.message;
     addLog(evt.message);
   }
   if(evt.type==='product'){
-    scrapedProducts.push(evt.data);
-    addLog((evt.data.brand||'?')+' \u2014 '+((evt.data.price_retail||'n/a'))+(evt.data.manteco?' [Manteco]':''),'ok');
+    evt.data._side=side;
+    if(side==='M') scrapedM.push(evt.data);
+    else           scrapedC.push(evt.data);
+    addLog((evt.data.brand||'?')+' — '+(evt.data.price_retail||'n/a')+(evt.data.manteco?' [Manteco ✓]':''),'ok');
     renderScraperResults();
-    refreshAll();
+    updatePairBuilder();
   }
-  if(evt.type==='error') addLog((evt.url||'').slice(0,50)+' \u2014 '+evt.message,'err');
+  if(evt.type==='error') addLog((evt.url||'').slice(0,55)+' — '+evt.message,'err');
   if(evt.type==='done'){
     document.getElementById('progress-fill').style.width='100%';
-    document.getElementById('progress-msg').textContent='Done \u2014 '+scrapedProducts.length+' products collected';
-    addLog('Scrape complete. '+scrapedProducts.length+' products.','ok');
+    document.getElementById('progress-msg').textContent='Done — Manteco: '+scrapedM.length+', Control: '+scrapedC.length;
+    addLog('Done. Manteco: '+scrapedM.length+', Control: '+scrapedC.length+'.','ok');
   }
 }
 
 function renderScraperResults() {
-  var body=document.getElementById('scraper-results');
-  if(!scrapedProducts.length){body.innerHTML='<div class="empty"><div class="empty-title">No results yet</div></div>';return;}
-  var html='<div class="pairs-table-wrap"><table class="pairs"><thead><tr><th>Brand</th><th>Product</th><th>Retail</th><th>Sale</th><th>Manteco</th><th>Assign</th></tr></thead><tbody>';
-  for(var i=0;i<scrapedProducts.length;i++){
-    var p=scrapedProducts[i];
-    html+='<tr>';
-    html+='<td class="pair-brand">'+esc(p.brand||'&#x2014;')+'</td>';
-    html+='<td style="font-size:11px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(p.name||'&#x2014;')+'</td>';
-    html+='<td class="price-val">'+esc(p.price_retail||'&#x2014;')+'</td>';
-    html+='<td class="price-val" style="color:var(--red);">'+esc(p.price_sale||'&#x2014;')+'</td>';
-    html+='<td>'+(p.manteco?'<span class="badge badge-m">&#10003;</span>':'<span style="color:var(--ink3)">&#x2014;</span>')+'</td>';
-    html+='<td><select onchange="assignToPair('+i+',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border2);border-radius:4px;font-family:var(--sans);"><option value="">Assign...</option>';
-    for(var pi=0;pi<pairs.length;pi++) html+='<option value="'+pairs[pi].id+':M">'+pairs[pi].id+' M</option><option value="'+pairs[pi].id+':C">'+pairs[pi].id+' C</option>';
-    html+='</select></td></tr>';
+  var mDiv=document.getElementById('results-m');
+  if(!scrapedM.length){ mDiv.innerHTML='<div class="empty"><div style="font-size:12px;color:var(--ink3);">Scrape Manteco URLs above</div></div>'; }
+  else {
+    var h='<div class="pairs-table-wrap"><table class="pairs"><thead><tr><th>Brand</th><th>Product</th><th>Retail</th><th>Sale</th><th>M?</th></tr></thead><tbody>';
+    for(var i=0;i<scrapedM.length;i++){
+      var p=scrapedM[i];
+      h+='<tr><td class="pair-brand" style="color:var(--manteco);">'+esc(p.brand||'—')+'</td>';
+      h+='<td style="font-size:11px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+esc(p.name||'')+'">'+esc(p.name||'—')+'</td>';
+      h+='<td class="price-val">'+esc(p.price_retail||'—')+'</td>';
+      h+='<td class="price-val" style="color:var(--red);">'+esc(p.price_sale||'—')+'</td>';
+      h+='<td>'+(p.manteco?'<span class="badge badge-m">✓</span>':'<span style="color:var(--ink3);font-size:11px;">—</span>')+'</td></tr>';
+    }
+    h+='</tbody></table></div>';
+    mDiv.innerHTML=h;
   }
-  html+='</tbody></table></div>';
-  body.innerHTML=html;
+  var cDiv=document.getElementById('results-c');
+  if(!scrapedC.length){ cDiv.innerHTML='<div class="empty"><div style="font-size:12px;color:var(--ink3);">Scrape control URLs above</div></div>'; }
+  else {
+    var h='<div class="pairs-table-wrap"><table class="pairs"><thead><tr><th>Brand</th><th>Product</th><th>Retail</th><th>Sale</th></tr></thead><tbody>';
+    for(var i=0;i<scrapedC.length;i++){
+      var p=scrapedC[i];
+      h+='<tr><td class="pair-brand" style="color:var(--control);">'+esc(p.brand||'—')+'</td>';
+      h+='<td style="font-size:11px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+esc(p.name||'')+'">'+esc(p.name||'—')+'</td>';
+      h+='<td class="price-val">'+esc(p.price_retail||'—')+'</td>';
+      h+='<td class="price-val" style="color:var(--red);">'+esc(p.price_sale||'—')+'</td></tr>';
+    }
+    h+='</tbody></table></div>';
+    cDiv.innerHTML=h;
+  }
 }
 
-function assignToPair(spIdx,val) {
-  if(!val) return;
-  var parts=val.split(':'), pairId=parts[0], side=parts[1];
-  var pairIdx=-1; for(var i=0;i<pairs.length;i++){if(pairs[i].id===pairId){pairIdx=i;break;}}
-  if(pairIdx===-1) return;
-  var sp=scrapedProducts[spIdx], px=pairs[pairIdx];
-  if(side==='M'){px.m_retail=parsePx(sp.price_retail)||px.m_retail;px.m_sale=parsePx(sp.price_sale)||px.m_sale;}
-  else           {px.c_retail=parsePx(sp.price_retail)||px.c_retail;px.c_sale=parsePx(sp.price_sale)||px.c_sale;}
-  saveToServer('/data/pairs/'+px.id,'PATCH',{m_retail:px.m_retail,m_sale:px.m_sale,c_retail:px.c_retail,c_sale:px.c_sale});
-  addLog('Assigned '+esc(sp.brand||'?')+' to '+pairId+' ('+side+')','ok');
+function updatePairBuilder() {
+  if(!scrapedM.length && !scrapedC.length){ document.getElementById('pair-builder-card').style.display='none'; return; }
+  document.getElementById('pair-builder-card').style.display='';
+  var ms=document.getElementById('pb-manteco'), cs=document.getElementById('pb-control');
+  ms.innerHTML='<option value="">Select Manteco product...</option>';
+  for(var i=0;i<scrapedM.length;i++){
+    var p=scrapedM[i];
+    ms.innerHTML+='<option value="'+i+'">'+(p.brand||'?')+' — '+(p.name||'?').slice(0,45)+(p.price_retail?' ('+p.price_retail+')':'')+'</option>';
+  }
+  cs.innerHTML='<option value="">Select control product...</option>';
+  for(var i=0;i<scrapedC.length;i++){
+    var p=scrapedC[i];
+    cs.innerHTML+='<option value="'+i+'">'+(p.brand||'?')+' — '+(p.name||'?').slice(0,45)+(p.price_retail?' ('+p.price_retail+')':'')+'</option>';
+  }
+  if(scrapedM.length && !document.getElementById('pb-brand').value)
+    document.getElementById('pb-brand').value=scrapedM[0].brand||'';
+}
+
+document.getElementById('pb-manteco').addEventListener('change',function(){
+  var idx=parseInt(this.value);
+  if(!isNaN(idx)&&scrapedM[idx]) document.getElementById('pb-brand').value=scrapedM[idx].brand||'';
+});
+
+function createPair() {
+  var mIdx=parseInt(document.getElementById('pb-manteco').value);
+  var cIdx=parseInt(document.getElementById('pb-control').value);
+  var brand=document.getElementById('pb-brand').value.trim();
+  var tier=document.getElementById('pb-tier').value;
+  var season=document.getElementById('pb-season').value.trim();
+  if(isNaN(mIdx)){alert('Select a Manteco product.');return;}
+  if(!brand){alert('Enter a brand name.');return;}
+  var sm=scrapedM[mIdx];
+  var sc=!isNaN(cIdx)?scrapedC[cIdx]:null;
+  var nextNum=pairs.length+1;
+  var id='P'+(nextNum<10?'0':'')+nextNum;
+  var newPair={id:id,brand:brand,tier:tier,cat:sm.category||'Coat',season:season,
+    m_name:sm.name||'',m_retail:parsePx(sm.price_retail),m_sale:parsePx(sm.price_sale),m_fabric:sm.fabric||null,m_url:sm.url||'',
+    c_name:sc?(sc.name||''):'',c_retail:sc?parsePx(sc.price_retail):null,c_sale:sc?parsePx(sc.price_sale):null,c_fabric:sc?(sc.fabric||null):null,c_url:sc?(sc.url||''):'',c_notes:null};
+  pairs.push(newPair);
+  saveToServer('/data/pairs','POST',newPair);
+  addLog('Created pair '+id+': '+brand,'ok');
+  document.getElementById('pb-manteco').value='';
+  document.getElementById('pb-control').value='';
   refreshAll();
+  showView('pairs');
 }
 
 // ── CONTROL MODAL ─────────────────────────────────────────────────────────────
@@ -1179,13 +1366,99 @@ function assignControl() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-var savedServer=localStorage.getItem('manteco_server');
-var savedKey   =localStorage.getItem('manteco_key');
-if(savedServer) document.getElementById('server-url').value=savedServer;
-if(savedKey)    document.getElementById('secret-key').value=savedKey;
-if(savedServer) { connectAndLoad(); } else { refreshAll(); }
+// ── SET YOUR RAILWAY URL HERE ────────────────────────────────────────────────
+// After deploying to Railway, paste your URL below (e.g. https://manteco-dashboard-production.up.railway.app)
+var RAILWAY_URL = 'https://manteco-dashboard-production.up.railway.app';
+// ─────────────────────────────────────────────────────────────────────────────
+
+var savedServer = RAILWAY_URL !== 'PASTE_YOUR_RAILWAY_URL_HERE' ? RAILWAY_URL : (localStorage.getItem('manteco_server') || '');
+var savedKey    = localStorage.getItem('manteco_key');
+
+// Always use the embedded URL if set — no need for users to type it
+if(RAILWAY_URL !== 'PASTE_YOUR_RAILWAY_URL_HERE') {
+  savedServer = RAILWAY_URL;
+  localStorage.setItem('manteco_server', RAILWAY_URL);
+}
+
+// Pre-fill login — server URL hidden from user, they only see password field
+if(savedServer) document.getElementById('login-server').value   = savedServer;
+if(savedKey)    document.getElementById('login-password').value = savedKey;
+
+// Also sync to scraper fields
+if(savedServer) document.getElementById('server-url').value = savedServer;
+if(savedKey)    document.getElementById('secret-key').value  = savedKey;
+
+// Auto-login if password is saved
+if(savedServer && savedKey) {
+  doLogin();
+} else {
+  // Show login screen
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+
+async function doLogin() {
+  var server   = document.getElementById('login-server').value.trim().replace(/\/$/,'');
+  var password = document.getElementById('login-password').value.trim();
+  var errEl    = document.getElementById('login-error');
+  var btn      = document.getElementById('login-btn');
+
+  errEl.textContent = '';
+
+  if(!server)   { errEl.textContent = 'Please enter the server URL.';   return; }
+  if(!password) { errEl.textContent = 'Please enter the team password.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Connecting...';
+
+  try {
+    // Test connection and auth by hitting /health
+    var res  = await fetch(server+'/health', {signal:AbortSignal.timeout(6000)});
+    var data = await res.json();
+
+    if(data.status !== 'ok') throw new Error('Server returned unexpected status');
+
+    // Save credentials
+    localStorage.setItem('manteco_server', server);
+    localStorage.setItem('manteco_key',    password);
+
+    // Sync to scraper panel fields
+    document.getElementById('server-url').value = server;
+    document.getElementById('secret-key').value  = password;
+
+    // Load data
+    var dataRes  = await fetch(server+'/data');
+    var teamData = await dataRes.json();
+    if(teamData.pairs && teamData.pairs.length)   pairs          = teamData.pairs;
+    if(teamData.resale_listings)                  resaleListings = teamData.resale_listings;
+    if(teamData.scraped_products)                 scrapedProducts= teamData.scraped_products;
+
+    // Hide login, show dashboard
+    document.getElementById('login-screen').classList.add('hidden');
+    refreshAll();
+
+  } catch(e) {
+    if(e.name === 'TimeoutError' || e.message.includes('fetch')) {
+      errEl.textContent = 'Cannot reach server. Check the URL and try again.';
+    } else {
+      errEl.textContent = 'Connection failed: ' + e.message;
+    }
+    btn.disabled = false;
+    btn.textContent = 'Sign in →';
+  }
+}
+
+function signOut() {
+  localStorage.removeItem('manteco_server');
+  localStorage.removeItem('manteco_key');
+  pairs = []; resaleListings = []; scrapedProducts = [];
+  document.getElementById('login-server').value   = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+
 checkServer();
-setInterval(checkServer,15000);
+setInterval(checkServer, 15000);
 </script>
+
 </body>
-</html>
