@@ -606,6 +606,8 @@ input.cell-input{width:100%;font-size:12px;font-family:var(--mono);padding:2px 6
 </div>
 
 <script>
+
+
 var RAILWAY_URL = 'https://manteco-dashboard-production.up.railway.app';
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -909,54 +911,65 @@ function renderOverview(){
 
 // ── PRODUCTS LIBRARY ──────────────────────────────────────────────────────────
 function renderProducts(){
-  var q    =document.getElementById('prod-search').value.toLowerCase();
-  var type =document.getElementById('prod-filter-type').value;
-  var pairedF=document.getElementById('prod-filter-paired').value;
-  var tbody=document.getElementById('products-tbody');
-  var rows='';
-  var count=0;
-  products.forEach(function(p,i){
-    if(q&&(p.name+' '+p.brand+' '+(p.fabric||'')).toLowerCase().indexOf(q)===-1) return;
-    if(type&&p.type!==type) return;
-    var paired=isPaired(p.id);
-    if(pairedF==='paired'&&!paired) return;
-    if(pairedF==='unpaired'&&paired) return;
+  var q      = document.getElementById("prod-search").value.toLowerCase();
+  var ftype  = document.getElementById("prod-filter-type").value;
+  var pairedF= document.getElementById("prod-filter-paired").value;
+  var tbody  = document.getElementById("products-tbody");
+  var rows   = "";
+  var count  = 0;
+  for(var i=0; i<products.length; i++){
+    var p = products[i];
+    if(q && (p.name+" "+p.brand+" "+(p.fabric||"")).toLowerCase().indexOf(q)===-1) continue;
+    if(ftype && p.type!==ftype) continue;
+    var paired = isPaired(p.id);
+    if(pairedF==="paired"   && !paired) continue;
+    if(pairedF==="unpaired" &&  paired) continue;
     count++;
-    var md=mdPct(p);
-    rows+='<tr>';
-    rows+='<td><div class="type-toggle"><button class="'+(p.type==='manteco'?'active-m':'')+'" onclick="quickToggleType(''+p.id+'','manteco')">M</button><button class="'+(p.type==='control'?'active-c':'')+'" onclick="quickToggleType(''+p.id+'','control')">C</button></div></td>';
-    rows+='<td class="t-brand editable" onclick="openEditModal(''+p.id+'')">'+esc(p.brand||'&mdash;')+'</td>';
-    rows+='<td><div class="t-name editable" title="'+esc(p.name||'')+'" onclick="openEditModal(''+p.id+'')">'+esc(p.name||'&mdash;')+'</div></td>';
-    rows+='<td class="t-price editable" onclick="openEditModal(''+p.id+'')">'+esc(p.price_retail||'&mdash;')+'</td>';
-    rows+='<td class="t-sale editable" onclick="openEditModal(''+p.id+'')">'+esc(p.price_sale||'&mdash;')+'</td>';
-    rows+='<td style="font-family:var(--mono);font-size:11px;">'+(md!==null?Math.round(md*100)+'%':'&mdash;')+'</td>';
-    rows+='<td style="font-size:11px;color:var(--ink3);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(p.fabric||'&mdash;')+'</td>';
-    rows+='<td>'+(paired?'<span class="badge badge-conf">Paired</span>':'<span class="badge badge-miss">Unpaired</span>')+'</td>';
-    rows+='<td><a href="'+esc(p.url||'#')+'" target="_blank" style="font-size:10px;color:var(--control);font-family:var(--mono);">'+(p.url?(p.url.replace(/https?:\/\/(www\.)?/,'').slice(0,22)+'...'):'&mdash;')+'</a></td>';
-    rows+='<td style="display:flex;gap:4px;"><button onclick="openEditModal(''+p.id+'')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--ink3);">&#9998;</button><button onclick="deleteProduct(''+p.id+'')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--red);">&#10005;</button></td>';
-    rows+='</tr>';
-  });
-  if(!count) rows='<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--ink3);">'+(products.length?'No products match filters':'No products yet &mdash; scrape URLs in Data Collection')+'</td></tr>';
-  tbody.innerHTML=rows;
+    var md = mdPct(p);
+    var mActive = p.type==="manteco" ? "active-m" : "";
+    var cActive = p.type==="control" ? "active-c" : "";
+    var shortUrl = p.url ? p.url.replace(/https?:\/\/(www\.)?/,"").slice(0,22)+"..." : "\u2014";
+    rows += "<tr>";
+    rows += "<td><div class=\"type-toggle\">";
+    rows += "<button class=\""+mActive+"\" onclick=\"quickToggleType("+i+",0)\">M</button>";
+    rows += "<button class=\""+cActive+"\" onclick=\"quickToggleType("+i+",1)\">C</button>";
+    rows += "</div></td>";
+    rows += "<td class=\"t-brand editable\" onclick=\"openEditModal("+i+")\">"+esc(p.brand||"\u2014")+"</td>";
+    rows += "<td onclick=\"openEditModal("+i+")\" ><div class=\"t-name editable\" title=\""+esc(p.name||"")+"\">"+esc(p.name||"\u2014")+"</div></td>";
+    rows += "<td class=\"t-price editable\" onclick=\"openEditModal("+i+")\">"+esc(p.price_retail||"\u2014")+"</td>";
+    rows += "<td class=\"t-sale  editable\" onclick=\"openEditModal("+i+")\">"+esc(p.price_sale||"\u2014")+"</td>";
+    rows += "<td style=\"font-family:var(--mono);font-size:11px;\">"+(md!==null?Math.round(md*100)+"%":"\u2014")+"</td>";
+    rows += "<td style=\"font-size:11px;color:var(--ink3);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">"+esc(p.fabric||"\u2014")+"</td>";
+    rows += "<td>"+(paired?"<span class=\"badge badge-conf\">Paired</span>":"<span class=\"badge badge-miss\">Unpaired</span>")+"</td>";
+    rows += "<td><a href=\""+esc(p.url||"#")+"\" target=\"_blank\" style=\"font-size:10px;color:var(--control);font-family:var(--mono);\" >"+shortUrl+"</a></td>";
+    rows += "<td style=\"display:flex;gap:4px;\">";
+    rows += "<button onclick=\"openEditModal("+i+")\" style=\"background:none;border:none;cursor:pointer;font-size:12px;color:var(--ink3);\">&#9998;</button>";
+    rows += "<button onclick=\"deleteProduct("+i+")\" style=\"background:none;border:none;cursor:pointer;font-size:12px;color:var(--red);\">&#10005;</button>";
+    rows += "</td></tr>";
+  }
+  if(!count) rows = "<tr><td colspan=\"10\" style=\"text-align:center;padding:24px;color:var(--ink3);\">"+( products.length?"No products match filters":"No products yet \u2014 scrape URLs in Data Collection")+"</td></tr>";
+  tbody.innerHTML = rows;
 }
 
-function quickToggleType(pid, newType){
-  var p=getProduct(pid); if(!p) return;
-  p.type=newType;
-  save('/data/products/'+pid,'PATCH',{type:newType});
+function quickToggleType(idx, flag){
+  var p=products[idx]; if(!p) return;
+  p.type=flag===0?'manteco':'control';
+  save('/data/products/'+p.id,'PATCH',{type:p.type});
   renderProducts(); renderPairBuilder();
 }
 
-function deleteProduct(pid){
+function deleteProduct(idx){
+  var p=typeof idx==='number'?products[idx]:getProduct(idx); if(!p) return;
   if(!confirm('Delete this product? It will be removed from any pairs.')) return;
-  products=products.filter(function(p){return p.id!==pid;});
-  save('/data/products/'+pid,'DELETE',{});
+  products=products.filter(function(pr){return pr.id!==p.id;});
+  save('/data/products/'+p.id,'DELETE',{});
   refreshAll();
 }
 
 // ── EDIT MODAL ────────────────────────────────────────────────────────────────
-function openEditModal(pid){
-  var p=getProduct(pid); if(!p) return;
+function openEditModal(idx){
+  var p=typeof idx==='number'?products[idx]:getProduct(idx); if(!p) return;
+  var pid=p.id;
   document.getElementById('edit-pid').value    = pid;
   document.getElementById('edit-brand').value  = p.brand||'';
   document.getElementById('edit-name').value   = p.name||'';
@@ -993,72 +1006,83 @@ document.getElementById('edit-modal').onclick=function(e){if(e.target===this)clo
 
 // ── PAIR BUILDER ──────────────────────────────────────────────────────────────
 function renderPairBuilder(){
-  var mList=document.getElementById('pb-manteco-list');
-  var cList=document.getElementById('pb-control-list');
-  var mProds=products.filter(function(p){return p.type==='manteco';});
-  var cProds=products.filter(function(p){return p.type==='control';});
+  var mProds = products.filter(function(p){return p.type==="manteco";});
+  var cProds = products.filter(function(p){return p.type==="control";});
+  var mList  = document.getElementById("pb-manteco-list");
+  var cList  = document.getElementById("pb-control-list");
 
-  if(!mProds.length){mList.innerHTML='<div class="empty" style="padding:20px;"><div class="empty-sub">No Manteco products yet</div></div>';}
-  else {
-    var h='';
-    mProds.forEach(function(p){
-      var sel=pbSelectedM.indexOf(p.id)>-1;
-      var paired=isPaired(p.id);
-      h+='<div class="pb-product-card'+(sel?' selected-m':'')+'" onclick="togglePbSelect('M',''+p.id+'');">';
-      h+='<div class="pb-product-name">'+esc(p.name||'Unknown product')+'</div>';
-      h+='<div class="pb-product-meta">'+esc(p.brand||'?')+(p.price_retail?' &middot; '+esc(p.price_retail):'')+' &middot; '+(paired?'<span style="color:var(--manteco);">paired</span>':'<span style="color:var(--ink3);">unpaired</span>')+'</div>';
-      h+='</div>';
-    });
-    mList.innerHTML=h;
+  // Find global indices for each product
+  if(!mProds.length){
+    mList.innerHTML = "<div class=\"empty\" style=\"padding:20px;\"><div class=\"empty-sub\">No Manteco products yet</div></div>";
+  } else {
+    var h = "";
+    for(var mi=0; mi<mProds.length; mi++){
+      var p   = mProds[mi];
+      var gi  = products.indexOf(p);
+      var sel = pbSelectedM.indexOf(gi) > -1;
+      var paired = isPaired(p.id);
+      h += "<div class=\"pb-product-card"+(sel?" selected-m":"")+"\" onclick=\"pbToggle(0,"+gi+");\">";
+      h += "<div class=\"pb-product-name\">"+esc(p.name||"Unknown product")+"</div>";
+      h += "<div class=\"pb-product-meta\">"+esc(p.brand||"?")+(p.price_retail?" &middot; "+esc(p.price_retail):"")+" &middot; "+(paired?"<span style=\"color:var(--manteco);\">paired</span>":"<span style=\"color:var(--ink3);\">unpaired</span>")+"</div>";
+      h += "</div>";
+    }
+    mList.innerHTML = h;
   }
 
-  if(!cProds.length){cList.innerHTML='<div class="empty" style="padding:20px;"><div class="empty-sub">No control products yet</div></div>';}
-  else {
-    var h='';
-    cProds.forEach(function(p){
-      var sel=pbSelectedC.indexOf(p.id)>-1;
-      var paired=isPaired(p.id);
-      h+='<div class="pb-product-card'+(sel?' selected-c':'')+'" onclick="togglePbSelect('C',''+p.id+'');">';
-      h+='<div class="pb-product-name">'+esc(p.name||'Unknown product')+'</div>';
-      h+='<div class="pb-product-meta">'+esc(p.brand||'?')+(p.price_retail?' &middot; '+esc(p.price_retail):'')+' &middot; '+(paired?'<span style="color:var(--control);">paired</span>':'<span style="color:var(--ink3);">unpaired</span>')+'</div>';
-      h+='</div>';
-    });
-    cList.innerHTML=h;
+  if(!cProds.length){
+    cList.innerHTML = "<div class=\"empty\" style=\"padding:20px;\"><div class=\"empty-sub\">No control products yet</div></div>";
+  } else {
+    var h = "";
+    for(var ci=0; ci<cProds.length; ci++){
+      var p   = cProds[ci];
+      var gi  = products.indexOf(p);
+      var sel = pbSelectedC.indexOf(gi) > -1;
+      var paired = isPaired(p.id);
+      h += "<div class=\"pb-product-card"+(sel?" selected-c":"")+"\" onclick=\"pbToggle(1,"+gi+");\">";
+      h += "<div class=\"pb-product-name\">"+esc(p.name||"Unknown product")+"</div>";
+      h += "<div class=\"pb-product-meta\">"+esc(p.brand||"?")+(p.price_retail?" &middot; "+esc(p.price_retail):"")+" &middot; "+(paired?"<span style=\"color:var(--control);\">paired</span>":"<span style=\"color:var(--ink3);\">unpaired</span>")+"</div>";
+      h += "</div>";
+    }
+    cList.innerHTML = h;
   }
 
   updatePairPreview();
 
   // Existing pairs
-  var pairsList=document.getElementById('pairs-list');
-  if(!pairs.length){pairsList.innerHTML='<div class="empty" style="padding:20px;"><div class="empty-sub">No pairs created yet</div></div>';return;}
-  var ph='<div class="table-wrap"><table class="t"><thead><tr><th>ID</th><th>Brand</th><th>Tier</th><th>Manteco product</th><th>Control product(s)</th><th>Retail &Delta;%</th><th></th></tr></thead><tbody>';
-  pairs.forEach(function(pair){
-    var mp=getProduct(pair.manteco_id);
-    var cps=(pair.control_ids||[]).map(function(cid){return getProduct(cid);}).filter(Boolean);
-    var cRetails=cps.map(function(cp){return px(cp.price_retail);}).filter(Boolean);
-    var avgC=cRetails.length?cRetails.reduce(function(a,b){return a+b;},0)/cRetails.length:null;
-    var mRet=mp?px(mp.price_retail):null;
-    var prem=(mRet&&avgC)?(mRet-avgC)/avgC:null;
-    var pc=prem!==null?(prem>=0.1?'delta-pos':prem>0?'delta-neu':'delta-neg'):'delta-neu';
-    ph+='<tr>';
-    ph+='<td class="t-id">'+esc(pair.id)+'</td>';
-    ph+='<td class="t-brand">'+esc(pair.brand||'?')+'</td>';
-    ph+='<td style="font-size:10px;color:var(--ink3);">'+esc(pair.tier||'?')+'</td>';
-    ph+='<td><div class="t-name" style="color:var(--manteco);" title="'+(mp?esc(mp.name||''):'')+'">'+esc(mp?mp.name||'?':'Deleted product')+'</div></td>';
-    ph+='<td><div style="font-size:11px;color:var(--control);">'+(cps.length?cps.map(function(cp){return esc(cp.name||'?');}).join('<br>'):esc('No controls'))+'</div></td>';
-    ph+='<td class="'+pc+'">'+pct(prem)+'</td>';
-    ph+='<td><button onclick="deletePair(''+pair.id+'')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--red);">&#10005;</button></td>';
-    ph+='</tr>';
-  });
-  ph+='</tbody></table></div>';
-  pairsList.innerHTML=ph;
+  var pairsList = document.getElementById("pairs-list");
+  if(!pairs.length){
+    pairsList.innerHTML = "<div class=\"empty\" style=\"padding:20px;\"><div class=\"empty-sub\">No pairs created yet</div></div>";
+    return;
+  }
+  var ph = "<div class=\"table-wrap\"><table class=\"t\"><thead><tr><th>ID</th><th>Brand</th><th>Tier</th><th>Manteco product</th><th>Control product(s)</th><th>Retail &Delta;%</th><th></th></tr></thead><tbody>";
+  for(var pi=0; pi<pairs.length; pi++){
+    var pair = pairs[pi];
+    var mp   = getProduct(pair.manteco_id);
+    var cps  = (pair.control_ids||[]).map(function(cid){return getProduct(cid);}).filter(Boolean);
+    var cRetails = cps.map(function(cp){return px(cp.price_retail);}).filter(Boolean);
+    var avgC = cRetails.length ? cRetails.reduce(function(a,b){return a+b;},0)/cRetails.length : null;
+    var mRet = mp ? px(mp.price_retail) : null;
+    var prem = (mRet&&avgC) ? (mRet-avgC)/avgC : null;
+    var pcls = prem!==null ? (prem>=0.1?"delta-pos":prem>0?"delta-neu":"delta-neg") : "delta-neu";
+    ph += "<tr>";
+    ph += "<td class=\"t-id\">"+esc(pair.id)+"</td>";
+    ph += "<td class=\"t-brand\">"+esc(pair.brand||"?")+"</td>";
+    ph += "<td style=\"font-size:10px;color:var(--ink3);\">"+esc(pair.tier||"?")+"</td>";
+    ph += "<td><div class=\"t-name\" style=\"color:var(--manteco);\" title=\""+(mp?esc(mp.name||""):"")+"\">"+ esc(mp?mp.name||"?":"Deleted")+"</div></td>";
+    ph += "<td><div style=\"font-size:11px;color:var(--control);\">"+( cps.length ? cps.map(function(cp){return esc(cp.name||"?");}).join("<br>") : "No controls")+"</div></td>";
+    ph += "<td class=\""+pcls+"\">"+pct(prem)+"</td>";
+    ph += "<td><button onclick=\"deletePairByIdx("+pi+")\" style=\"background:none;border:none;cursor:pointer;font-size:12px;color:var(--red);\">&#10005;</button></td>";
+    ph += "</tr>";
+  }
+  ph += "</tbody></table></div>";
+  pairsList.innerHTML = ph;
 }
 
-function togglePbSelect(side, pid){
-  var arr=side==='M'?pbSelectedM:pbSelectedC;
-  var idx=arr.indexOf(pid);
-  if(idx>-1) arr.splice(idx,1);
-  else arr.push(pid);
+function pbToggle(sideFlag, idx){
+  var arr = sideFlag===0 ? pbSelectedM : pbSelectedC;
+  var pos = arr.indexOf(idx);
+  if(pos>-1) arr.splice(pos,1);
+  else arr.push(idx);
   renderPairBuilder();
 }
 
@@ -1069,13 +1093,15 @@ function updatePairPreview(){
   var h='';
   // Show each Manteco x each Control combo
   if(pbSelectedM.length&&pbSelectedC.length){
-    pbSelectedM.forEach(function(mid){
-      var mp=getProduct(mid); if(!mp) return;
+    pbSelectedM.forEach(function(gi_m){
+    var mid = products[gi_m] ? products[gi_m].id : null; if(!mid) return;
+      var mp=mid?getProduct(mid):null; if(!mp) return;
       h+='<div class="pair-preview-row">';
       h+='<div class="pair-preview-m"><strong>M:</strong> '+esc(mp.brand||'?')+' &mdash; '+esc((mp.name||'?').slice(0,40))+(mp.price_retail?' ('+esc(mp.price_retail)+')':'')+'</div>';
       h+='<div class="pair-preview-vs">&#8596;</div>';
       h+='<div class="pair-preview-c">';
-      pbSelectedC.forEach(function(cid,ci){
+      pbSelectedC.forEach(function(gic,ci){
+      var cid = products[gic] ? products[gic].id : null;
         var cp=getProduct(cid); if(!cp) return;
         if(ci>0) h+='<br>';
         h+='<strong>C'+( pbSelectedC.length>1?(ci+1):'' )+':</strong> '+esc(cp.brand||'?')+' &mdash; '+esc((cp.name||'?').slice(0,35))+(cp.price_retail?' ('+esc(cp.price_retail)+')':'');
@@ -1102,13 +1128,14 @@ function createPairs(){
   if(!brand){alert('Enter a brand name.');return;}
 
   // Create one pair per Manteco product, each with all selected controls
-  pbSelectedM.forEach(function(mid){
+  pbSelectedM.forEach(function(gi_m){
+    var mid = products[gi_m] ? products[gi_m].id : null; if(!mid) return;
     var nextNum=pairs.length+1;
     var id='P'+(nextNum<10?'0':'')+nextNum;
     var newPair={
       id:id, brand:brand, tier:tier, cat:cat, season:season,
       manteco_id:mid,
-      control_ids:pbSelectedC.slice(),
+      control_ids:pbSelectedC.map(function(gi){return products[gi]?products[gi].id:null;}).filter(Boolean),
       created_at:new Date().toISOString()
     };
     pairs.push(newPair);
@@ -1121,6 +1148,7 @@ function createPairs(){
   showView('pairs');
 }
 
+function deletePairByIdx(idx){ var p=pairs[idx]; if(p) deletePair(p.id); }
 function deletePair(pid){
   if(!confirm('Delete this pair?')) return;
   pairs=pairs.filter(function(p){return p.id!==pid;});
@@ -1505,6 +1533,8 @@ if(savedKey){
 } else {
   refreshAll();
 }
+
+
 </script>
 </body>
 </html>
