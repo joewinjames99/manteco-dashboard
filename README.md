@@ -1,6 +1,1 @@
-flask==3.0.3
-flask-cors==4.0.1
-requests==2.32.3
-beautifulsoup4==4.12.3
-anthropic==0.40.0
-gunicorn==22.0.0
+web: gunicorn server:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
