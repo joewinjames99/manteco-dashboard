@@ -117,10 +117,14 @@ def init_db():
     except Exception as e:
         print(f"DB init error: {e}")
 
+_memory_store = None  # in-memory fallback when DB unavailable
+
 def load_data():
+    global _memory_store
     if not DATABASE_URL:
-        # Fallback to in-memory (data won't persist but app still works)
-        return dict(DEFAULT_DATA)
+        if _memory_store is None:
+            _memory_store = dict(DEFAULT_DATA)
+        return _memory_store
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -130,13 +134,18 @@ def load_data():
         conn.close()
         if row:
             return json.loads(row[0])
+        return dict(DEFAULT_DATA)
     except Exception as e:
-        print(f"Load error: {e}")
-    return dict(DEFAULT_DATA)
+        print(f"DB load error (using memory): {e}")
+        if _memory_store is None:
+            _memory_store = dict(DEFAULT_DATA)
+        return _memory_store
 
 def save_data(data):
+    global _memory_store
     data["last_updated"] = datetime.utcnow().isoformat()
     data["version"] = data.get("version", 0) + 1
+    _memory_store = data  # always update memory
     if not DATABASE_URL:
         return
     try:
@@ -152,7 +161,7 @@ def save_data(data):
         cur.close()
         conn.close()
     except Exception as e:
-        print(f"Save error: {e}")
+        print(f"DB save error (saved to memory only): {e}")
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 def check_auth():
@@ -203,15 +212,28 @@ def index():
 
 @app.route("/health")
 def health():
-    d = load_data()
+    db_ok = False
+    version = 0
+    num_products = 0
+    num_pairs = 0
+    last_updated = "—"
+    try:
+        d = load_data()
+        db_ok = True
+        version = d.get("version", 0)
+        num_products = len(d.get("products",[]))
+        num_pairs = len(d.get("pairs",[]))
+        last_updated = d.get("last_updated","—")
+    except Exception as e:
+        print(f"Health check load error: {e}")
     return jsonify({
         "status": "ok",
         "api_key_set": bool(ANTHROPIC_API_KEY),
-        "db_connected": bool(DATABASE_URL),
-        "version": d.get("version", 0),
-        "products": len(d.get("products",[])),
-        "pairs": len(d.get("pairs",[])),
-        "last_updated": d.get("last_updated","—"),
+        "db_connected": db_ok,
+        "version": version,
+        "products": num_products,
+        "pairs": num_pairs,
+        "last_updated": last_updated,
     })
 
 @app.route("/data", methods=["GET"])

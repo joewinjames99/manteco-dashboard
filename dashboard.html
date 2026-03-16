@@ -638,25 +638,31 @@ async function doLogin(){
   var btn = document.querySelector('.login-btn');
   if(!pw){ err.textContent='Enter the team password.'; return; }
   btn.textContent='Connecting...'; btn.disabled=true;
-  document.getElementById('login-server').value = RAILWAY_URL;
+  err.textContent='';
   try {
-    var res  = await fetch(RAILWAY_URL+'/health', {headers:{'X-Secret-Key':pw}, signal:AbortSignal.timeout(6000)});
-    var data = await res.json();
-    if(data.status==='ok'){
-      localStorage.setItem('manteco_key', pw);
-      err.textContent='';
-      document.getElementById('login-screen').classList.add('hidden');
-      await loadAllData();
-      startPolling();
-    } else {
-      err.textContent='Connection error. Try again.';
-    }
+    var res = await fetch(RAILWAY_URL+'/health', {signal:AbortSignal.timeout(8000)});
+    if(!res.ok){ err.textContent='Server error ('+res.status+'). Try again.'; btn.textContent='Access dashboard →'; btn.disabled=false; return; }
+    var health = await res.json();
+    if(health.status !== 'ok'){ err.textContent='Server not ready. Try again.'; btn.textContent='Access dashboard →'; btn.disabled=false; return; }
+    // Server is up — save key and load data
+    localStorage.setItem('manteco_key', pw);
+    var dataRes = await fetch(RAILWAY_URL+'/data', {signal:AbortSignal.timeout(10000)});
+    var data = await dataRes.json();
+    if(data.products)         products        = data.products;
+    if(data.pairs)            pairs           = data.pairs;
+    if(data.resale_listings)  resaleListings  = data.resale_listings;
+    if(data.version)          serverVersion   = data.version;
+    err.textContent='';
+    document.getElementById('login-screen').classList.add('hidden');
+    refreshAll();
+    startPolling();
   } catch(e){
-    if(e.message&&e.message.includes('401')) err.textContent='Incorrect password.';
-    else err.textContent='Cannot reach server. Check your connection.';
+    if(e.name==='TimeoutError') err.textContent='Server took too long. Try again.';
+    else err.textContent='Error: '+e.message;
   }
   btn.textContent='Access dashboard →'; btn.disabled=false;
 }
+
 
 function signOut(){
   localStorage.removeItem('manteco_key');
