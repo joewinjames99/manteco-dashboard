@@ -3,538 +3,436 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manteco Price Resilience Dashboard</title>
+<title>Manteco Price Resilience</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --ink:#1c1b18;--ink2:#4a4840;--ink3:#8a8880;
-  --paper:#f5f3ee;--paper2:#ede9e1;--paper3:#e4dfd5;
-  --white:#ffffff;--border:rgba(28,27,24,0.1);--border2:rgba(28,27,24,0.2);
+  --paper:#f5f3ee;--paper2:#ede9e1;
+  --white:#fff;--border:rgba(28,27,24,0.1);--border2:rgba(28,27,24,0.2);
   --manteco:#2d5a3d;--manteco-l:#eaf3de;--manteco-m:#c5e0c8;
   --control:#1a3a5c;--control-l:#deeaf8;--control-m:#b8d4ee;
   --amber:#8a5c00;--amber-l:#fdf0d0;
   --red:#8a2020;--red-l:#fde8e8;
-  --serif:'Playfair Display',Georgia,serif;
-  --sans:'DM Sans',system-ui,sans-serif;
-  --mono:'DM Mono',monospace;
+  --serif:"Playfair Display",Georgia,serif;
+  --sans:"DM Sans",system-ui,sans-serif;
+  --mono:"DM Mono",monospace;
   --radius:6px;--radius-lg:12px;
 }
-body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:13px;line-height:1.5;min-height:100vh}
-.topbar{background:var(--ink);color:var(--paper);padding:0 28px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.topbar-logo{font-family:var(--serif);font-size:15px;color:var(--paper);display:flex;align-items:center;gap:8px}
-.topbar-logo span{width:24px;height:24px;background:var(--manteco);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--sans);font-weight:500;color:#fff}
-.topbar-sub{font-size:11px;color:rgba(245,243,238,0.45);margin-left:12px}
-.topbar-pills{display:flex;gap:12px;font-size:11px;color:rgba(245,243,238,0.6)}
-.topbar-pills strong{color:var(--paper)}
-.subnav{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;display:flex}
-.nav-tab{font-size:12px;padding:14px 18px 13px;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap}
-.nav-tab:hover{color:var(--ink)}
-.nav-tab.active{color:var(--ink);border-bottom-color:var(--manteco);font-weight:500}
-.view{display:none;padding:24px 28px;max-width:1400px;margin:0 auto}
-.view.active{display:block}
-.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
-.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
-.kpi-label{font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px}
-.kpi-val{font-family:var(--serif);font-size:26px;color:var(--ink);line-height:1}
-.kpi-sub{font-size:11px;color:var(--ink3);margin-top:4px}
-.kpi-green .kpi-val{color:var(--manteco)}
-.kpi-amber .kpi-val{color:var(--amber)}
-.kpi-red .kpi-val{color:var(--red)}
-.hypothesis{background:var(--ink);color:var(--paper);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.hypothesis-label{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,243,238,0.45);margin-bottom:4px}
-.hypothesis-text{font-family:var(--serif);font-size:14px;font-style:italic;line-height:1.5}
-.hypothesis-verdict{flex-shrink:0;text-align:center;padding:12px 20px;border-radius:var(--radius);background:rgba(245,243,238,0.07);border:1px solid rgba(245,243,238,0.12);min-width:180px}
-.verdict-label{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,243,238,0.4);margin-bottom:4px}
-.verdict-val{font-size:18px;font-weight:500}
-.verdict-pending{color:rgba(245,243,238,0.5)}
-.verdict-yes{color:#7ec88a}
-.verdict-no{color:#e88a7e}
-.section-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.section-title{font-family:var(--serif);font-size:16px}
-.section-sub{font-size:11px;color:var(--ink3)}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.grid-3-1{display:grid;grid-template-columns:2fr 1fr;gap:16px}
-.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px}
-.card-title{font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:14px}
-.pairs-table-wrap{overflow-x:auto}
-table.pairs{width:100%;border-collapse:collapse;font-size:12px}
-table.pairs th{padding:8px 12px;text-align:left;font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:0.07em;text-transform:uppercase;border-bottom:1px solid var(--border2);white-space:nowrap;background:var(--paper)}
-table.pairs td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
-table.pairs tr:last-child td{border-bottom:none}
-table.pairs tr:hover td{background:var(--paper)}
-.pair-id{font-family:var(--mono);font-size:11px;color:var(--ink3)}
-.pair-brand{font-weight:500}
-.manteco-name{color:var(--manteco);font-size:11px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.control-name{color:var(--control);font-size:11px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.price-val{font-family:var(--mono);font-size:12px}
-.delta-pos{color:var(--manteco);font-weight:500;font-family:var(--mono)}
-.delta-neg{color:var(--red);font-weight:500;font-family:var(--mono)}
-.delta-neu{color:var(--ink3);font-family:var(--mono)}
-.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;white-space:nowrap}
-.badge-m{background:var(--manteco-l);color:var(--manteco)}
-.badge-c{background:var(--control-l);color:var(--control)}
-.badge-conf{background:var(--manteco-l);color:var(--manteco)}
-.badge-est{background:var(--amber-l);color:var(--amber)}
-.badge-miss{background:var(--red-l);color:var(--red)}
-.editable{cursor:pointer;border-radius:3px;padding:1px 3px}
-.editable:hover{background:var(--paper2);outline:1px dashed var(--border2)}
-input.cell-input{width:100%;font-size:12px;font-family:var(--mono);padding:2px 4px;background:var(--white);border:1px solid var(--control);border-radius:3px;color:var(--ink)}
-.lifecycle-row{display:grid;grid-template-columns:130px 1fr 1fr 60px;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
-.lifecycle-row:last-child{border-bottom:none}
-.lc-pair-id{font-family:var(--mono);font-size:10px;color:var(--ink3)}
-.lc-pair-brand{font-size:12px;font-weight:500}
-.lc-bar-group{display:flex;flex-direction:column;gap:5px}
-.lc-bar-row{display:flex;align-items:center;gap:8px}
-.lc-bar-label{font-size:9px;width:16px;text-align:center}
-.lc-track{flex:1;height:8px;background:var(--paper2);border-radius:4px;overflow:hidden}
-.lc-fill-m{height:100%;background:var(--manteco);border-radius:4px}
-.lc-fill-c{height:100%;background:var(--control);border-radius:4px}
-.lc-val{font-family:var(--mono);font-size:11px;min-width:52px;text-align:right}
-.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px}
-.toolbar input,.toolbar select{font-size:12px;padding:7px 12px;background:var(--white);border:1px solid var(--border2);border-radius:var(--radius);color:var(--ink);font-family:var(--sans)}
-.toolbar input{flex:1}
-.toolbar input:focus,.toolbar select:focus{outline:none;border-color:var(--manteco)}
-.btn{font-size:12px;padding:7px 14px;border-radius:var(--radius);background:var(--white);border:1px solid var(--border2);color:var(--ink);cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:6px;white-space:nowrap}
-.btn:hover{background:var(--paper)}
-.btn-dark{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.btn-dark:hover{opacity:0.88;background:var(--ink)}
-.legend{display:flex;gap:16px;font-size:11px;color:var(--ink2)}
-.legend-item{display:flex;align-items:center;gap:5px}
-.legend-dot{width:10px;height:10px;border-radius:50%}
-.scraper-layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
-.scraper-sidebar{display:flex;flex-direction:column;gap:14px}
-.field-label{font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px}
-textarea.url-box{width:100%;resize:none;height:160px;font-family:var(--mono);font-size:11px;line-height:1.7;padding:10px 12px;background:var(--paper);border:1px solid var(--border2);border-radius:var(--radius);color:var(--ink)}
-textarea.url-box:focus{outline:none;border-color:var(--manteco)}
-.server-row{display:flex;gap:8px;align-items:center}
-.server-row input{flex:1;font-family:var(--mono);font-size:11px;padding:7px 10px;background:var(--paper);border:1px solid var(--border2);border-radius:var(--radius);color:var(--ink)}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--ink3);flex-shrink:0;transition:background 0.3s}
-.dot-ok{background:var(--manteco)}
-.dot-err{background:var(--red)}
-.progress-wrap{display:none}
-.progress-track{height:3px;background:var(--paper2);border-radius:2px;overflow:hidden}
-.progress-fill{height:100%;background:var(--manteco);border-radius:2px;transition:width 0.3s}
-.progress-msg{font-size:11px;color:var(--ink3);margin-top:5px}
-.scrape-btn{width:100%;padding:11px;font-size:13px;font-weight:500;background:var(--manteco);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-family:var(--sans);transition:opacity 0.15s}
-.scrape-btn:hover{opacity:0.88}
-.scrape-btn:disabled{opacity:0.4;cursor:not-allowed}
-.log-entry{font-family:var(--mono);font-size:11px;padding:4px 0;border-bottom:1px solid var(--border);display:flex;gap:10px}
-.log-time{color:var(--ink3);min-width:58px}
-.log-ok{color:var(--manteco)}
-.log-err{color:var(--red)}
-.log-info{color:var(--ink3)}
-.chips{display:flex;flex-wrap:wrap;gap:5px}
-.chip{font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--border2);cursor:pointer;color:var(--ink2);background:var(--white);transition:all 0.12s}
-.chip:hover{background:var(--paper2);border-color:var(--manteco);color:var(--manteco)}
-.empty{text-align:center;padding:48px 20px;color:var(--ink3)}
-.empty-title{font-size:14px;font-family:var(--serif);color:var(--ink2);margin-bottom:4px}
-.completeness-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.comp-cell{border-radius:var(--radius);padding:10px 8px;text-align:center;border:1px solid var(--border)}
-.comp-pair{font-family:var(--mono);font-size:10px;color:var(--ink3);margin-bottom:3px}
-.comp-brand{font-size:10px;font-weight:500;margin-bottom:6px}
-.comp-dots{display:flex;gap:3px;justify-content:center;flex-wrap:wrap}
-.comp-dot{width:8px;height:8px;border-radius:50%}
-.dot-ok{background:var(--manteco)}
-.dot-miss{background:#e0dbd2;border:1px solid var(--border2)}
-/* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(28,27,24,0.55);z-index:1000;align-items:center;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal{background:var(--white);border-radius:var(--radius-lg);width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.18)}
-.modal-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-title{font-family:var(--serif);font-size:16px}
-.modal-subtitle{font-size:11px;color:var(--ink3);margin-top:2px}
-.modal-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:none;cursor:pointer;font-size:14px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
-.modal-close:hover{background:var(--paper)}
-.modal-body{padding:20px 22px}
-.modal-footer{padding:14px 22px 18px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
-.modal-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:18px}
-.modal-tab{font-size:12px;padding:8px 16px;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;transition:all 0.12s}
-.modal-tab.active{color:var(--ink);border-bottom-color:var(--manteco);font-weight:500}
-.modal-tab-pane{display:none}
-.modal-tab-pane.active{display:block}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.form-row.full{grid-template-columns:1fr}
-.form-field{display:flex;flex-direction:column;gap:4px}
-.form-field label{font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:0.07em;text-transform:uppercase}
-.form-field input,.form-field select,.form-field textarea{font-size:12px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--paper);color:var(--ink);font-family:var(--sans)}
-.form-field input:focus,.form-field select:focus,.form-field textarea:focus{outline:none;border-color:var(--control)}
-.form-field textarea{resize:vertical;min-height:60px;font-family:var(--mono);font-size:11px}
-.manteco-ref{background:var(--manteco-l);border:1px solid var(--manteco-m);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px}
-.manteco-ref-label{font-size:10px;font-weight:500;color:var(--manteco);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px}
-.manteco-ref-name{font-size:12px;font-weight:500;color:var(--ink)}
-.manteco-ref-price{font-size:11px;color:var(--ink2);font-family:var(--mono);margin-top:2px}
-.scrape-preview{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-top:12px;display:none}
-.scrape-preview.show{display:block}
-.preview-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)}
-.preview-row:last-child{border-bottom:none}
-.preview-label{font-size:11px;color:var(--ink3)}
-.preview-val{font-size:12px;font-weight:500;font-family:var(--mono)}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:13px;line-height:1.5;min-height:100vh;}
 
-/* ── LOGIN SCREEN ── */
-#login-screen {
-  position: fixed; inset: 0; z-index: 9999;
-  background: var(--ink);
-  display: flex; align-items: center; justify-content: center;
-}
-#login-screen.hidden { display: none; }
-.login-box {
-  width: 380px; padding: 40px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 16px;
-  text-align: center;
-}
-.login-mark {
-  width: 48px; height: 48px; background: var(--manteco);
-  border-radius: 10px; margin: 0 auto 20px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 600; color: #fff; letter-spacing: 0.5px;
-  font-family: var(--sans);
-}
-.login-title {
-  font-family: var(--serif); font-size: 22px;
-  color: var(--paper); margin-bottom: 4px;
-}
-.login-sub {
-  font-size: 12px; color: rgba(245,243,238,0.4);
-  margin-bottom: 32px; line-height: 1.5;
-}
-.login-field { margin-bottom: 14px; text-align: left; }
-.login-field label {
-  display: block; font-size: 10px; font-weight: 500;
-  color: rgba(245,243,238,0.45); letter-spacing: 0.08em;
-  text-transform: uppercase; margin-bottom: 6px;
-}
-.login-field input {
-  width: 100%; font-size: 13px; padding: 11px 14px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px; color: var(--paper);
-  font-family: var(--sans);
-  transition: border-color 0.15s;
-}
-.login-field input:focus {
-  outline: none; border-color: var(--manteco);
-}
-.login-field input::placeholder { color: rgba(245,243,238,0.2); }
-.login-btn {
-  width: 100%; padding: 12px; font-size: 14px; font-weight: 500;
-  background: var(--manteco); color: #fff;
-  border: none; border-radius: 8px; cursor: pointer;
-  font-family: var(--sans); transition: opacity 0.15s;
-  margin-top: 8px;
-}
-.login-btn:hover { opacity: 0.88; }
-.login-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.login-error {
-  font-size: 12px; color: #e88a7e;
-  margin-top: 10px; min-height: 18px;
-}
-.login-meta {
-  font-size: 11px; color: rgba(245,243,238,0.2);
-  margin-top: 24px; line-height: 1.5;
-}
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;align-items:center;justify-content:center;}
+#login-screen.hidden{display:none;}
+.login-box{background:var(--white);border-radius:var(--radius-lg);padding:36px 40px;width:380px;max-width:95vw;}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.login-logo-mark{width:40px;height:40px;background:var(--manteco);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;}
+.login-title{font-family:var(--serif);font-size:18px;}
+.login-sub{font-size:11px;color:var(--ink3);margin-top:2px;}
+.login-field{margin-bottom:14px;}
+.login-field label{display:block;font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px;}
+.login-field input{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;font-family:var(--mono);background:var(--paper);color:var(--ink);}
+.login-field input:focus{outline:none;border-color:var(--manteco);}
+.login-btn{width:100%;padding:12px;font-size:13px;font-weight:500;background:var(--manteco);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-family:var(--sans);margin-top:6px;}
+.login-btn:hover{opacity:0.88;}
+.login-err{font-size:11px;color:var(--red);margin-top:8px;min-height:16px;}
 
+/* ── TOPBAR ── */
+.topbar{background:var(--ink);color:var(--paper);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-logo{font-family:var(--serif);font-size:15px;color:var(--paper);display:flex;align-items:center;gap:8px;}
+.topbar-logo-mark{width:24px;height:24px;background:var(--manteco);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#fff;}
+.topbar-sub{font-size:11px;color:rgba(245,243,238,0.4);}
+.topbar-right{display:flex;align-items:center;gap:20px;}
+.topbar-stat{font-size:11px;color:rgba(245,243,238,0.6);}
+.topbar-stat strong{color:var(--paper);}
+.sync-indicator{font-size:10px;color:rgba(245,243,238,0.4);display:flex;align-items:center;gap:5px;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:rgba(245,243,238,0.3);}
+.sync-dot.live{background:#7ec88a;}
+.signout-btn{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid rgba(245,243,238,0.2);background:none;color:rgba(245,243,238,0.6);cursor:pointer;}
+.signout-btn:hover{border-color:rgba(245,243,238,0.4);color:var(--paper);}
+
+/* ── NAV ── */
+.subnav{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;display:flex;overflow-x:auto;}
+.nav-tab{font-size:12px;padding:14px 16px 13px;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap;}
+.nav-tab:hover{color:var(--ink);}
+.nav-tab.active{color:var(--ink);border-bottom-color:var(--manteco);font-weight:500;}
+
+/* ── LAYOUT ── */
+.view{display:none;padding:20px 24px;max-width:1400px;margin:0 auto;}
+.view.active{display:block;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+/* ── CARDS ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;}
+.card-title{font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:14px;}
+.section-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.section-title{font-family:var(--serif);font-size:16px;}
+.section-sub{font-size:11px;color:var(--ink3);}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;}
+.kpi-label{font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px;}
+.kpi-val{font-family:var(--serif);font-size:24px;color:var(--ink);line-height:1;}
+.kpi-sub{font-size:11px;color:var(--ink3);margin-top:3px;}
+.kpi-green .kpi-val{color:var(--manteco);}
+.kpi-amber .kpi-val{color:var(--amber);}
+.kpi-red   .kpi-val{color:var(--red);}
+
+/* ── HYPOTHESIS ── */
+.hypothesis{background:var(--ink);color:var(--paper);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.hypothesis-label{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,243,238,0.4);margin-bottom:3px;}
+.hypothesis-text{font-family:var(--serif);font-size:13px;font-style:italic;line-height:1.5;}
+.hypothesis-verdict{flex-shrink:0;text-align:center;padding:10px 18px;border-radius:var(--radius);background:rgba(245,243,238,0.07);border:1px solid rgba(245,243,238,0.12);min-width:160px;}
+.verdict-label{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,243,238,0.4);margin-bottom:3px;}
+.verdict-val{font-size:16px;font-weight:500;}
+.verdict-pending{color:rgba(245,243,238,0.4);}
+.verdict-yes{color:#7ec88a;}
+.verdict-no{color:#e88a7e;}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;}
+table.t{width:100%;border-collapse:collapse;font-size:12px;}
+table.t th{padding:8px 12px;text-align:left;font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:0.07em;text-transform:uppercase;border-bottom:1px solid var(--border2);white-space:nowrap;background:var(--paper);}
+table.t td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+table.t tr:last-child td{border-bottom:none;}
+table.t tr:hover td{background:var(--paper);}
+.t-id{font-family:var(--mono);font-size:10px;color:var(--ink3);}
+.t-name{font-size:11px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.t-brand{font-weight:500;}
+.t-price{font-family:var(--mono);font-size:12px;}
+.t-sale{color:var(--red);font-family:var(--mono);font-size:12px;}
+
+/* ── BADGES ── */
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;white-space:nowrap;}
+.badge-manteco{background:var(--manteco-l);color:var(--manteco);}
+.badge-control{background:var(--control-l);color:var(--control);}
+.badge-conf{background:var(--manteco-l);color:var(--manteco);}
+.badge-partial{background:var(--amber-l);color:var(--amber);}
+.badge-miss{background:var(--red-l);color:var(--red);}
+.delta-pos{color:var(--manteco);font-weight:500;font-family:var(--mono);}
+.delta-neg{color:var(--red);font-weight:500;font-family:var(--mono);}
+.delta-neu{color:var(--ink3);font-family:var(--mono);}
+
+/* ── EDITABLE ── */
+.editable{cursor:pointer;border-radius:3px;padding:1px 4px;}
+.editable:hover{background:var(--paper2);outline:1px dashed var(--border2);}
+input.cell-input{width:100%;font-size:12px;font-family:var(--mono);padding:2px 6px;background:var(--white);border:1px solid var(--control);border-radius:3px;color:var(--ink);}
+
+/* ── TYPE TOGGLE ── */
+.type-toggle{display:inline-flex;border-radius:20px;overflow:hidden;border:1px solid var(--border2);}
+.type-toggle button{font-size:10px;padding:3px 10px;border:none;cursor:pointer;font-family:var(--sans);background:var(--white);color:var(--ink3);transition:all 0.12s;}
+.type-toggle button.active-m{background:var(--manteco);color:#fff;}
+.type-toggle button.active-c{background:var(--control);color:#fff;}
+
+/* ── SCRAPER ── */
+.scrape-area{border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px;}
+.url-textarea{width:100%;resize:vertical;min-height:100px;font-family:var(--mono);font-size:11px;line-height:1.7;padding:10px 12px;background:var(--paper);border:1px solid var(--border2);border-radius:var(--radius);color:var(--ink);}
+.url-textarea:focus{outline:none;border-color:var(--manteco);}
+.scrape-btn{padding:10px 20px;font-size:13px;font-weight:500;background:var(--manteco);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-family:var(--sans);}
+.scrape-btn:hover{opacity:0.88;}
+.scrape-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.progress-track{height:3px;background:var(--paper2);border-radius:2px;overflow:hidden;margin:10px 0;}
+.progress-fill{height:100%;background:var(--manteco);border-radius:2px;transition:width 0.3s;}
+.progress-msg{font-size:11px;color:var(--ink3);}
+.log-entry{font-family:var(--mono);font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;}
+.log-time{color:var(--ink3);min-width:55px;}
+.log-ok{color:var(--manteco);}
+.log-err{color:var(--red);}
+.log-info{color:var(--ink3);}
+
+/* ── PAIR BUILDER ── */
+.pb-product-card{border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;cursor:pointer;transition:all 0.12s;background:var(--white);}
+.pb-product-card:hover{border-color:var(--manteco);background:var(--manteco-l);}
+.pb-product-card.selected-m{border-color:var(--manteco);background:var(--manteco-l);border-width:2px;}
+.pb-product-card.selected-c{border-color:var(--control);background:var(--control-l);border-width:2px;}
+.pb-product-name{font-size:12px;font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pb-product-meta{font-size:11px;color:var(--ink3);font-family:var(--mono);}
+.pb-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.pb-column-header{font-size:11px;font-weight:500;padding:8px 12px;border-radius:var(--radius);margin-bottom:10px;text-align:center;}
+.pb-m-header{background:var(--manteco-l);color:var(--manteco);}
+.pb-c-header{background:var(--control-l);color:var(--control);}
+.pb-product-list{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;}
+.pair-preview{background:var(--paper);border-radius:var(--radius);padding:12px 14px;margin-top:14px;display:none;}
+.pair-preview.show{display:block;}
+.pair-preview-row{display:flex;gap:12px;align-items:center;font-size:12px;margin-bottom:6px;}
+.pair-preview-m{flex:1;background:var(--manteco-l);border-radius:var(--radius);padding:6px 10px;font-size:11px;}
+.pair-preview-c{flex:1;background:var(--control-l);border-radius:var(--radius);padding:6px 10px;font-size:11px;}
+.pair-preview-vs{font-size:11px;color:var(--ink3);font-weight:500;}
+
+/* ── FORM ── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-row.full{grid-template-columns:1fr;}
+.form-field{display:flex;flex-direction:column;gap:4px;}
+.form-field label{font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:0.07em;text-transform:uppercase;}
+.form-field input,.form-field select,.form-field textarea{font-size:12px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--paper);color:var(--ink);font-family:var(--sans);}
+.form-field input:focus,.form-field select:focus{outline:none;border-color:var(--manteco);}
+
+/* ── BUTTONS ── */
+.btn{font-size:12px;padding:7px 14px;border-radius:var(--radius);background:var(--white);border:1px solid var(--border2);color:var(--ink);cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn:hover{background:var(--paper);}
+.btn-primary{background:var(--manteco);color:#fff;border-color:var(--manteco);}
+.btn-primary:hover{opacity:0.88;background:var(--manteco);}
+.btn-dark{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.btn-dark:hover{opacity:0.88;background:var(--ink);}
+.btn-danger{color:var(--red);border-color:transparent;}
+.btn-danger:hover{background:var(--red-l);border-color:var(--red);}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:40px 20px;color:var(--ink3);}
+.empty-title{font-size:14px;font-family:var(--serif);color:var(--ink2);margin-bottom:4px;}
+.empty-sub{font-size:12px;}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.toolbar input,.toolbar select{font-size:12px;padding:7px 12px;background:var(--white);border:1px solid var(--border2);border-radius:var(--radius);color:var(--ink);font-family:var(--sans);}
+.toolbar input{flex:1;min-width:160px;}
+.toolbar input:focus,.toolbar select:focus{outline:none;border-color:var(--manteco);}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(28,27,24,0.5);z-index:500;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:var(--radius-lg);width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.15);}
+.modal-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:var(--serif);font-size:16px;}
+.modal-body{padding:18px 20px;}
+.modal-footer{padding:12px 20px 16px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+.modal-close{width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);background:none;cursor:pointer;font-size:14px;color:var(--ink2);display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:var(--paper);}
+
+/* ── COMPLETENESS ── */
+.completeness-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.comp-cell{border-radius:var(--radius);padding:8px;text-align:center;border:1px solid var(--border);}
+.comp-pair{font-family:var(--mono);font-size:10px;color:var(--ink3);margin-bottom:2px;}
+.comp-brand{font-size:10px;font-weight:500;margin-bottom:5px;}
+.comp-dots{display:flex;gap:3px;justify-content:center;flex-wrap:wrap;}
+.comp-dot{width:7px;height:7px;border-radius:50%;}
+.dot-ok{background:var(--manteco);}
+.dot-miss{background:#e0dbd2;border:1px solid var(--border2);}
+
+/* ── LEGEND ── */
+.legend{display:flex;gap:14px;font-size:11px;color:var(--ink2);}
+.legend-item{display:flex;align-items:center;gap:5px;}
+.legend-dot{width:9px;height:9px;border-radius:50%;}
 </style>
 </head>
 <body>
 
-
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-mark">MTC</div>
-    <div class="login-title">Manteco Price Resilience</div>
-    <div class="login-sub">Research dashboard &nbsp;&middot;&nbsp; Baruch College &amp; UniBz<br>Enter your server URL and team password to continue</div>
-    <div class="login-field" style="display:none;">
-      <label>Server URL</label>
-      <input type="text" id="login-server" placeholder="https://your-app.up.railway.app" autocomplete="off">
+    <div class="login-logo">
+      <div class="login-logo-mark">MTC</div>
+      <div>
+        <div class="login-title">Manteco Price Resilience</div>
+        <div class="login-sub">Baruch College &amp; UniBz &nbsp;&middot;&nbsp; March 2026</div>
+      </div>
     </div>
     <div class="login-field">
       <label>Team password</label>
-      <input type="password" id="login-password" placeholder="Enter team password" onkeydown="if(event.key==='Enter')doLogin()">
+      <input type="password" id="login-password" placeholder="Enter password" autofocus onkeydown="if(event.key==='Enter')doLogin()">
     </div>
-    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in &rarr;</button>
-    <div class="login-error" id="login-error"></div>
-    <div class="login-meta">Your data is stored securely on your team&rsquo;s server.<br>Contact your project lead for the server URL and password.</div>
+    <input type="hidden" id="login-server" value="">
+    <button class="login-btn" onclick="doLogin()">Access dashboard &rarr;</button>
+    <div class="login-err" id="login-error"></div>
   </div>
 </div>
 
+<!-- TOPBAR -->
 <div class="topbar">
-  <div style="display:flex;align-items:center;gap:8px;">
-    <div class="topbar-logo"><span>MTC</span>Manteco Price Resilience Study</div>
-    <div class="topbar-sub">Baruch College &amp; UniBz &nbsp;·&nbsp; March 2026</div>
+  <div class="topbar-left">
+    <div class="topbar-logo"><div class="topbar-logo-mark">MTC</div>Manteco Price Resilience</div>
+    <div class="topbar-sub">Baruch &amp; UniBz &middot; 2026</div>
   </div>
-  <div class="topbar-pills">
-    <span><strong id="top-pairs">0</strong> pairs</span>
-    <span><strong id="top-conf">0</strong> confirmed</span>
-    <span>Avg premium <strong id="top-premium">—</strong></span>
-    <button onclick="signOut()" style="font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(245,243,238,0.5);cursor:pointer;font-family:var(--sans);margin-left:8px;">Sign out</button>
+  <div class="topbar-right">
+    <div class="topbar-stat"><strong id="top-products">0</strong> products</div>
+    <div class="topbar-stat"><strong id="top-pairs">0</strong> pairs</div>
+    <div class="topbar-stat">Premium <strong id="top-premium">&mdash;</strong></div>
+    <div class="sync-indicator"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">syncing</span></div>
+    <button class="signout-btn" onclick="signOut()">Sign out</button>
   </div>
 </div>
 
+<!-- NAV -->
 <div class="subnav">
-  <div class="nav-tab active" id="tab-overview" onclick="showView('overview')">Overview</div>
-  <div class="nav-tab" id="tab-stage2"   onclick="showView('stage2')">Stage 2 — Retail</div>
-  <div class="nav-tab" id="tab-stage3"   onclick="showView('stage3')">Stage 3 — Markdown</div>
-  <div class="nav-tab" id="tab-stage4"   onclick="showView('stage4')">Stage 4 — Resale</div>
-  <div class="nav-tab" id="tab-pairs"    onclick="showView('pairs')">Matched Pairs</div>
-  <div class="nav-tab" id="tab-scraper"  onclick="showView('scraper')">Data Collection</div>
+  <div class="nav-tab active" id="tab-overview"    onclick="showView('overview')">Overview</div>
+  <div class="nav-tab"        id="tab-products"    onclick="showView('products')">Products</div>
+  <div class="nav-tab"        id="tab-pairs"       onclick="showView('pairs')">Pair Builder</div>
+  <div class="nav-tab"        id="tab-stage2"      onclick="showView('stage2')">Stage 2 &mdash; Retail</div>
+  <div class="nav-tab"        id="tab-stage3"      onclick="showView('stage3')">Stage 3 &mdash; Markdown</div>
+  <div class="nav-tab"        id="tab-stage4"      onclick="showView('stage4')">Stage 4 &mdash; Resale</div>
+  <div class="nav-tab"        id="tab-scraper"     onclick="showView('scraper')">Data Collection</div>
 </div>
 
-<!-- OVERVIEW -->
+<!-- ═══ OVERVIEW ═══ -->
 <div class="view active" id="view-overview">
   <div class="hypothesis">
     <div>
       <div class="hypothesis-label">Research Hypothesis</div>
       <div class="hypothesis-text">"Garments incorporating Manteco fabrics demonstrate stronger price resilience across their lifecycle than comparable garments without the Manteco label."</div>
-      <div style="margin-top:8px;font-size:11px;color:rgba(245,243,238,0.4);">Working benchmark: consistent differential of 10% or greater</div>
+      <div style="margin-top:6px;font-size:11px;color:rgba(245,243,238,0.35);">Working benchmark: consistent differential of 10% or greater</div>
     </div>
     <div class="hypothesis-verdict">
       <div class="verdict-label">10% Threshold</div>
       <div class="verdict-val verdict-pending" id="verdict-main">Pending data</div>
-      <div style="font-size:10px;color:rgba(245,243,238,0.3);margin-top:4px;" id="verdict-sub">—</div>
+      <div style="font-size:10px;color:rgba(245,243,238,0.3);margin-top:3px;" id="verdict-sub">&mdash;</div>
     </div>
   </div>
   <div class="kpi-strip">
-    <div class="kpi"><div class="kpi-label">Matched Pairs</div><div class="kpi-val" id="kpi-pairs">0</div><div class="kpi-sub">of 20–25 target</div></div>
-    <div class="kpi kpi-green"><div class="kpi-label">Retail Premium</div><div class="kpi-val" id="kpi-premium">—</div><div class="kpi-sub">avg Manteco vs control</div></div>
-    <div class="kpi kpi-amber"><div class="kpi-label">Markdown Delta</div><div class="kpi-val" id="kpi-mddelta">—</div><div class="kpi-sub">Manteco vs control</div></div>
-    <div class="kpi kpi-green"><div class="kpi-label">Residual Delta</div><div class="kpi-val" id="kpi-resdelta">—</div><div class="kpi-sub">resale value retained</div></div>
-    <div class="kpi"><div class="kpi-label">Data Points</div><div class="kpi-val" id="kpi-complete">—</div><div class="kpi-sub">confirmed prices</div></div>
+    <div class="kpi"><div class="kpi-label">Products</div><div class="kpi-val" id="kpi-products">0</div><div class="kpi-sub">in library</div></div>
+    <div class="kpi"><div class="kpi-label">Pairs</div><div class="kpi-val" id="kpi-pairs">0</div><div class="kpi-sub">matched</div></div>
+    <div class="kpi kpi-green"><div class="kpi-label">Retail Premium</div><div class="kpi-val" id="kpi-premium">&mdash;</div><div class="kpi-sub">avg Manteco vs control</div></div>
+    <div class="kpi kpi-amber"><div class="kpi-label">Markdown &Delta;</div><div class="kpi-val" id="kpi-mddelta">&mdash;</div><div class="kpi-sub">less discount on Manteco</div></div>
+    <div class="kpi"><div class="kpi-label">Data Points</div><div class="kpi-val" id="kpi-datapoints">&mdash;</div><div class="kpi-sub">confirmed prices</div></div>
   </div>
+
+  <!-- Product library stats — always visible even before pairing -->
+  <div class="grid-3" style="margin-bottom:16px;" id="overview-library-section">
+    <div class="card">
+      <div class="card-title">Products in library</div>
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px;">
+        <div style="text-align:center;flex:1;">
+          <div style="font-family:var(--serif);font-size:28px;color:var(--manteco);" id="ov-count-m">0</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:2px;">Manteco</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--border);"></div>
+        <div style="text-align:center;flex:1;">
+          <div style="font-family:var(--serif);font-size:28px;color:var(--control);" id="ov-count-c">0</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:2px;">Control</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--border);"></div>
+        <div style="text-align:center;flex:1;">
+          <div style="font-family:var(--serif);font-size:28px;color:var(--ink);" id="ov-count-unpaired">0</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:2px;">Unpaired</div>
+        </div>
+      </div>
+      <div id="ov-next-step" style="font-size:11px;padding:8px 10px;border-radius:var(--radius);background:var(--paper);color:var(--ink2);"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Avg retail price &mdash; library</div>
+      <div style="display:flex;gap:16px;align-items:center;height:60px;">
+        <div style="flex:1;text-align:center;">
+          <div style="font-family:var(--serif);font-size:22px;color:var(--manteco);" id="ov-avg-retail-m">&mdash;</div>
+          <div style="font-size:10px;color:var(--manteco);margin-top:2px;letter-spacing:0.05em;text-transform:uppercase;">Manteco</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--border);"></div>
+        <div style="flex:1;text-align:center;">
+          <div style="font-family:var(--serif);font-size:22px;color:var(--control);" id="ov-avg-retail-c">&mdash;</div>
+          <div style="font-size:10px;color:var(--control);margin-top:2px;letter-spacing:0.05em;text-transform:uppercase;">Control</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--ink3);margin-top:8px;text-align:center;" id="ov-raw-premium">Pair products to see premium analysis</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Manteco detection</div>
+      <div style="display:flex;gap:16px;align-items:center;height:60px;">
+        <div style="flex:1;text-align:center;">
+          <div style="font-family:var(--serif);font-size:22px;color:var(--manteco);" id="ov-detected-m">0</div>
+          <div style="font-size:10px;color:var(--manteco);margin-top:2px;letter-spacing:0.05em;text-transform:uppercase;">Detected</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--border);"></div>
+        <div style="flex:1;text-align:center;">
+          <div style="font-family:var(--serif);font-size:22px;color:var(--ink3);" id="ov-detected-none">0</div>
+          <div style="font-size:10px;color:var(--ink3);margin-top:2px;letter-spacing:0.05em;text-transform:uppercase;">Not detected</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--ink3);margin-top:8px;text-align:center;">Override in Products tab if incorrect</div>
+    </div>
+  </div>
+
   <div class="grid-2" style="margin-bottom:16px;">
     <div class="card">
-      <div class="card-title">Retail price — Manteco vs Control by pair</div>
-      <div style="height:220px;"><canvas id="chart-retail-overview"></canvas></div>
-      <div class="legend" style="margin-top:10px;justify-content:center;">
-        <div class="legend-item"><div class="legend-dot" style="background:var(--manteco)"></div>Manteco</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--control)"></div>Control</div>
+      <div id="overview-chart-section">
+        <div class="card-title" id="overview-chart-title">Retail prices &mdash; all products</div>
+        <div style="height:200px;"><canvas id="chart-overview"></canvas></div>
+        <div class="legend" style="margin-top:10px;justify-content:center;">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--manteco)"></div>Manteco</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--control)"></div>Control</div>
+        </div>
       </div>
     </div>
     <div class="card">
-      <div class="card-title">Data completeness by pair</div>
-      <div class="completeness-grid" id="completeness-grid"><div class="empty"><div class="empty-title">No pairs yet</div></div></div>
-      <div style="display:flex;gap:14px;margin-top:12px;font-size:11px;color:var(--ink2);">
-        <div style="display:flex;align-items:center;gap:5px;"><div class="comp-dot dot-ok"></div>Confirmed</div>
-        <div style="display:flex;align-items:center;gap:5px;"><div class="comp-dot dot-miss"></div>Missing</div>
+      <div id="overview-right-section">
+        <div class="card-title" id="overview-right-title">Data completeness</div>
+        <div class="completeness-grid" id="completeness-grid"><div class="empty" style="grid-column:1/-1;padding:20px;"><div class="empty-sub">Create pairs in Pair Builder to see completeness</div></div></div>
+        <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;color:var(--ink2);">
+          <div style="display:flex;align-items:center;gap:4px;"><div class="comp-dot dot-ok"></div>Confirmed</div>
+          <div style="display:flex;align-items:center;gap:4px;"><div class="comp-dot dot-miss"></div>Missing</div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- STAGE 2 -->
-<div class="view" id="view-stage2">
+<!-- ═══ PRODUCTS LIBRARY ═══ -->
+<div class="view" id="view-products">
   <div class="section-hdr">
-    <div><div class="section-title">Stage 2 — Market Entry</div><div class="section-sub">Does the Manteco label justify a higher retail price?</div></div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--manteco)"></div>Manteco</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--control)"></div>Control</div>
-    </div>
-  </div>
-  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);">
-    <div class="kpi kpi-green"><div class="kpi-label">Avg Manteco Retail</div><div class="kpi-val" id="s2-avg-m">—</div></div>
-    <div class="kpi"><div class="kpi-label">Avg Control Retail</div><div class="kpi-val" id="s2-avg-c">—</div></div>
-    <div class="kpi kpi-green"><div class="kpi-label">Avg Premium</div><div class="kpi-val" id="s2-premium">—</div></div>
-    <div class="kpi"><div class="kpi-label">Pairs &ge;10% premium</div><div class="kpi-val" id="s2-pairs-10">—</div></div>
-  </div>
-  <div style="margin-bottom:16px;">
-    <div class="card">
-      <div class="card-title">Retail price by pair ($)</div>
-      <div style="height:260px;"><canvas id="chart-s2-bars"></canvas></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">Retail price detail</div>
-    <div class="pairs-table-wrap"><table class="pairs"><thead><tr><th>Pair</th><th>Brand</th><th>Tier</th><th>Manteco Product</th><th>M: Retail</th><th>Control Product</th><th>C: Retail</th><th>Premium $</th><th>Premium %</th><th>Conf.</th><th style="min-width:130px;"></th></tr></thead><tbody id="s2-tbody"></tbody></table></div>
-  </div>
-</div>
-
-<!-- STAGE 3 -->
-<div class="view" id="view-stage3">
-  <div class="section-hdr">
-    <div><div class="section-title">Stage 3 — Seasonal Sales Cycle</div><div class="section-sub">Does the Manteco label reduce markdown pressure?</div></div>
-  </div>
-  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);">
-    <div class="kpi kpi-green"><div class="kpi-label">Avg Manteco MD%</div><div class="kpi-val" id="s3-md-m">—</div></div>
-    <div class="kpi kpi-red"><div class="kpi-label">Avg Control MD%</div><div class="kpi-val" id="s3-md-c">—</div></div>
-    <div class="kpi kpi-green"><div class="kpi-label">MD Differential</div><div class="kpi-val" id="s3-delta">—</div></div>
-    <div class="kpi"><div class="kpi-label">Pairs with sale data</div><div class="kpi-val" id="s3-pairs">—</div></div>
-  </div>
-  <div class="grid-2" style="margin-bottom:16px;">
-    <div class="card">
-      <div class="card-title">Markdown depth by pair</div>
-      <div style="height:260px;"><canvas id="chart-s3-bars"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Full price &#8594; Sale price</div>
-      <div id="s3-waterfall"></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">Markdown detail</div>
-    <div class="pairs-table-wrap"><table class="pairs"><thead><tr><th>Pair</th><th>Brand</th><th>M: Retail</th><th>M: Sale</th><th>M: MD%</th><th>C: Retail</th><th>C: Sale</th><th>C: MD%</th><th>Delta</th></tr></thead><tbody id="s3-tbody"></tbody></table></div>
-  </div>
-</div>
-
-<!-- STAGE 4 -->
-<div class="view" id="view-stage4">
-  <div class="section-hdr">
-    <div><div class="section-title">Stage 4 — Secondary Market</div><div class="section-sub">Does the Manteco label sustain resale value over time?</div></div>
-  </div>
-  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);">
-    <div class="kpi kpi-green"><div class="kpi-label">Avg Manteco Residual%</div><div class="kpi-val" id="s4-res-m">—</div></div>
-    <div class="kpi"><div class="kpi-label">Avg Control Residual%</div><div class="kpi-val" id="s4-res-c">—</div></div>
-    <div class="kpi kpi-green"><div class="kpi-label">Residual Delta</div><div class="kpi-val" id="s4-delta">—</div></div>
-    <div class="kpi"><div class="kpi-label">Listings recorded</div><div class="kpi-val" id="s4-listings">0</div></div>
-  </div>
-  <div class="grid-2" style="margin-bottom:16px;">
-    <div class="card">
-      <div class="card-title">Residual value % by pair</div>
-      <div style="height:260px;"><canvas id="chart-s4"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Add resale listing</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-        <div class="form-field"><label>Pair ID</label><select id="s4-pair" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;background:var(--paper);color:var(--ink);font-family:var(--sans);"><option value="">Select...</option></select></div>
-        <div class="form-field"><label>Side</label><select id="s4-side" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;background:var(--paper);color:var(--ink);font-family:var(--sans);"><option value="M">Manteco</option><option value="C">Control</option></select></div>
-        <div class="form-field"><label>Original Retail ($)</label><input type="number" id="s4-retail" placeholder="e.g. 1035" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--mono);"></div>
-        <div class="form-field"><label>Resale Price ($)</label><input type="number" id="s4-resale" placeholder="e.g. 420" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--mono);"></div>
-        <div class="form-field"><label>Platform</label><select id="s4-platform" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;background:var(--paper);color:var(--ink);font-family:var(--sans);"><option>Vestiaire Collective</option><option>Grailed</option><option>eBay</option><option>Poshmark</option><option>The RealReal</option><option>Other</option></select></div>
-        <div class="form-field"><label>Garment Age (yrs)</label><input type="number" id="s4-age" placeholder="e.g. 2" step="0.5" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--mono);"></div>
-      </div>
-      <button class="btn btn-dark" onclick="addResaleListing()" style="width:100%;">Add listing</button>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">Resale listings</div>
-    <div class="pairs-table-wrap"><table class="pairs"><thead><tr><th>Pair</th><th>Side</th><th>Brand</th><th>Platform</th><th>Original ($)</th><th>Resale ($)</th><th>Residual %</th><th>Age</th><th></th></tr></thead><tbody id="s4-tbody"></tbody></table></div>
-  </div>
-</div>
-
-<!-- PAIRS -->
-<div class="view" id="view-pairs">
-  <div class="section-hdr">
-    <div><div class="section-title">Matched Pairs</div><div class="section-sub">Click any price cell to edit. Changes save automatically.</div></div>
-    <div style="display:flex;gap:10px;">
-      <button class="btn" onclick="addNewPair()">+ Add pair</button>
-      <button class="btn btn-dark" onclick="exportCSV()">&#8595; Export CSV</button>
-    </div>
+    <div><div class="section-title">Products Library</div><div class="section-sub">All scraped products &mdash; click any cell to edit &mdash; toggle M/C flag as needed</div></div>
+    <button class="btn btn-dark" onclick="exportProductsCSV()">&#8595; Export CSV</button>
   </div>
   <div class="toolbar">
-    <input type="text" id="pairs-search" placeholder="Search brand, product, tier..." oninput="renderPairsTable()">
-    <select id="pairs-filter-tier" onchange="renderPairsTable()" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--sans);">
-      <option value="">All tiers</option>
-      <option>Premium</option>
-      <option>Contemporary Premium</option>
-      <option>Contemporary</option>
-      <option>Fast Fashion Premium</option>
+    <input type="text" id="prod-search" placeholder="Search name, brand, fabric..." oninput="renderProducts()">
+    <select id="prod-filter-type" onchange="renderProducts()" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--sans);">
+      <option value="">All types</option>
+      <option value="manteco">Manteco only</option>
+      <option value="control">Control only</option>
+    </select>
+    <select id="prod-filter-paired" onchange="renderProducts()" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--sans);">
+      <option value="">All</option>
+      <option value="paired">Paired</option>
+      <option value="unpaired">Unpaired</option>
     </select>
   </div>
   <div class="card" style="padding:0;overflow:hidden;">
-    <div class="pairs-table-wrap">
-      <table class="pairs">
+    <div class="table-wrap">
+      <table class="t">
         <thead><tr>
-          <th>Pair</th><th>Brand / Tier</th><th>Cat</th>
-          <th style="background:#f0f8f0;">Manteco Product</th><th style="background:#f0f8f0;">M: Retail</th><th style="background:#f0f8f0;">M: Sale</th>
-          <th style="background:#eaf4fb;">Control Product</th><th style="background:#eaf4fb;">C: Retail</th><th style="background:#eaf4fb;">C: Sale</th>
-          <th>Retail &#916;%</th><th>MD &#916;%</th><th>Conf.</th><th style="min-width:130px;"></th>
+          <th>Type</th><th>Brand</th><th>Product</th><th>Retail</th><th>Sale</th>
+          <th>MD%</th><th>Fabric</th><th>Paired</th><th>Source</th><th></th>
         </tr></thead>
-        <tbody id="pairs-tbody"></tbody>
+        <tbody id="products-tbody"></tbody>
       </table>
     </div>
   </div>
-  <div style="font-size:11px;color:var(--amber);padding:8px 4px;">Click any price cell to edit &nbsp;&#183;&nbsp; All analysis views update automatically</div>
+  <div style="font-size:11px;color:var(--amber);padding:6px 2px;">Click any cell to edit &nbsp;&middot;&nbsp; Toggle M/C button to change type</div>
 </div>
 
-<!-- SCRAPER -->
-<div class="view" id="view-scraper">
+<!-- ═══ PAIR BUILDER ═══ -->
+<div class="view" id="view-pairs">
   <div class="section-hdr">
-    <div><div class="section-title">Data Collection</div><div class="section-sub">Scrape Manteco and Control URLs separately, then pair them up</div></div>
+    <div><div class="section-title">Pair Builder</div><div class="section-sub">Select Manteco products on the left and Control products on the right, then create pairs</div></div>
+    <button class="btn btn-dark" onclick="exportPairsCSV()">&#8595; Export pairs CSV</button>
   </div>
 
-  <!-- Server connection -->
-  <div class="card" style="margin-bottom:16px;">
-    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;">
-      <div>
-        <div class="field-label">Server URL</div>
-        <div class="server-row">
-          <input type="text" id="server-url" placeholder="https://your-app.up.railway.app">
-          <div class="status-dot" id="server-dot"></div>
-        </div>
-      </div>
-      <div>
-        <div class="field-label">Team password</div>
-        <input type="password" id="secret-key" placeholder="Enter team password" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-family:var(--mono);background:var(--paper);color:var(--ink);">
-      </div>
-      <button class="btn btn-dark" onclick="connectAndLoad()" style="white-space:nowrap;">Connect &amp; load</button>
+  <div class="pb-columns" style="margin-bottom:16px;">
+    <!-- Manteco column -->
+    <div>
+      <div class="pb-column-header pb-m-header">Manteco products &mdash; select to pair</div>
+      <div class="pb-product-list" id="pb-manteco-list"></div>
     </div>
-    <div style="font-size:10px;color:var(--ink3);margin-top:6px;" id="server-hint">Enter URL and password above</div>
-  </div>
-
-  <!-- Two-column scrape area -->
-  <div class="grid-2" style="margin-bottom:16px;">
-    <!-- Manteco URLs -->
-    <div class="card" style="border-top:3px solid var(--manteco);">
-      <div class="card-title" style="color:var(--manteco);">Manteco products</div>
-      <div class="field-label" style="margin-bottom:4px;">Paste Manteco product URLs</div>
-      <textarea class="url-box" id="url-input-m" placeholder="https://www.karenmillen.com/us/product/karen-millen-italian-manteco-wool...&#10;https://www.woolrich.com/us/en/coat-in-manteco...&#10;https://shop.mango.com/us/en/p/women/coats/manteco...&#10;&#10;One URL per line"></textarea>
-      <button class="scrape-btn" id="scrape-btn-m" onclick="startScrape('M')" style="margin-top:10px;background:var(--manteco);">Scrape Manteco URLs</button>
-    </div>
-
-    <!-- Control URLs -->
-    <div class="card" style="border-top:3px solid var(--control);">
-      <div class="card-title" style="color:var(--control);">Control products (non-Manteco)</div>
-      <div class="field-label" style="margin-bottom:4px;">Paste control product URLs</div>
-      <textarea class="url-box" id="url-input-c" placeholder="https://www.karenmillen.com/us/italian-wool-fitted-coat---/BKK06546.html&#10;https://www.woolrich.com/us/en/coat-in-recycled-italian-wool...&#10;https://shop.mango.com/us/en/p/women/coats/wool-coat...&#10;&#10;One URL per line"></textarea>
-      <button class="scrape-btn" id="scrape-btn-c" onclick="startScrape('C')" style="margin-top:10px;background:var(--control);">Scrape Control URLs</button>
+    <!-- Control column -->
+    <div>
+      <div class="pb-column-header pb-c-header">Control products &mdash; select to pair</div>
+      <div class="pb-product-list" id="pb-control-list"></div>
     </div>
   </div>
 
-  <!-- Progress -->
-  <div class="progress-wrap" id="progress-wrap" style="margin-bottom:16px;">
-    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-    <div class="progress-msg" id="progress-msg">Initializing...</div>
-  </div>
-
-  <!-- Results: Manteco + Control side by side, with pair builder -->
-  <div class="grid-2" style="margin-bottom:16px;">
-    <div class="card" style="border-top:3px solid var(--manteco);">
-      <div class="card-title" style="color:var(--manteco);">Scraped Manteco products</div>
-      <div id="results-m"><div class="empty"><div style="font-size:12px;color:var(--ink3);">Scrape Manteco URLs above</div></div></div>
-    </div>
-    <div class="card" style="border-top:3px solid var(--control);">
-      <div class="card-title" style="color:var(--control);">Scraped control products</div>
-      <div id="results-c"><div class="empty"><div style="font-size:12px;color:var(--ink3);">Scrape control URLs above</div></div></div>
-    </div>
-  </div>
-
-  <!-- Pair builder -->
-  <div class="card" id="pair-builder-card" style="display:none;margin-bottom:16px;">
-    <div class="card-title">Create matched pair</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;">
-      <div>
-        <div class="field-label" style="color:var(--manteco);margin-bottom:6px;">Manteco product</div>
-        <select id="pb-manteco" style="width:100%;padding:8px 10px;border:1px solid var(--manteco-m);border-radius:var(--radius);font-size:12px;background:var(--manteco-l);color:var(--ink);font-family:var(--sans);">
-          <option value="">Select scraped Manteco product...</option>
-        </select>
-      </div>
-      <div>
-        <div class="field-label" style="color:var(--control);margin-bottom:6px;">Control product</div>
-        <select id="pb-control" style="width:100%;padding:8px 10px;border:1px solid var(--control-m);border-radius:var(--radius);font-size:12px;background:var(--control-l);color:var(--ink);font-family:var(--sans);">
-          <option value="">Select scraped control product...</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+  <!-- Pair preview + metadata -->
+  <div class="pair-preview" id="pair-preview">
+    <div style="font-size:11px;font-weight:500;color:var(--ink2);margin-bottom:10px;">Selected for pairing:</div>
+    <div id="pair-preview-items"></div>
+    <div class="form-row" style="margin-top:14px;">
       <div class="form-field">
         <label>Brand</label>
-        <input type="text" id="pb-brand" placeholder="e.g. Karen Millen" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--sans);">
+        <input type="text" id="pb-brand" placeholder="e.g. Karen Millen">
       </div>
       <div class="form-field">
         <label>Market tier</label>
-        <select id="pb-tier" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;background:var(--paper);color:var(--ink);font-family:var(--sans);">
+        <select id="pb-tier">
           <option>Premium</option>
           <option>Contemporary Premium</option>
           <option selected>Contemporary</option>
@@ -542,132 +440,282 @@ textarea.url-box:focus{outline:none;border-color:var(--manteco)}
         </select>
       </div>
       <div class="form-field">
+        <label>Category</label>
+        <select id="pb-cat">
+          <option>Coat</option><option>Jacket</option><option>Blazer</option>
+          <option>Trousers</option><option>Suit</option><option>Knitwear</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-field">
         <label>Season</label>
-        <input type="text" id="pb-season" value="FW24" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--sans);">
+        <input type="text" id="pb-season" value="FW24">
       </div>
     </div>
-    <button class="btn btn-dark" onclick="createPair()" style="width:100%;padding:11px;font-size:13px;">Create matched pair &rarr; Add to analysis</button>
+    <button class="btn btn-primary" onclick="createPairs()" style="width:100%;padding:11px;font-size:13px;">Create pair(s) &rarr; Add to analysis</button>
   </div>
 
-  <!-- Log -->
-  <div class="card">
-    <div class="card-title">Scrape log</div>
-    <div id="scrape-log" style="max-height:180px;overflow-y:auto;"><div style="font-size:11px;color:var(--ink3);padding:4px 0;">Activity will appear here</div></div>
+  <!-- Existing pairs -->
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title">Existing pairs</div>
+    <div id="pairs-list"></div>
   </div>
 </div>
 
-<!-- ASSIGN CONTROL MODAL -->
-<div class="modal-overlay" id="control-modal">
+<!-- ═══ STAGE 2 ═══ -->
+<div class="view" id="view-stage2">
+  <div class="section-hdr">
+    <div><div class="section-title">Stage 2 &mdash; Market Entry</div><div class="section-sub">Does the Manteco label justify a higher retail price?</div></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--manteco)"></div>Manteco</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--control)"></div>Control</div>
+    </div>
+  </div>
+  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);">
+    <div class="kpi kpi-green"><div class="kpi-label">Avg Manteco Retail</div><div class="kpi-val" id="s2-avg-m">&mdash;</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Control Retail</div><div class="kpi-val" id="s2-avg-c">&mdash;</div></div>
+    <div class="kpi kpi-green"><div class="kpi-label">Avg Premium</div><div class="kpi-val" id="s2-premium">&mdash;</div></div>
+    <div class="kpi"><div class="kpi-label">Pairs &ge;10%</div><div class="kpi-val" id="s2-above10">&mdash;</div></div>
+  </div>
+  <div style="margin-bottom:16px;"><div class="card"><div class="card-title">Retail price by pair ($)</div><div style="height:240px;"><canvas id="chart-s2"></canvas></div></div></div>
+  <div class="card"><div class="card-title">Detail</div><div class="table-wrap"><table class="t"><thead><tr><th>Pair</th><th>Brand</th><th>Manteco product</th><th>M: Retail</th><th>Control product(s)</th><th>C: Retail (avg)</th><th>Premium $</th><th>Premium %</th></tr></thead><tbody id="s2-tbody"></tbody></table></div></div>
+</div>
+
+<!-- ═══ STAGE 3 ═══ -->
+<div class="view" id="view-stage3">
+  <div class="section-hdr">
+    <div><div class="section-title">Stage 3 &mdash; Markdown</div><div class="section-sub">Does the Manteco label reduce markdown depth?</div></div>
+  </div>
+  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);">
+    <div class="kpi kpi-green"><div class="kpi-label">Avg Manteco MD%</div><div class="kpi-val" id="s3-md-m">&mdash;</div></div>
+    <div class="kpi kpi-red"><div class="kpi-label">Avg Control MD%</div><div class="kpi-val" id="s3-md-c">&mdash;</div></div>
+    <div class="kpi kpi-green"><div class="kpi-label">MD Differential</div><div class="kpi-val" id="s3-delta">&mdash;</div></div>
+    <div class="kpi"><div class="kpi-label">Pairs with sale data</div><div class="kpi-val" id="s3-pairs">&mdash;</div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="card"><div class="card-title">Markdown % by pair</div><div style="height:240px;"><canvas id="chart-s3"></canvas></div></div>
+    <div class="card"><div class="card-title">Price waterfall</div><div id="s3-waterfall"></div></div>
+  </div>
+  <div class="card"><div class="card-title">Detail</div><div class="table-wrap"><table class="t"><thead><tr><th>Pair</th><th>Brand</th><th>M: Retail</th><th>M: Sale</th><th>M: MD%</th><th>C: Retail</th><th>C: Sale</th><th>C: MD%</th><th>&Delta;</th></tr></thead><tbody id="s3-tbody"></tbody></table></div></div>
+</div>
+
+<!-- ═══ STAGE 4 ═══ -->
+<div class="view" id="view-stage4">
+  <div class="section-hdr">
+    <div><div class="section-title">Stage 4 &mdash; Resale</div><div class="section-sub">Does the Manteco label sustain resale value?</div></div>
+  </div>
+  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);">
+    <div class="kpi kpi-green"><div class="kpi-label">Avg Manteco Residual</div><div class="kpi-val" id="s4-res-m">&mdash;</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Control Residual</div><div class="kpi-val" id="s4-res-c">&mdash;</div></div>
+    <div class="kpi kpi-green"><div class="kpi-label">Residual &Delta;</div><div class="kpi-val" id="s4-delta">&mdash;</div></div>
+    <div class="kpi"><div class="kpi-label">Listings</div><div class="kpi-val" id="s4-listings">0</div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="card"><div class="card-title">Residual % by pair</div><div style="height:240px;"><canvas id="chart-s4"></canvas></div></div>
+    <div class="card">
+      <div class="card-title">Add resale listing</div>
+      <div class="form-row">
+        <div class="form-field"><label>Pair</label><select id="s4-pair" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;background:var(--paper);color:var(--ink);font-family:var(--sans);"><option value="">Select...</option></select></div>
+        <div class="form-field"><label>Side</label><select id="s4-side" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;background:var(--paper);color:var(--ink);font-family:var(--sans);"><option value="M">Manteco</option><option value="C">Control</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Original Retail ($)</label><input type="number" id="s4-retail" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--mono);"></div>
+        <div class="form-field"><label>Resale Price ($)</label><input type="number" id="s4-resale" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--mono);"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Platform</label><select id="s4-platform" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;background:var(--paper);color:var(--ink);font-family:var(--sans);"><option>Vestiaire Collective</option><option>Grailed</option><option>eBay</option><option>Poshmark</option><option>The RealReal</option><option>Other</option></select></div>
+        <div class="form-field"><label>Age (yrs)</label><input type="number" id="s4-age" step="0.5" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--mono);"></div>
+      </div>
+      <button class="btn btn-dark" onclick="addResale()" style="width:100%;">Add listing</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">Resale listings</div><div class="table-wrap"><table class="t"><thead><tr><th>Pair</th><th>Side</th><th>Platform</th><th>Original ($)</th><th>Resale ($)</th><th>Residual %</th><th>Age</th><th></th></tr></thead><tbody id="s4-tbody"></tbody></table></div></div>
+</div>
+
+<!-- ═══ DATA COLLECTION ═══ -->
+<div class="view" id="view-scraper">
+  <div class="section-hdr">
+    <div><div class="section-title">Data Collection</div><div class="section-sub">Paste product URLs &mdash; Manteco is auto-detected, you can override</div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="card">
+      <div class="card-title">Add product URLs</div>
+      <div class="form-field" style="margin-bottom:12px;">
+        <label>URLs to scrape (one per line)</label>
+        <textarea class="url-textarea" id="url-input" placeholder="https://www.karenmillen.com/us/product/karen-millen-italian-manteco-wool...&#10;https://www.woolrich.com/us/en/coat-in-manteco-recycled-wool-blend...&#10;https://www.karenmillen.com/us/italian-wool-fitted-coat---/BKK06546.html&#10;&#10;Manteco vs control is auto-detected. You can override in the Products library."></textarea>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <button class="scrape-btn" id="scrape-btn" onclick="startScrape()">Scrape &amp; add to library</button>
+        <div style="font-size:11px;color:var(--ink3);">Auto-detects Manteco from page content</div>
+      </div>
+      <div id="progress-section" style="display:none;margin-top:10px;">
+        <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+        <div class="progress-msg" id="progress-msg"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Scrape log</div>
+      <div id="scrape-log" style="max-height:220px;overflow-y:auto;"><div style="font-size:11px;color:var(--ink3);padding:4px 0;">Activity will appear here</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Recently scraped</div>
+    <div id="recent-scraped"><div class="empty"><div class="empty-sub">No products scraped yet this session</div></div></div>
+  </div>
+</div>
+
+<!-- EDIT PRODUCT MODAL -->
+<div class="modal-overlay" id="edit-modal">
   <div class="modal">
     <div class="modal-header">
-      <div><div class="modal-title">Assign control item</div><div class="modal-subtitle" id="modal-pair-label">—</div></div>
-      <button class="modal-close" onclick="closeControlModal()">&#215;</button>
+      <div class="modal-title">Edit product</div>
+      <button class="modal-close" onclick="closeEditModal()">&#215;</button>
     </div>
     <div class="modal-body">
-      <div class="manteco-ref">
-        <div class="manteco-ref-label">Manteco item (reference)</div>
-        <div class="manteco-ref-name" id="modal-m-name">—</div>
-        <div class="manteco-ref-price" id="modal-m-price">—</div>
-      </div>
-      <div class="modal-tabs">
-        <div class="modal-tab active" id="mtab-scrape" onclick="switchModalTab('scrape')">Scrape from URL</div>
-        <div class="modal-tab" id="mtab-manual" onclick="switchModalTab('manual')">Enter manually</div>
-      </div>
-      <div class="modal-tab-pane active" id="mpane-scrape">
-        <div class="form-row full">
-          <div class="form-field"><label>Control product URL</label><input type="text" id="modal-c-url" placeholder="https://..."></div>
-        </div>
-        <button class="btn btn-dark" id="modal-scrape-btn" onclick="scrapeControlItem()" style="width:100%;">Scrape product</button>
-        <div class="scrape-preview" id="scrape-preview">
-          <div class="preview-row"><span class="preview-label">Name</span><span class="preview-val" id="prev-name">—</span></div>
-          <div class="preview-row"><span class="preview-label">Retail</span><span class="preview-val" id="prev-retail">—</span></div>
-          <div class="preview-row"><span class="preview-label">Sale</span><span class="preview-val" id="prev-sale">—</span></div>
-          <div class="preview-row"><span class="preview-label">Fabric</span><span class="preview-val" id="prev-fabric" style="font-family:var(--sans);font-size:11px;">—</span></div>
-          <div class="preview-row"><span class="preview-label">Manteco flag</span><span class="preview-val" id="prev-manteco">—</span></div>
+      <input type="hidden" id="edit-pid">
+      <div class="form-row full" style="margin-bottom:12px;">
+        <div class="form-field"><label>Type</label>
+          <div class="type-toggle" style="margin-top:4px;">
+            <button id="edit-type-m" onclick="setEditType('manteco')">Manteco</button>
+            <button id="edit-type-c" onclick="setEditType('control')">Control</button>
+          </div>
         </div>
       </div>
-      <div class="modal-tab-pane" id="mpane-manual">
-        <div class="form-row full"><div class="form-field"><label>Product name</label><input type="text" id="mc-name" placeholder="e.g. Italian Wool Fitted Coat"></div></div>
-        <div class="form-row">
-          <div class="form-field"><label>Retail price ($)</label><input type="number" id="mc-retail" placeholder="e.g. 350"></div>
-          <div class="form-field"><label>Sale price ($)</label><input type="number" id="mc-sale" placeholder="optional"></div>
-        </div>
-        <div class="form-row full"><div class="form-field"><label>Fabric composition</label><input type="text" id="mc-fabric" placeholder="e.g. 70% Wool, 20% Polyamide, 10% Cashmere"></div></div>
-        <div class="form-row full"><div class="form-field"><label>Product URL (optional)</label><input type="text" id="mc-url" placeholder="https://..."></div></div>
-        <div class="form-row full"><div class="form-field"><label>Matching rationale (notes)</label><textarea id="mc-notes" placeholder="e.g. Same brand, same silhouette, comparable wool content."></textarea></div></div>
+      <div class="form-row">
+        <div class="form-field"><label>Brand</label><input type="text" id="edit-brand"></div>
+        <div class="form-field"><label>Product name</label><input type="text" id="edit-name"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Retail price</label><input type="text" id="edit-retail" placeholder="e.g. $350"></div>
+        <div class="form-field"><label>Sale price</label><input type="text" id="edit-sale" placeholder="e.g. $210"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field"><label>Fabric composition</label><input type="text" id="edit-fabric" placeholder="e.g. 75% Wool, 25% Polyamide"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field"><label>Product URL</label><input type="text" id="edit-url"></div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeControlModal()">Cancel</button>
-      <button class="btn btn-dark" onclick="assignControl()">Assign as control</button>
+      <button class="btn" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditModal()">Save changes</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── DATA ──────────────────────────────────────────────────────────────────────
-var pairs = [];
+var RAILWAY_URL = 'https://manteco-dashboard-production.up.railway.app';
 
-var resaleListings = [];
-var scrapedProducts = [];
-var logs = [];
-var modalPairIdx = null;
-var scrapedControlData = null;
+// ── STATE ─────────────────────────────────────────────────────────────────────
+var products        = [];
+var pairs           = [];
+var resaleListings  = [];
+var serverVersion   = 0;
+var sessionLogs     = [];
+var recentScraped   = [];
+var pbSelectedM     = [];
+var pbSelectedC     = [];
+var editingType     = 'manteco';
 
-var QUICK_URLS = {
-  km1:"https://www.karenmillen.com/us/product/karen-millen-italian-manteco-wool-blend-high-neck-belted-midaxi-coat_bkk13810",
-  km2:"https://www.karenmillen.com/us/product/karen-millen-premium-italian-manteco-wool-double-breasted-tailored-midi-coat_bkk21774",
-  woolrich1:"https://www.woolrich.com/us/en/coat-in-manteco-recycled-wool-blend-CFWOOU0821MRUT3518_734.html",
-  mango:"https://shop.mango.com/us/en/p/men/coats/coats/manteco-wool-coat-with-lapels_77097782",
-  naadam:"https://naadam.co/products/luxe-wool-double-breasted-coat",
-  "24s":"https://www.24s.com/en-us/coat-in-manteco-recycled-wool-blend-woolrich_WOO4AB22"
-};
+// Charts
+var chartOverview=null, chartS2=null, chartS3=null, chartS4=null;
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function parsePx(s) {
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function px(s){
   if(s===null||s===undefined||s==='') return null;
-  var n = parseFloat(String(s).replace(/[^\d.]/g,''));
-  return isNaN(n)||n<=0 ? null : n;
+  var n=parseFloat(String(s).replace(/[^\d.]/g,''));
+  return isNaN(n)||n<=0?null:n;
 }
-function fmtUSD(v) {
-  if(v===null||v===undefined) return '&#x2014;';
-  return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+function usd(v){ if(v===null||v===undefined) return '&mdash;'; return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+function pct(v){ if(v===null||v===undefined||v==='') return '&mdash;'; return (v>=0?'+':'')+Math.round(v*100)+'%'; }
+function getKey()   { return localStorage.getItem('manteco_key')||''; }
+function authHdrs() { return {'Content-Type':'application/json','X-Secret-Key':getKey()}; }
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+async function doLogin(){
+  var pw  = document.getElementById('login-password').value.trim();
+  var err = document.getElementById('login-error');
+  var btn = document.querySelector('.login-btn');
+  if(!pw){ err.textContent='Enter the team password.'; return; }
+  btn.textContent='Connecting...'; btn.disabled=true;
+  document.getElementById('login-server').value = RAILWAY_URL;
+  try {
+    var res  = await fetch(RAILWAY_URL+'/health', {headers:{'X-Secret-Key':pw}, signal:AbortSignal.timeout(6000)});
+    var data = await res.json();
+    if(data.status==='ok'){
+      localStorage.setItem('manteco_key', pw);
+      err.textContent='';
+      document.getElementById('login-screen').classList.add('hidden');
+      await loadAllData();
+      startPolling();
+    } else {
+      err.textContent='Connection error. Try again.';
+    }
+  } catch(e){
+    if(e.message&&e.message.includes('401')) err.textContent='Incorrect password.';
+    else err.textContent='Cannot reach server. Check your connection.';
+  }
+  btn.textContent='Access dashboard →'; btn.disabled=false;
 }
-function fmtPct(v) {
-  if(v===null||v===undefined||v==='') return '&#x2014;';
-  return (v>=0?'+':'')+Math.round(v*100)+'%';
+
+function signOut(){
+  localStorage.removeItem('manteco_key');
+  products=[]; pairs=[]; resaleListings=[];
+  document.getElementById('login-password').value='';
+  document.getElementById('login-error').textContent='';
+  document.getElementById('login-screen').classList.remove('hidden');
 }
-function retailPremium(p) {
-  var m=parsePx(p.m_retail), c=parsePx(p.c_retail);
-  if(!m||!c) return null;
-  return (m-c)/c;
+
+// ── DATA LOADING ──────────────────────────────────────────────────────────────
+async function loadAllData(){
+  try {
+    var res  = await fetch(RAILWAY_URL+'/data');
+    var data = await res.json();
+    products       = data.products       || [];
+    pairs          = data.pairs          || [];
+    resaleListings = data.resale_listings|| [];
+    serverVersion  = data.version        || 0;
+    document.getElementById('sync-dot').classList.add('live');
+    document.getElementById('sync-label').textContent='live';
+    refreshAll();
+  } catch(e){
+    document.getElementById('sync-label').textContent='offline';
+  }
 }
-function mdPct(retail,sale) {
-  var r=parsePx(retail), s=parsePx(sale);
-  if(!r||!s||s>=r) return null;
-  return (r-s)/r;
+
+// ── LIVE POLLING ──────────────────────────────────────────────────────────────
+function startPolling(){
+  setInterval(async function(){
+    try {
+      var res  = await fetch(RAILWAY_URL+'/data?since_version='+serverVersion);
+      var data = await res.json();
+      if(data.up_to_date) return; // no changes
+      products       = data.products       || [];
+      pairs          = data.pairs          || [];
+      resaleListings = data.resale_listings|| [];
+      serverVersion  = data.version        || 0;
+      refreshAll();
+      document.getElementById('sync-dot').classList.add('live');
+      document.getElementById('sync-label').textContent='updated';
+      setTimeout(function(){ document.getElementById('sync-label').textContent='live'; }, 2000);
+    } catch(e){
+      document.getElementById('sync-dot').classList.remove('live');
+      document.getElementById('sync-label').textContent='offline';
+    }
+  }, 10000);
 }
-function confStatus(p) {
-  if(parsePx(p.m_retail)&&parsePx(p.c_retail)) return 'confirmed';
-  if(parsePx(p.m_retail)||parsePx(p.c_retail)) return 'partial';
-  return 'missing';
+
+// ── SERVER SAVE ───────────────────────────────────────────────────────────────
+function save(endpoint, method, body){
+  fetch(RAILWAY_URL+endpoint, {method:method, headers:authHdrs(), body:JSON.stringify(body)})
+    .then(function(r){ if(r.ok){ serverVersion++; }})
+    .catch(function(){});
 }
-function confBadge(c) {
-  if(c==='confirmed') return '<span class="badge badge-conf">Confirmed</span>';
-  if(c==='partial')   return '<span class="badge badge-est">Partial</span>';
-  return '<span class="badge badge-miss">Missing</span>';
-}
-function getServer() { return (document.getElementById('server-url').value||'').replace(/\/$/,''); }
-function getKey()    { return document.getElementById('secret-key').value||localStorage.getItem('manteco_key')||''; }
-function authHdrs()  { return {'Content-Type':'application/json','X-Secret-Key':getKey()}; }
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
-function showView(name) {
-  var views = ['overview','stage2','stage3','stage4','pairs','scraper'];
-  for(var i=0;i<views.length;i++) {
+function showView(name){
+  var views=['overview','products','pairs','stage2','stage3','stage4','scraper'];
+  for(var i=0;i<views.length;i++){
     document.getElementById('view-'+views[i]).classList.remove('active');
     document.getElementById('tab-'+views[i]).classList.remove('active');
   }
@@ -676,230 +724,509 @@ function showView(name) {
   refreshAll();
 }
 
-// ── SERVER ────────────────────────────────────────────────────────────────────
-async function checkServer() {
-  var dot  = document.getElementById('server-dot');
-  var hint = document.getElementById('server-hint');
-  var url  = getServer();
-  if(!url) { dot.className='status-dot'; hint.textContent='Enter server URL above'; return; }
-  try {
-    var res  = await fetch(url+'/health', {signal:AbortSignal.timeout(4000)});
-    var data = await res.json();
-    dot.className = 'status-dot dot-ok';
-    hint.textContent = data.api_key_set ? 'Connected \u2713' : 'Connected (no API key)';
-  } catch(e) {
-    dot.className = 'status-dot dot-err';
-    hint.textContent = 'Cannot reach server';
-  }
-}
-
-async function connectAndLoad() {
-  var url = getServer();
-  var key = getKey();
-  if(!url) { alert('Enter the Railway URL first.'); return; }
-  localStorage.setItem('manteco_server', url);
-  localStorage.setItem('manteco_key', key);
-  await checkServer();
-  try {
-    var res  = await fetch(url+'/data');
-    var data = await res.json();
-    if(data.pairs&&data.pairs.length)           pairs           = data.pairs;
-    if(data.resale_listings)                    resaleListings  = data.resale_listings;
-    if(data.scraped_products)                   scrapedProducts = data.scraped_products;
-    document.getElementById('server-hint').textContent = 'Loaded \u2013 '+pairs.length+' pairs';
-    refreshAll();
-  } catch(e) {
-    document.getElementById('server-hint').textContent = 'Load failed: '+e.message;
-  }
-}
-
-function saveToServer(endpoint, method, body) {
-  var url = getServer();
-  if(!url) return;
-  fetch(url+endpoint, {method:method, headers:authHdrs(), body:JSON.stringify(body)}).catch(function(){});
-}
-
-// ── EDITABLE CELLS ────────────────────────────────────────────────────────────
-function makeEditable(el, idx, field) {
-  var current = pairs[idx][field]!==null&&pairs[idx][field]!==undefined ? pairs[idx][field] : '';
-  var input = document.createElement('input');
-  input.className = 'cell-input';
-  input.value = current;
-  el.innerHTML = '';
-  el.appendChild(input);
-  input.focus();
-  input.select();
-  function save() {
-    var v   = input.value.trim();
-    var num = parseFloat(v.replace(/[^\d.]/g,''));
-    pairs[idx][field] = (!v||isNaN(num)) ? null : num;
-    saveToServer('/data/pairs/'+pairs[idx].id, 'PATCH', {[field]:pairs[idx][field]});
-    refreshAll();
-  }
-  input.onblur = save;
-  input.onkeydown = function(e) {
-    if(e.key==='Enter') { e.preventDefault(); save(); }
-    if(e.key==='Escape') refreshAll();
-  };
-}
-
 // ── REFRESH ───────────────────────────────────────────────────────────────────
-var chartRetail=null, chartS2=null, chartS3=null, chartS4=null;
-
-function refreshAll() {
-  updateTopStats();
+function refreshAll(){
+  updateTopBar();
   renderOverview();
+  renderProducts();
+  renderPairBuilder();
   renderS2();
   renderS3();
   renderS4();
-  renderPairsTable();
   populateSelects();
 }
 
-function updateTopStats() {
-  var prems = pairs.map(function(p){return retailPremium(p);}).filter(function(v){return v!==null;});
+function updateTopBar(){
+  document.getElementById('top-products').textContent = products.length;
+  document.getElementById('top-pairs').textContent    = pairs.length;
+  var prems = computeRetailPremiums();
   var avgP  = prems.length ? prems.reduce(function(a,b){return a+b;},0)/prems.length : null;
-  var conf  = pairs.filter(function(p){return parsePx(p.m_retail)&&parsePx(p.c_retail);}).length;
-  document.getElementById('top-pairs').textContent   = pairs.length;
-  document.getElementById('top-conf').textContent    = conf;
-  document.getElementById('top-premium').textContent = avgP!==null ? fmtPct(avgP) : '&#x2014;';
-  document.getElementById('kpi-pairs').textContent   = pairs.length;
-  document.getElementById('kpi-premium').textContent = avgP!==null ? fmtPct(avgP) : '&#x2014;';
-  var vm = document.getElementById('verdict-main');
-  var vs = document.getElementById('verdict-sub');
-  if(avgP===null)     { vm.className='verdict-val verdict-pending'; vm.textContent='Pending data'; vs.textContent='&#x2014;'; }
-  else if(avgP>=0.1)  { vm.className='verdict-val verdict-yes';     vm.textContent='SUPPORTED';    vs.textContent=fmtPct(avgP)+' avg premium'; }
-  else                { vm.className='verdict-val verdict-no';      vm.textContent='BELOW THRESHOLD'; vs.textContent=fmtPct(avgP)+' avg premium'; }
+  document.getElementById('top-premium').textContent  = avgP!==null ? pct(avgP) : '&mdash;';
+  document.getElementById('kpi-products').textContent = products.length;
+  document.getElementById('kpi-pairs').textContent    = pairs.length;
+  document.getElementById('kpi-premium').textContent  = avgP!==null ? pct(avgP) : '&mdash;';
+
+  var mds_m=[], mds_c=[];
+  pairs.forEach(function(pair){
+    var mp=getProduct(pair.manteco_id);
+    if(mp){ var v=mdPct(mp); if(v!==null) mds_m.push(v); }
+    (pair.control_ids||[]).forEach(function(cid){
+      var cp=getProduct(cid);
+      if(cp){ var v=mdPct(cp); if(v!==null) mds_c.push(v); }
+    });
+  });
+  var avgMm=mds_m.length?mds_m.reduce(function(a,b){return a+b;},0)/mds_m.length:null;
+  var avgMc=mds_c.length?mds_c.reduce(function(a,b){return a+b;},0)/mds_c.length:null;
+  document.getElementById('kpi-mddelta').textContent=(avgMm!==null&&avgMc!==null)?Math.round((avgMc-avgMm)*100)+'pp':'&mdash;';
+
+  var pts=0;
+  products.forEach(function(p){ if(px(p.price_retail)) pts++; if(px(p.price_sale)) pts++; });
+  document.getElementById('kpi-datapoints').textContent=pts+resaleListings.length;
+
+  // Verdict
+  var vm=document.getElementById('verdict-main'),vs=document.getElementById('verdict-sub');
+  if(avgP===null){vm.className='verdict-val verdict-pending';vm.innerHTML='Pending data';vs.innerHTML='&mdash;';}
+  else if(avgP>=0.1){vm.className='verdict-val verdict-yes';vm.textContent='SUPPORTED';vs.textContent=pct(avgP)+' avg premium';}
+  else{vm.className='verdict-val verdict-no';vm.textContent='BELOW THRESHOLD';vs.textContent=pct(avgP)+' avg premium';}
 }
 
-// ── OVERVIEW ──────────────────────────────────────────────────────────────────
-function renderOverview() {
-  // Completeness
-  var grid = document.getElementById('completeness-grid');
-  if(!pairs.length) { grid.innerHTML='<div class="empty"><div class="empty-title">No pairs yet</div></div>'; return; }
-  var html = '';
-  for(var i=0;i<pairs.length;i++) {
-    var p = pairs[i];
-    var d = [parsePx(p.m_retail)?'ok':'miss', parsePx(p.c_retail)?'ok':'miss',
-             parsePx(p.m_sale)?'ok':'miss',   parsePx(p.c_sale)?'ok':'miss',
-             resaleListings.filter(function(r){return r.pairId===p.id&&r.side==='M';}).length?'ok':'miss',
-             resaleListings.filter(function(r){return r.pairId===p.id&&r.side==='C';}).length?'ok':'miss'];
-    var dots=''; for(var di=0;di<d.length;di++) dots+='<div class="comp-dot dot-'+d[di]+'"></div>';
-    html += '<div class="comp-cell"><div class="comp-pair">'+esc(p.id)+'</div><div class="comp-brand">'+esc(p.brand.split(' ')[0])+'</div><div class="comp-dots">'+dots+'</div></div>';
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function getProduct(id){ for(var i=0;i<products.length;i++) if(products[i].id===id) return products[i]; return null; }
+function mdPct(p){ var r=px(p.price_retail),s=px(p.price_sale); if(!r||!s||s>=r) return null; return (r-s)/r; }
+function isPaired(pid){
+  for(var i=0;i<pairs.length;i++){
+    if(pairs[i].manteco_id===pid) return true;
+    if((pairs[i].control_ids||[]).indexOf(pid)>-1) return true;
   }
-  grid.innerHTML = html;
-
-  // MD delta KPI
-  var mds_m = pairs.map(function(p){return mdPct(p.m_retail,p.m_sale);}).filter(function(v){return v!==null;});
-  var mds_c = pairs.map(function(p){return mdPct(p.c_retail,p.c_sale);}).filter(function(v){return v!==null;});
-  var avg_md_m = mds_m.length ? mds_m.reduce(function(a,b){return a+b;},0)/mds_m.length : null;
-  var avg_md_c = mds_c.length ? mds_c.reduce(function(a,b){return a+b;},0)/mds_c.length : null;
-  document.getElementById('kpi-mddelta').textContent = (avg_md_m!==null&&avg_md_c!==null) ? fmtPct(avg_md_c-avg_md_m) : '&#x2014;';
-
-  // Resale delta KPI
-  var rm = resaleListings.filter(function(r){return r.side==='M';}).map(function(r){return r.resale/r.retail;});
-  var rc = resaleListings.filter(function(r){return r.side==='C';}).map(function(r){return r.resale/r.retail;});
-  var avgRm = rm.length ? rm.reduce(function(a,b){return a+b;},0)/rm.length : null;
-  var avgRc = rc.length ? rc.reduce(function(a,b){return a+b;},0)/rc.length : null;
-  document.getElementById('kpi-resdelta').textContent = (avgRm!==null&&avgRc!==null) ? fmtPct(avgRm-avgRc) : '&#x2014;';
-
-  // Confirmed count
-  var pts = 0;
-  for(var ci=0;ci<pairs.length;ci++) {
-    if(parsePx(pairs[ci].m_retail)) pts++;
-    if(parsePx(pairs[ci].c_retail)) pts++;
-    if(parsePx(pairs[ci].m_sale))   pts++;
-    if(parsePx(pairs[ci].c_sale))   pts++;
-  }
-  document.getElementById('kpi-complete').textContent = pts + resaleListings.length;
-
-  // Chart
-  var wp = pairs.filter(function(p){return parsePx(p.m_retail)||parsePx(p.c_retail);});
-  if(!wp.length) return;
-  var ctx = document.getElementById('chart-retail-overview').getContext('2d');
-  if(chartRetail) chartRetail.destroy();
-  chartRetail = new Chart(ctx, {
-    type:'bar',
-    data:{labels:wp.map(function(p){return p.id;}),datasets:[
-      {label:'Manteco',data:wp.map(function(p){return parsePx(p.m_retail);}),backgroundColor:'#2d5a3d',borderRadius:3},
-      {label:'Control', data:wp.map(function(p){return parsePx(p.c_retail);}),backgroundColor:'#1a3a5c',borderRadius:3}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:function(v){return '$'+v.toLocaleString();}}}}}
+  return false;
+}
+function computeRetailPremiums(){
+  var prems=[];
+  pairs.forEach(function(pair){
+    var mp=getProduct(pair.manteco_id);
+    if(!mp||!px(mp.price_retail)) return;
+    var cRetails=(pair.control_ids||[]).map(function(cid){var cp=getProduct(cid);return cp?px(cp.price_retail):null;}).filter(Boolean);
+    if(!cRetails.length) return;
+    var avgC=cRetails.reduce(function(a,b){return a+b;},0)/cRetails.length;
+    prems.push((px(mp.price_retail)-avgC)/avgC);
   });
+  return prems;
+}
+
+// ── OVERVIEW ─────────────────────────────────────────────────────────────────
+function renderOverview(){
+  var mProds = products.filter(function(p){return p.type==='manteco';});
+  var cProds = products.filter(function(p){return p.type==='control';});
+  var unpaired = products.filter(function(p){return !isPaired(p.id);});
+  var mWithPrice = mProds.filter(function(p){return px(p.price_retail);});
+  var cWithPrice = cProds.filter(function(p){return px(p.price_retail);});
+  var detected = products.filter(function(p){return p.manteco;});
+
+  // Library stats (always shown)
+  document.getElementById('ov-count-m').textContent    = mProds.length;
+  document.getElementById('ov-count-c').textContent    = cProds.length;
+  document.getElementById('ov-count-unpaired').textContent = unpaired.length;
+  document.getElementById('ov-detected-m').textContent    = detected.length;
+  document.getElementById('ov-detected-none').textContent = products.length - detected.length;
+
+  // Avg retail from library
+  var avgMr = mWithPrice.length ? mWithPrice.map(function(p){return px(p.price_retail);}).reduce(function(a,b){return a+b;},0)/mWithPrice.length : null;
+  var avgCr = cWithPrice.length ? cWithPrice.map(function(p){return px(p.price_retail);}).reduce(function(a,b){return a+b;},0)/cWithPrice.length : null;
+  document.getElementById('ov-avg-retail-m').innerHTML = avgMr ? usd(avgMr) : '&mdash;';
+  document.getElementById('ov-avg-retail-c').innerHTML = avgCr ? usd(avgCr) : '&mdash;';
+
+  // Raw premium from library (before pairing)
+  var rawPremEl = document.getElementById('ov-raw-premium');
+  if(avgMr && avgCr) {
+    var rawPrem = (avgMr - avgCr) / avgCr;
+    rawPremEl.innerHTML = 'Unmatched avg premium: <strong style="color:'+(rawPrem>=0?'var(--manteco)':'var(--red)')+';">'+pct(rawPrem)+'</strong> &nbsp;&middot;&nbsp; Pair products for rigorous analysis';
+  } else if(!products.length) {
+    rawPremEl.textContent = 'Scrape product URLs to start building your dataset';
+  } else {
+    rawPremEl.textContent = 'Pair products to see premium analysis';
+  }
+
+  // Next step guidance
+  var nextEl = document.getElementById('ov-next-step');
+  if(!products.length) {
+    nextEl.innerHTML = '&#8594; Go to <strong>Data Collection</strong> to scrape your first product URLs';
+  } else if(!pairs.length) {
+    nextEl.innerHTML = '&#8594; Go to <strong>Pair Builder</strong> to match Manteco products with controls';
+  } else if(unpaired.length > 0) {
+    nextEl.innerHTML = '&#8594; <strong>'+unpaired.length+' products</strong> still unpaired &mdash; go to Pair Builder';
+  } else {
+    nextEl.innerHTML = '&#10003; All products paired &mdash; check Stage 2, 3 &amp; 4 for analysis';
+    nextEl.style.background = 'var(--manteco-l)';
+    nextEl.style.color = 'var(--manteco)';
+  }
+
+  // Completeness grid (pairs view)
+  var grid = document.getElementById('completeness-grid');
+  var rightTitle = document.getElementById('overview-right-title');
+  if(!pairs.length) {
+    grid.innerHTML='<div class="empty" style="grid-column:1/-1;padding:16px;"><div class="empty-sub">Create pairs in Pair Builder to see completeness</div></div>';
+  } else {
+    rightTitle.textContent = 'Data completeness by pair';
+    var h='';
+    pairs.forEach(function(pair){
+      var mp=getProduct(pair.manteco_id);
+      var cps=(pair.control_ids||[]).map(function(cid){return getProduct(cid);}).filter(Boolean);
+      var dots=[
+        mp&&px(mp.price_retail)?'ok':'miss',
+        mp&&px(mp.price_sale)?'ok':'miss',
+        cps.length&&px(cps[0].price_retail)?'ok':'miss',
+        cps.length&&px(cps[0].price_sale)?'ok':'miss',
+        resaleListings.filter(function(r){return r.pairId===pair.id&&r.side==='M';}).length?'ok':'miss',
+        resaleListings.filter(function(r){return r.pairId===pair.id&&r.side==='C';}).length?'ok':'miss',
+      ];
+      var ds=''; dots.forEach(function(d){ds+='<div class="comp-dot dot-'+d+'"></div>';});
+      h+='<div class="comp-cell"><div class="comp-pair">'+esc(pair.id)+'</div><div class="comp-brand">'+esc((pair.brand||'?').split(' ')[0])+'</div><div class="comp-dots">'+ds+'</div></div>';
+    });
+    grid.innerHTML=h;
+  }
+
+  // Chart — show all products if no pairs, show pairs if available
+  var ctx = document.getElementById('chart-overview').getContext('2d');
+  if(chartOverview) chartOverview.destroy();
+  var chartTitle = document.getElementById('overview-chart-title');
+
+  if(pairs.length) {
+    // Pairs chart
+    chartTitle.textContent = 'Retail price by pair &mdash; Manteco vs Control';
+    var wp = pairs.filter(function(pair){var mp=getProduct(pair.manteco_id);return mp&&px(mp.price_retail);});
+    if(!wp.length) return;
+    chartOverview=new Chart(ctx,{type:'bar',
+      data:{labels:wp.map(function(p){return p.id;}),datasets:[
+        {label:'Manteco',data:wp.map(function(pair){var mp=getProduct(pair.manteco_id);return mp?px(mp.price_retail):null;}),backgroundColor:'rgba(45,90,61,0.85)',borderRadius:4},
+        {label:'Control',data:wp.map(function(pair){
+          var cps=(pair.control_ids||[]).map(function(cid){var cp=getProduct(cid);return cp?px(cp.price_retail):null;}).filter(Boolean);
+          return cps.length?cps.reduce(function(a,b){return a+b;},0)/cps.length:null;
+        }),backgroundColor:'rgba(26,58,92,0.75)',borderRadius:4}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:11}}}},
+        scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:function(v){return '$'+v.toLocaleString();}}}}}
+    });
+  } else if(products.filter(function(p){return px(p.price_retail);}).length) {
+    // All products chart (pre-pairing)
+    chartTitle.innerHTML = 'Retail prices &mdash; all products (unpaired)';
+    var allWithPrice = products.filter(function(p){return px(p.price_retail);});
+    chartOverview=new Chart(ctx,{type:'bar',
+      data:{
+        labels:allWithPrice.map(function(p){return (p.brand||'?').split(' ')[0];}),
+        datasets:[{
+          label:'Retail price',
+          data:allWithPrice.map(function(p){return px(p.price_retail);}),
+          backgroundColor:allWithPrice.map(function(p){return p.type==='manteco'?'rgba(45,90,61,0.85)':'rgba(26,58,92,0.75)';}),
+          borderRadius:4
+        }]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:function(ctx){var p=allWithPrice[ctx.dataIndex];return (p.type==='manteco'?'Manteco':'Control')+': $'+ctx.parsed.y.toLocaleString();}}}},
+        scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{callback:function(v){return '$'+v.toLocaleString();}}}}}
+    });
+  }
+}
+
+// ── PRODUCTS LIBRARY ──────────────────────────────────────────────────────────
+function renderProducts(){
+  var q    =document.getElementById('prod-search').value.toLowerCase();
+  var type =document.getElementById('prod-filter-type').value;
+  var pairedF=document.getElementById('prod-filter-paired').value;
+  var tbody=document.getElementById('products-tbody');
+  var rows='';
+  var count=0;
+  products.forEach(function(p,i){
+    if(q&&(p.name+' '+p.brand+' '+(p.fabric||'')).toLowerCase().indexOf(q)===-1) return;
+    if(type&&p.type!==type) return;
+    var paired=isPaired(p.id);
+    if(pairedF==='paired'&&!paired) return;
+    if(pairedF==='unpaired'&&paired) return;
+    count++;
+    var md=mdPct(p);
+    rows+='<tr>';
+    rows+='<td><div class="type-toggle"><button class="'+(p.type==='manteco'?'active-m':'')+'" onclick="quickToggleType(''+p.id+'','manteco')">M</button><button class="'+(p.type==='control'?'active-c':'')+'" onclick="quickToggleType(''+p.id+'','control')">C</button></div></td>';
+    rows+='<td class="t-brand editable" onclick="openEditModal(''+p.id+'')">'+esc(p.brand||'&mdash;')+'</td>';
+    rows+='<td><div class="t-name editable" title="'+esc(p.name||'')+'" onclick="openEditModal(''+p.id+'')">'+esc(p.name||'&mdash;')+'</div></td>';
+    rows+='<td class="t-price editable" onclick="openEditModal(''+p.id+'')">'+esc(p.price_retail||'&mdash;')+'</td>';
+    rows+='<td class="t-sale editable" onclick="openEditModal(''+p.id+'')">'+esc(p.price_sale||'&mdash;')+'</td>';
+    rows+='<td style="font-family:var(--mono);font-size:11px;">'+(md!==null?Math.round(md*100)+'%':'&mdash;')+'</td>';
+    rows+='<td style="font-size:11px;color:var(--ink3);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(p.fabric||'&mdash;')+'</td>';
+    rows+='<td>'+(paired?'<span class="badge badge-conf">Paired</span>':'<span class="badge badge-miss">Unpaired</span>')+'</td>';
+    rows+='<td><a href="'+esc(p.url||'#')+'" target="_blank" style="font-size:10px;color:var(--control);font-family:var(--mono);">'+(p.url?(p.url.replace(/https?:\/\/(www\.)?/,'').slice(0,22)+'...'):'&mdash;')+'</a></td>';
+    rows+='<td style="display:flex;gap:4px;"><button onclick="openEditModal(''+p.id+'')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--ink3);">&#9998;</button><button onclick="deleteProduct(''+p.id+'')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--red);">&#10005;</button></td>';
+    rows+='</tr>';
+  });
+  if(!count) rows='<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--ink3);">'+(products.length?'No products match filters':'No products yet &mdash; scrape URLs in Data Collection')+'</td></tr>';
+  tbody.innerHTML=rows;
+}
+
+function quickToggleType(pid, newType){
+  var p=getProduct(pid); if(!p) return;
+  p.type=newType;
+  save('/data/products/'+pid,'PATCH',{type:newType});
+  renderProducts(); renderPairBuilder();
+}
+
+function deleteProduct(pid){
+  if(!confirm('Delete this product? It will be removed from any pairs.')) return;
+  products=products.filter(function(p){return p.id!==pid;});
+  save('/data/products/'+pid,'DELETE',{});
+  refreshAll();
+}
+
+// ── EDIT MODAL ────────────────────────────────────────────────────────────────
+function openEditModal(pid){
+  var p=getProduct(pid); if(!p) return;
+  document.getElementById('edit-pid').value    = pid;
+  document.getElementById('edit-brand').value  = p.brand||'';
+  document.getElementById('edit-name').value   = p.name||'';
+  document.getElementById('edit-retail').value = p.price_retail||'';
+  document.getElementById('edit-sale').value   = p.price_sale||'';
+  document.getElementById('edit-fabric').value = p.fabric||'';
+  document.getElementById('edit-url').value    = p.url||'';
+  setEditType(p.type||'manteco');
+  document.getElementById('edit-modal').className='modal-overlay open';
+}
+function closeEditModal(){ document.getElementById('edit-modal').className='modal-overlay'; }
+function setEditType(type){
+  editingType=type;
+  document.getElementById('edit-type-m').className=type==='manteco'?'active-m':'';
+  document.getElementById('edit-type-c').className=type==='control'?'active-c':'';
+}
+function saveEditModal(){
+  var pid    =document.getElementById('edit-pid').value;
+  var updates={
+    brand:       document.getElementById('edit-brand').value.trim(),
+    name:        document.getElementById('edit-name').value.trim(),
+    price_retail:document.getElementById('edit-retail').value.trim()||null,
+    price_sale:  document.getElementById('edit-sale').value.trim()||null,
+    fabric:      document.getElementById('edit-fabric').value.trim()||null,
+    url:         document.getElementById('edit-url').value.trim()||null,
+    type:        editingType,
+  };
+  var p=getProduct(pid); if(p) Object.assign(p,updates);
+  save('/data/products/'+pid,'PATCH',updates);
+  closeEditModal();
+  refreshAll();
+}
+document.getElementById('edit-modal').onclick=function(e){if(e.target===this)closeEditModal();};
+
+// ── PAIR BUILDER ──────────────────────────────────────────────────────────────
+function renderPairBuilder(){
+  var mList=document.getElementById('pb-manteco-list');
+  var cList=document.getElementById('pb-control-list');
+  var mProds=products.filter(function(p){return p.type==='manteco';});
+  var cProds=products.filter(function(p){return p.type==='control';});
+
+  if(!mProds.length){mList.innerHTML='<div class="empty" style="padding:20px;"><div class="empty-sub">No Manteco products yet</div></div>';}
+  else {
+    var h='';
+    mProds.forEach(function(p){
+      var sel=pbSelectedM.indexOf(p.id)>-1;
+      var paired=isPaired(p.id);
+      h+='<div class="pb-product-card'+(sel?' selected-m':'')+'" onclick="togglePbSelect('M',''+p.id+'');">';
+      h+='<div class="pb-product-name">'+esc(p.name||'Unknown product')+'</div>';
+      h+='<div class="pb-product-meta">'+esc(p.brand||'?')+(p.price_retail?' &middot; '+esc(p.price_retail):'')+' &middot; '+(paired?'<span style="color:var(--manteco);">paired</span>':'<span style="color:var(--ink3);">unpaired</span>')+'</div>';
+      h+='</div>';
+    });
+    mList.innerHTML=h;
+  }
+
+  if(!cProds.length){cList.innerHTML='<div class="empty" style="padding:20px;"><div class="empty-sub">No control products yet</div></div>';}
+  else {
+    var h='';
+    cProds.forEach(function(p){
+      var sel=pbSelectedC.indexOf(p.id)>-1;
+      var paired=isPaired(p.id);
+      h+='<div class="pb-product-card'+(sel?' selected-c':'')+'" onclick="togglePbSelect('C',''+p.id+'');">';
+      h+='<div class="pb-product-name">'+esc(p.name||'Unknown product')+'</div>';
+      h+='<div class="pb-product-meta">'+esc(p.brand||'?')+(p.price_retail?' &middot; '+esc(p.price_retail):'')+' &middot; '+(paired?'<span style="color:var(--control);">paired</span>':'<span style="color:var(--ink3);">unpaired</span>')+'</div>';
+      h+='</div>';
+    });
+    cList.innerHTML=h;
+  }
+
+  updatePairPreview();
+
+  // Existing pairs
+  var pairsList=document.getElementById('pairs-list');
+  if(!pairs.length){pairsList.innerHTML='<div class="empty" style="padding:20px;"><div class="empty-sub">No pairs created yet</div></div>';return;}
+  var ph='<div class="table-wrap"><table class="t"><thead><tr><th>ID</th><th>Brand</th><th>Tier</th><th>Manteco product</th><th>Control product(s)</th><th>Retail &Delta;%</th><th></th></tr></thead><tbody>';
+  pairs.forEach(function(pair){
+    var mp=getProduct(pair.manteco_id);
+    var cps=(pair.control_ids||[]).map(function(cid){return getProduct(cid);}).filter(Boolean);
+    var cRetails=cps.map(function(cp){return px(cp.price_retail);}).filter(Boolean);
+    var avgC=cRetails.length?cRetails.reduce(function(a,b){return a+b;},0)/cRetails.length:null;
+    var mRet=mp?px(mp.price_retail):null;
+    var prem=(mRet&&avgC)?(mRet-avgC)/avgC:null;
+    var pc=prem!==null?(prem>=0.1?'delta-pos':prem>0?'delta-neu':'delta-neg'):'delta-neu';
+    ph+='<tr>';
+    ph+='<td class="t-id">'+esc(pair.id)+'</td>';
+    ph+='<td class="t-brand">'+esc(pair.brand||'?')+'</td>';
+    ph+='<td style="font-size:10px;color:var(--ink3);">'+esc(pair.tier||'?')+'</td>';
+    ph+='<td><div class="t-name" style="color:var(--manteco);" title="'+(mp?esc(mp.name||''):'')+'">'+esc(mp?mp.name||'?':'Deleted product')+'</div></td>';
+    ph+='<td><div style="font-size:11px;color:var(--control);">'+(cps.length?cps.map(function(cp){return esc(cp.name||'?');}).join('<br>'):esc('No controls'))+'</div></td>';
+    ph+='<td class="'+pc+'">'+pct(prem)+'</td>';
+    ph+='<td><button onclick="deletePair(''+pair.id+'')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--red);">&#10005;</button></td>';
+    ph+='</tr>';
+  });
+  ph+='</tbody></table></div>';
+  pairsList.innerHTML=ph;
+}
+
+function togglePbSelect(side, pid){
+  var arr=side==='M'?pbSelectedM:pbSelectedC;
+  var idx=arr.indexOf(pid);
+  if(idx>-1) arr.splice(idx,1);
+  else arr.push(pid);
+  renderPairBuilder();
+}
+
+function updatePairPreview(){
+  var preview=document.getElementById('pair-preview');
+  if(!pbSelectedM.length&&!pbSelectedC.length){preview.className='pair-preview';return;}
+  preview.className='pair-preview show';
+  var h='';
+  // Show each Manteco x each Control combo
+  if(pbSelectedM.length&&pbSelectedC.length){
+    pbSelectedM.forEach(function(mid){
+      var mp=getProduct(mid); if(!mp) return;
+      h+='<div class="pair-preview-row">';
+      h+='<div class="pair-preview-m"><strong>M:</strong> '+esc(mp.brand||'?')+' &mdash; '+esc((mp.name||'?').slice(0,40))+(mp.price_retail?' ('+esc(mp.price_retail)+')':'')+'</div>';
+      h+='<div class="pair-preview-vs">&#8596;</div>';
+      h+='<div class="pair-preview-c">';
+      pbSelectedC.forEach(function(cid,ci){
+        var cp=getProduct(cid); if(!cp) return;
+        if(ci>0) h+='<br>';
+        h+='<strong>C'+( pbSelectedC.length>1?(ci+1):'' )+':</strong> '+esc(cp.brand||'?')+' &mdash; '+esc((cp.name||'?').slice(0,35))+(cp.price_retail?' ('+esc(cp.price_retail)+')':'');
+      });
+      h+='</div></div>';
+    });
+    // Auto-fill brand from first Manteco
+    var mp0=getProduct(pbSelectedM[0]);
+    if(mp0&&!document.getElementById('pb-brand').value) document.getElementById('pb-brand').value=mp0.brand||'';
+  } else {
+    h='<div style="font-size:11px;color:var(--ink3);">Select at least one Manteco product and one control product to create a pair.</div>';
+    preview.querySelector('button')&&(preview.querySelector('button').style.display='none');
+  }
+  document.getElementById('pair-preview-items').innerHTML=h;
+  if(preview.querySelector('.btn-primary')) preview.querySelector('.btn-primary').style.display=(pbSelectedM.length&&pbSelectedC.length)?'':'none';
+}
+
+function createPairs(){
+  if(!pbSelectedM.length||!pbSelectedC.length){alert('Select at least one Manteco and one Control product.');return;}
+  var brand =document.getElementById('pb-brand').value.trim();
+  var tier  =document.getElementById('pb-tier').value;
+  var cat   =document.getElementById('pb-cat').value;
+  var season=document.getElementById('pb-season').value.trim();
+  if(!brand){alert('Enter a brand name.');return;}
+
+  // Create one pair per Manteco product, each with all selected controls
+  pbSelectedM.forEach(function(mid){
+    var nextNum=pairs.length+1;
+    var id='P'+(nextNum<10?'0':'')+nextNum;
+    var newPair={
+      id:id, brand:brand, tier:tier, cat:cat, season:season,
+      manteco_id:mid,
+      control_ids:pbSelectedC.slice(),
+      created_at:new Date().toISOString()
+    };
+    pairs.push(newPair);
+    save('/data/pairs','POST',newPair);
+  });
+
+  pbSelectedM=[]; pbSelectedC=[];
+  document.getElementById('pb-brand').value='';
+  refreshAll();
+  showView('pairs');
+}
+
+function deletePair(pid){
+  if(!confirm('Delete this pair?')) return;
+  pairs=pairs.filter(function(p){return p.id!==pid;});
+  save('/data/pairs/'+pid,'DELETE',{});
+  refreshAll();
 }
 
 // ── STAGE 2 ───────────────────────────────────────────────────────────────────
-function renderS2() {
-  var prems   = pairs.map(function(p){return retailPremium(p);}).filter(function(v){return v!==null;});
-  var mRets   = pairs.map(function(p){return parsePx(p.m_retail);}).filter(Boolean);
-  var cRets   = pairs.map(function(p){return parsePx(p.c_retail);}).filter(Boolean);
-  var avgM    = mRets.length ? mRets.reduce(function(a,b){return a+b;},0)/mRets.length : null;
-  var avgC    = cRets.length ? cRets.reduce(function(a,b){return a+b;},0)/cRets.length : null;
-  var avgP    = prems.length ? prems.reduce(function(a,b){return a+b;},0)/prems.length : null;
-  var above10 = prems.filter(function(v){return v>=0.1;}).length;
-  document.getElementById('s2-avg-m').textContent   = avgM!==null ? fmtUSD(avgM) : '&#x2014;';
-  document.getElementById('s2-avg-c').textContent   = avgC!==null ? fmtUSD(avgC) : '&#x2014;';
-  document.getElementById('s2-premium').textContent = avgP!==null ? fmtPct(avgP) : '&#x2014;';
-  document.getElementById('s2-pairs-10').textContent= prems.length ? above10+' / '+prems.length : '&#x2014;';
+function renderS2(){
+  var mRets=[], cRets=[], prems=[];
+  pairs.forEach(function(pair){
+    var mp=getProduct(pair.manteco_id); if(!mp||!px(mp.price_retail)) return;
+    var cps=(pair.control_ids||[]).map(function(cid){return getProduct(cid);}).filter(Boolean);
+    var cRetails=cps.map(function(cp){return px(cp.price_retail);}).filter(Boolean);
+    if(!cRetails.length) return;
+    mRets.push(px(mp.price_retail));
+    var avgC=cRetails.reduce(function(a,b){return a+b;},0)/cRetails.length;
+    cRets.push(avgC);
+    prems.push((px(mp.price_retail)-avgC)/avgC);
+  });
+  var avgM=mRets.length?mRets.reduce(function(a,b){return a+b;},0)/mRets.length:null;
+  var avgC=cRets.length?cRets.reduce(function(a,b){return a+b;},0)/cRets.length:null;
+  var avgP=prems.length?prems.reduce(function(a,b){return a+b;},0)/prems.length:null;
+  var above10=prems.filter(function(v){return v>=0.1;}).length;
+  document.getElementById('s2-avg-m').innerHTML  =avgM!==null?usd(avgM):'&mdash;';
+  document.getElementById('s2-avg-c').innerHTML  =avgC!==null?usd(avgC):'&mdash;';
+  document.getElementById('s2-premium').innerHTML=avgP!==null?pct(avgP):'&mdash;';
+  document.getElementById('s2-above10').textContent=prems.length?above10+' / '+prems.length:'&mdash;';
 
-  var wp = pairs.filter(function(p){return parsePx(p.m_retail)||parsePx(p.c_retail);});
-  if(wp.length) {
-    var ctx = document.getElementById('chart-s2-bars').getContext('2d');
+  var wp=pairs.filter(function(pair){var mp=getProduct(pair.manteco_id);return mp&&px(mp.price_retail);});
+  if(wp.length){
+    var ctx=document.getElementById('chart-s2').getContext('2d');
     if(chartS2) chartS2.destroy();
-    chartS2 = new Chart(ctx,{type:'bar',
+    chartS2=new Chart(ctx,{type:'bar',
       data:{labels:wp.map(function(p){return p.id;}),datasets:[
-        {label:'Manteco',data:wp.map(function(p){return parsePx(p.m_retail);}),backgroundColor:'rgba(45,90,61,0.85)',borderRadius:4},
-        {label:'Control', data:wp.map(function(p){return parsePx(p.c_retail);}),backgroundColor:'rgba(26,58,92,0.75)',borderRadius:4}
+        {label:'Manteco',data:wp.map(function(pair){var mp=getProduct(pair.manteco_id);return mp?px(mp.price_retail):null;}),backgroundColor:'rgba(45,90,61,0.85)',borderRadius:4},
+        {label:'Control',data:wp.map(function(pair){
+          var cps=(pair.control_ids||[]).map(function(cid){var cp=getProduct(cid);return cp?px(cp.price_retail):null;}).filter(Boolean);
+          return cps.length?cps.reduce(function(a,b){return a+b;},0)/cps.length:null;
+        }),backgroundColor:'rgba(26,58,92,0.75)',borderRadius:4}
       ]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:11}}}},
         scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:function(v){return '$'+v.toLocaleString();}}}}}
     });
   }
 
-  var rows = '';
-  for(var i=0;i<pairs.length;i++) {
-    var p = pairs[i];
-    var prem = retailPremium(p);
-    var premAmt = (parsePx(p.m_retail)&&parsePx(p.c_retail)) ? parsePx(p.m_retail)-parsePx(p.c_retail) : null;
-    var pc = prem!==null ? (prem>=0.1?'delta-pos':prem>0?'delta-neu':'delta-neg') : 'delta-neu';
-    rows += '<tr>';
-    rows += '<td class="pair-id">'+esc(p.id)+'</td>';
-    rows += '<td class="pair-brand">'+esc(p.brand)+'</td>';
-    rows += '<td style="font-size:10px;color:var(--ink3);">'+esc(p.tier)+'</td>';
-    rows += '<td><div class="manteco-name" title="'+esc(p.m_name)+'">'+esc(p.m_name)+'</div></td>';
-    rows += '<td class="editable price-val" onclick="makeEditable(this,'+i+',\'m_retail\')">'+fmtUSD(p.m_retail)+'</td>';
-    rows += '<td><div class="control-name" title="'+esc(p.c_name)+'">'+esc(p.c_name)+'</div></td>';
-    rows += '<td class="editable price-val" onclick="makeEditable(this,'+i+',\'c_retail\')">'+fmtUSD(p.c_retail)+'</td>';
-    rows += '<td class="'+pc+'">'+fmtUSD(premAmt)+'</td>';
-    rows += '<td class="'+pc+'">'+fmtPct(prem)+'</td>';
-    rows += '<td>'+confBadge(confStatus(p))+'</td>';
-    rows += '<td><button onclick="deletePair('+i+')" title="Delete pair" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:13px;padding:2px 6px;">&#10005;</button></td>';
-    rows += '</tr>';
-  }
-  document.getElementById('s2-tbody').innerHTML = rows;
+  var rows='';
+  pairs.forEach(function(pair){
+    var mp=getProduct(pair.manteco_id);
+    var cps=(pair.control_ids||[]).map(function(cid){return getProduct(cid);}).filter(Boolean);
+    var cRetails=cps.map(function(cp){return px(cp.price_retail);}).filter(Boolean);
+    var avgC=cRetails.length?cRetails.reduce(function(a,b){return a+b;},0)/cRetails.length:null;
+    var mRet=mp?px(mp.price_retail):null;
+    var prem=(mRet&&avgC)?(mRet-avgC)/avgC:null;
+    var premAmt=(mRet&&avgC)?mRet-avgC:null;
+    var pc=prem!==null?(prem>=0.1?'delta-pos':prem>0?'delta-neu':'delta-neg'):'delta-neu';
+    rows+='<tr>';
+    rows+='<td class="t-id">'+esc(pair.id)+'</td>';
+    rows+='<td class="t-brand">'+esc(pair.brand)+'</td>';
+    rows+='<td style="color:var(--manteco);font-size:11px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(mp?mp.name||'?':'?')+'</td>';
+    rows+='<td class="t-price">'+usd(mRet)+'</td>';
+    rows+='<td style="font-size:11px;color:var(--control);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(cps.length?cps.map(function(cp){return esc(cp.name||'?');}).join(', '):'&mdash;')+'</td>';
+    rows+='<td class="t-price">'+usd(avgC)+'</td>';
+    rows+='<td class="'+pc+'">'+usd(premAmt)+'</td>';
+    rows+='<td class="'+pc+'">'+pct(prem)+'</td>';
+    rows+='</tr>';
+  });
+  if(!rows) rows='<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--ink3);">No pairs with retail prices yet</td></tr>';
+  document.getElementById('s2-tbody').innerHTML=rows;
 }
 
 // ── STAGE 3 ───────────────────────────────────────────────────────────────────
-function renderS3() {
-  var mMDs = pairs.map(function(p){return mdPct(p.m_retail,p.m_sale);}).filter(function(v){return v!==null;});
-  var cMDs = pairs.map(function(p){return mdPct(p.c_retail,p.c_sale);}).filter(function(v){return v!==null;});
-  var avgMm = mMDs.length ? mMDs.reduce(function(a,b){return a+b;},0)/mMDs.length : null;
-  var avgMc = cMDs.length ? cMDs.reduce(function(a,b){return a+b;},0)/cMDs.length : null;
-  var hasBoth = pairs.filter(function(p){return mdPct(p.m_retail,p.m_sale)!==null&&mdPct(p.c_retail,p.c_sale)!==null;}).length;
-  document.getElementById('s3-md-m').textContent = avgMm!==null ? Math.round(avgMm*100)+'%' : '&#x2014;';
-  document.getElementById('s3-md-c').textContent = avgMc!==null ? Math.round(avgMc*100)+'%' : '&#x2014;';
-  document.getElementById('s3-delta').textContent= (avgMm!==null&&avgMc!==null) ? Math.round((avgMc-avgMm)*100)+'pp' : '&#x2014;';
-  document.getElementById('s3-pairs').textContent= hasBoth+' / '+pairs.length;
+function renderS3(){
+  var mMDs=[], cMDs=[];
+  pairs.forEach(function(pair){
+    var mp=getProduct(pair.manteco_id);
+    if(mp){ var v=mdPct(mp); if(v!==null) mMDs.push(v); }
+    (pair.control_ids||[]).forEach(function(cid){
+      var cp=getProduct(cid); if(cp){ var v=mdPct(cp); if(v!==null) cMDs.push(v); }
+    });
+  });
+  var avgMm=mMDs.length?mMDs.reduce(function(a,b){return a+b;},0)/mMDs.length:null;
+  var avgMc=cMDs.length?cMDs.reduce(function(a,b){return a+b;},0)/cMDs.length:null;
+  var hasBoth=pairs.filter(function(pair){
+    var mp=getProduct(pair.manteco_id);
+    return mp&&mdPct(mp)!==null&&(pair.control_ids||[]).some(function(cid){var cp=getProduct(cid);return cp&&mdPct(cp)!==null;});
+  }).length;
+  document.getElementById('s3-md-m').textContent=avgMm!==null?Math.round(avgMm*100)+'%':'&mdash;';
+  document.getElementById('s3-md-c').textContent=avgMc!==null?Math.round(avgMc*100)+'%':'&mdash;';
+  document.getElementById('s3-delta').textContent=(avgMm!==null&&avgMc!==null)?Math.round((avgMc-avgMm)*100)+'pp':'&mdash;';
+  document.getElementById('s3-pairs').textContent=hasBoth+' / '+pairs.length;
 
-  var wmd = pairs.filter(function(p){return mdPct(p.m_retail,p.m_sale)!==null||mdPct(p.c_retail,p.c_sale)!==null;});
-  if(wmd.length) {
-    var ctx = document.getElementById('chart-s3-bars').getContext('2d');
+  var wmd=pairs.filter(function(pair){
+    var mp=getProduct(pair.manteco_id);
+    return mp&&(mdPct(mp)!==null||(pair.control_ids||[]).some(function(cid){var cp=getProduct(cid);return cp&&mdPct(cp)!==null;}));
+  });
+  if(wmd.length){
+    var ctx=document.getElementById('chart-s3').getContext('2d');
     if(chartS3) chartS3.destroy();
-    chartS3 = new Chart(ctx,{type:'bar',
+    chartS3=new Chart(ctx,{type:'bar',
       data:{labels:wmd.map(function(p){return p.id;}),datasets:[
-        {label:'Manteco MD%',data:wmd.map(function(p){var v=mdPct(p.m_retail,p.m_sale);return v!==null?Math.round(v*100):null;}),backgroundColor:'rgba(45,90,61,0.8)',borderRadius:4},
-        {label:'Control MD%', data:wmd.map(function(p){var v=mdPct(p.c_retail,p.c_sale);return v!==null?Math.round(v*100):null;}),backgroundColor:'rgba(138,32,32,0.7)',borderRadius:4}
+        {label:'Manteco MD%',data:wmd.map(function(pair){var mp=getProduct(pair.manteco_id);var v=mp?mdPct(mp):null;return v!==null?Math.round(v*100):null;}),backgroundColor:'rgba(45,90,61,0.8)',borderRadius:4},
+        {label:'Control MD%',data:wmd.map(function(pair){
+          var cMDs=(pair.control_ids||[]).map(function(cid){var cp=getProduct(cid);return cp?mdPct(cp):null;}).filter(function(v){return v!==null;});
+          return cMDs.length?Math.round(cMDs.reduce(function(a,b){return a+b;},0)/cMDs.length*100):null;
+        }),backgroundColor:'rgba(138,32,32,0.7)',borderRadius:4}
       ]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:11}}}},
         scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:function(v){return v+'%';}}}}}
@@ -907,80 +1234,89 @@ function renderS3() {
   }
 
   // Waterfall
-  var wf = document.getElementById('s3-waterfall');
-  var wfp = pairs.filter(function(p){return parsePx(p.m_retail);});
-  if(!wfp.length) { wf.innerHTML='<div class="empty"><div style="font-size:12px;color:var(--ink3);">Add retail and sale prices to see waterfall</div></div>'; }
-  else {
+  var wf=document.getElementById('s3-waterfall');
+  var wfp=pairs.filter(function(pair){var mp=getProduct(pair.manteco_id);return mp&&px(mp.price_retail);});
+  if(!wfp.length){wf.innerHTML='<div class="empty"><div class="empty-sub">Add retail and sale prices to see waterfall</div></div>';}
+  else{
     var maxP=0;
-    for(var wi=0;wi<wfp.length;wi++) {
-      maxP = Math.max(maxP, parsePx(wfp[wi].m_retail)||0, parsePx(wfp[wi].c_retail)||0);
-    }
-    var whtml='';
-    for(var wi=0;wi<wfp.length;wi++) {
-      var p=wfp[wi];
-      var mr=parsePx(p.m_retail),ms=parsePx(p.m_sale),cr=parsePx(p.c_retail),cs=parsePx(p.c_sale);
-      var mw=mr?Math.round(mr/maxP*100):0, msw=ms?Math.round(ms/maxP*100):0;
-      var cw=cr?Math.round(cr/maxP*100):0, csw=cs?Math.round(cs/maxP*100):0;
-      whtml += '<div class="lifecycle-row">';
-      whtml += '<div><div class="lc-pair-id">'+esc(p.id)+'</div><div class="lc-pair-brand">'+esc(p.brand.split(' ')[0])+'</div></div>';
-      whtml += '<div class="lc-bar-group">';
-      whtml += '<div class="lc-bar-row"><span class="lc-bar-label" style="color:var(--manteco)">M</span><div class="lc-track"><div class="lc-fill-m" style="width:'+mw+'%"></div></div><span class="lc-val" style="color:var(--manteco)">'+fmtUSD(mr)+'</span></div>';
-      if(ms) whtml += '<div class="lc-bar-row"><span class="lc-bar-label" style="color:var(--manteco);opacity:0.6">&#8600;</span><div class="lc-track"><div class="lc-fill-m" style="width:'+msw+'%;opacity:0.5"></div></div><span class="lc-val" style="color:var(--red);font-size:11px;">'+fmtUSD(ms)+' (&#x2212;'+Math.round((mr-ms)/mr*100)+'%)</span></div>';
-      whtml += '</div>';
-      whtml += '<div class="lc-bar-group">';
-      whtml += '<div class="lc-bar-row"><span class="lc-bar-label" style="color:var(--control)">C</span><div class="lc-track"><div class="lc-fill-c" style="width:'+cw+'%"></div></div><span class="lc-val" style="color:var(--control)">'+fmtUSD(cr)+'</span></div>';
-      if(cs&&cr) whtml += '<div class="lc-bar-row"><span class="lc-bar-label" style="color:var(--control);opacity:0.6">&#8600;</span><div class="lc-track"><div class="lc-fill-c" style="width:'+csw+'%;opacity:0.5"></div></div><span class="lc-val" style="color:var(--red);font-size:11px;">'+fmtUSD(cs)+' (&#x2212;'+Math.round((cr-cs)/cr*100)+'%)</span></div>';
-      whtml += '</div><div></div></div>';
-    }
-    wf.innerHTML = whtml;
+    wfp.forEach(function(pair){
+      var mp=getProduct(pair.manteco_id);
+      maxP=Math.max(maxP,px(mp.price_retail)||0,px(mp.price_sale)||0);
+      (pair.control_ids||[]).forEach(function(cid){var cp=getProduct(cid);if(cp){maxP=Math.max(maxP,px(cp.price_retail)||0,px(cp.price_sale)||0);}});
+    });
+    var wh='';
+    wfp.slice(0,6).forEach(function(pair){
+      var mp=getProduct(pair.manteco_id);
+      var mr=px(mp.price_retail),ms=px(mp.price_sale);
+      var cps=(pair.control_ids||[]).map(function(cid){return getProduct(cid);}).filter(Boolean);
+      var cr=cps.length?cps.map(function(cp){return px(cp.price_retail)||0;}).reduce(function(a,b){return a+b;},0)/cps.length:null;
+      var cs=cps.length?cps.map(function(cp){return px(cp.price_sale)||0;}).filter(Boolean):[];
+      var avgCs=cs.length?cs.reduce(function(a,b){return a+b;},0)/cs.length:null;
+      wh+='<div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">';
+      wh+='<div><div style="font-family:var(--mono);font-size:10px;color:var(--ink3);">'+esc(pair.id)+'</div><div style="font-size:11px;font-weight:500;">'+esc((pair.brand||'').split(' ')[0])+'</div></div>';
+      wh+='<div>';
+      wh+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-size:9px;width:12px;text-align:center;color:var(--manteco);">M</span><div style="flex:1;height:7px;background:var(--paper2);border-radius:4px;overflow:hidden;"><div style="width:'+(mr?Math.round(mr/maxP*100):0)+'%;height:100%;background:var(--manteco);border-radius:4px;"></div></div><span style="font-size:11px;font-family:var(--mono);color:var(--manteco);min-width:44px;">'+usd(mr)+'</span></div>';
+      if(ms) wh+='<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;width:12px;text-align:center;color:var(--manteco);opacity:0.6;">&#8600;</span><div style="flex:1;height:7px;background:var(--paper2);border-radius:4px;overflow:hidden;"><div style="width:'+Math.round(ms/maxP*100)+'%;height:100%;background:var(--manteco);border-radius:4px;opacity:0.5;"></div></div><span style="font-size:11px;font-family:var(--mono);color:var(--red);min-width:44px;">'+usd(ms)+'</span></div>';
+      wh+='</div>';
+      wh+='<div>';
+      wh+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-size:9px;width:12px;text-align:center;color:var(--control);">C</span><div style="flex:1;height:7px;background:var(--paper2);border-radius:4px;overflow:hidden;"><div style="width:'+(cr?Math.round(cr/maxP*100):0)+'%;height:100%;background:var(--control);border-radius:4px;"></div></div><span style="font-size:11px;font-family:var(--mono);color:var(--control);min-width:44px;">'+usd(cr)+'</span></div>';
+      if(avgCs) wh+='<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;width:12px;text-align:center;color:var(--control);opacity:0.6;">&#8600;</span><div style="flex:1;height:7px;background:var(--paper2);border-radius:4px;overflow:hidden;"><div style="width:'+Math.round(avgCs/maxP*100)+'%;height:100%;background:var(--control);border-radius:4px;opacity:0.5;"></div></div><span style="font-size:11px;font-family:var(--mono);color:var(--red);min-width:44px;">'+usd(avgCs)+'</span></div>';
+      wh+='</div></div>';
+    });
+    wf.innerHTML=wh;
   }
 
   var rows='';
-  for(var i=0;i<pairs.length;i++) {
-    var p=pairs[i];
-    var mm=mdPct(p.m_retail,p.m_sale), mc=mdPct(p.c_retail,p.c_sale);
-    var delta=(mm!==null&&mc!==null)?mc-mm:null;
+  pairs.forEach(function(pair){
+    var mp=getProduct(pair.manteco_id);
+    var cps=(pair.control_ids||[]).map(function(cid){return getProduct(cid);}).filter(Boolean);
+    var mm=mp?mdPct(mp):null;
+    var cMDs=cps.map(function(cp){return mdPct(cp);}).filter(function(v){return v!==null;});
+    var avgMc=cMDs.length?cMDs.reduce(function(a,b){return a+b;},0)/cMDs.length:null;
+    var delta=(mm!==null&&avgMc!==null)?avgMc-mm:null;
     var dc=delta!==null?(delta>0?'delta-pos':'delta-neg'):'delta-neu';
-    rows += '<tr>';
-    rows += '<td class="pair-id">'+esc(p.id)+'</td>';
-    rows += '<td class="pair-brand">'+esc(p.brand)+'</td>';
-    rows += '<td class="editable price-val" onclick="makeEditable(this,'+i+',\'m_retail\')">'+fmtUSD(p.m_retail)+'</td>';
-    rows += '<td class="editable price-val" onclick="makeEditable(this,'+i+',\'m_sale\')">'+fmtUSD(p.m_sale)+'</td>';
-    rows += '<td style="color:var(--manteco);font-family:var(--mono);">'+(mm!==null?Math.round(mm*100)+'%':'&#x2014;')+'</td>';
-    rows += '<td class="editable price-val" onclick="makeEditable(this,'+i+',\'c_retail\')">'+fmtUSD(p.c_retail)+'</td>';
-    rows += '<td class="editable price-val" onclick="makeEditable(this,'+i+',\'c_sale\')">'+fmtUSD(p.c_sale)+'</td>';
-    rows += '<td style="color:var(--red);font-family:var(--mono);">'+(mc!==null?Math.round(mc*100)+'%':'&#x2014;')+'</td>';
-    rows += '<td class="'+dc+'">'+(delta!==null?'+'+Math.round(delta*100)+'pp':'&#x2014;')+'</td>';
-    rows += '</tr>';
-  }
-  document.getElementById('s3-tbody').innerHTML = rows;
+    var cRetail=cps.length?cps.map(function(cp){return px(cp.price_retail)||0;}).reduce(function(a,b){return a+b;},0)/cps.length:null;
+    var cSale=cps.length?cps.filter(function(cp){return px(cp.price_sale);}).map(function(cp){return px(cp.price_sale);}).reduce(function(a,b){return a+b;},0)/(cps.filter(function(cp){return px(cp.price_sale);}).length||1):null;
+    rows+='<tr>';
+    rows+='<td class="t-id">'+esc(pair.id)+'</td>';
+    rows+='<td class="t-brand">'+esc(pair.brand)+'</td>';
+    rows+='<td class="t-price">'+usd(mp?px(mp.price_retail):null)+'</td>';
+    rows+='<td class="t-sale">'+usd(mp?px(mp.price_sale):null)+'</td>';
+    rows+='<td style="font-family:var(--mono);color:var(--manteco);">'+(mm!==null?Math.round(mm*100)+'%':'&mdash;')+'</td>';
+    rows+='<td class="t-price">'+usd(cRetail)+'</td>';
+    rows+='<td class="t-sale">'+usd(cSale&&cSale>0?cSale:null)+'</td>';
+    rows+='<td style="font-family:var(--mono);color:var(--red);">'+(avgMc!==null?Math.round(avgMc*100)+'%':'&mdash;')+'</td>';
+    rows+='<td class="'+dc+'">'+(delta!==null?'+'+Math.round(delta*100)+'pp':'&mdash;')+'</td>';
+    rows+='</tr>';
+  });
+  if(!rows) rows='<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--ink3);">No pairs yet</td></tr>';
+  document.getElementById('s3-tbody').innerHTML=rows;
 }
 
 // ── STAGE 4 ───────────────────────────────────────────────────────────────────
-function renderS4() {
-  var rm = resaleListings.filter(function(r){return r.side==='M';}).map(function(r){return r.resale/r.retail;});
-  var rc = resaleListings.filter(function(r){return r.side==='C';}).map(function(r){return r.resale/r.retail;});
-  var avgRm = rm.length ? rm.reduce(function(a,b){return a+b;},0)/rm.length : null;
-  var avgRc = rc.length ? rc.reduce(function(a,b){return a+b;},0)/rc.length : null;
-  document.getElementById('s4-res-m').textContent  = avgRm!==null ? Math.round(avgRm*100)+'%' : '&#x2014;';
-  document.getElementById('s4-res-c').textContent  = avgRc!==null ? Math.round(avgRc*100)+'%' : '&#x2014;';
-  document.getElementById('s4-delta').textContent  = (avgRm!==null&&avgRc!==null) ? fmtPct(avgRm-avgRc) : '&#x2014;';
-  document.getElementById('s4-listings').textContent = resaleListings.length;
+function renderS4(){
+  var rm=resaleListings.filter(function(r){return r.side==='M';}).map(function(r){return r.resale/r.retail;});
+  var rc=resaleListings.filter(function(r){return r.side==='C';}).map(function(r){return r.resale/r.retail;});
+  var avgRm=rm.length?rm.reduce(function(a,b){return a+b;},0)/rm.length:null;
+  var avgRc=rc.length?rc.reduce(function(a,b){return a+b;},0)/rc.length:null;
+  document.getElementById('s4-res-m').textContent=avgRm!==null?Math.round(avgRm*100)+'%':'&mdash;';
+  document.getElementById('s4-res-c').textContent=avgRc!==null?Math.round(avgRc*100)+'%':'&mdash;';
+  document.getElementById('s4-delta').innerHTML=(avgRm!==null&&avgRc!==null)?pct(avgRm-avgRc):'&mdash;';
+  document.getElementById('s4-listings').textContent=resaleListings.length;
 
-  if(resaleListings.length) {
+  if(resaleListings.length){
     var byPair={};
-    for(var i=0;i<resaleListings.length;i++) {
-      var r=resaleListings[i];
+    resaleListings.forEach(function(r){
       if(!byPair[r.pairId]) byPair[r.pairId]={M:[],C:[]};
       byPair[r.pairId][r.side].push(r.resale/r.retail);
-    }
+    });
     var pids=Object.keys(byPair);
     var ctx=document.getElementById('chart-s4').getContext('2d');
     if(chartS4) chartS4.destroy();
     chartS4=new Chart(ctx,{type:'bar',
       data:{labels:pids,datasets:[
         {label:'Manteco%',data:pids.map(function(id){var a=byPair[id].M;return a.length?Math.round(a.reduce(function(x,y){return x+y;},0)/a.length*100):null;}),backgroundColor:'rgba(45,90,61,0.8)',borderRadius:4},
-        {label:'Control%', data:pids.map(function(id){var a=byPair[id].C;return a.length?Math.round(a.reduce(function(x,y){return x+y;},0)/a.length*100):null;}),backgroundColor:'rgba(26,58,92,0.7)',borderRadius:4}
+        {label:'Control%',data:pids.map(function(id){var a=byPair[id].C;return a.length?Math.round(a.reduce(function(x,y){return x+y;},0)/a.length*100):null;}),backgroundColor:'rgba(26,58,92,0.7)',borderRadius:4}
       ]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:11}}}},
         scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:function(v){return v+'%';}}}}}
@@ -988,161 +1324,79 @@ function renderS4() {
   }
 
   var rows='';
-  if(!resaleListings.length) {
-    rows='<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--ink3);">No resale listings yet</td></tr>';
-  } else {
-    for(var i=0;i<resaleListings.length;i++) {
-      var r=resaleListings[i];
+  if(!resaleListings.length){rows='<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--ink3);">No resale listings yet</td></tr>';}
+  else {
+    resaleListings.forEach(function(r,i){
       var res=Math.round(r.resale/r.retail*100);
-      var p=null; for(var pi=0;pi<pairs.length;pi++){if(pairs[pi].id===r.pairId){p=pairs[pi];break;}}
-      rows += '<tr>';
-      rows += '<td class="pair-id">'+esc(r.pairId)+'</td>';
-      rows += '<td><span class="badge '+(r.side==='M'?'badge-m':'badge-c')+'">'+(r.side==='M'?'Manteco':'Control')+'</span></td>';
-      rows += '<td>'+(p?esc(p.brand):'&#x2014;')+'</td>';
-      rows += '<td>'+esc(r.platform)+'</td>';
-      rows += '<td class="price-val">'+fmtUSD(r.retail)+'</td>';
-      rows += '<td class="price-val">'+fmtUSD(r.resale)+'</td>';
-      rows += '<td style="font-weight:500;color:'+(res>=70?'var(--manteco)':res>=50?'var(--amber)':'var(--red)')+';">'+res+'%</td>';
-      rows += '<td>'+(r.age||'&#x2014;')+'</td>';
-      rows += '<td><button onclick="removeResale('+i+')" style="background:none;border:none;cursor:pointer;color:var(--ink3);">&#10005;</button></td>';
-      rows += '</tr>';
-    }
+      var pair=null; for(var pi=0;pi<pairs.length;pi++){if(pairs[pi].id===r.pairId){pair=pairs[pi];break;}}
+      rows+='<tr>';
+      rows+='<td class="t-id">'+esc(r.pairId)+'</td>';
+      rows+='<td><span class="badge '+(r.side==='M'?'badge-manteco':'badge-control')+'">'+(r.side==='M'?'Manteco':'Control')+'</span></td>';
+      rows+='<td>'+esc(r.platform)+'</td>';
+      rows+='<td class="t-price">'+usd(r.retail)+'</td>';
+      rows+='<td class="t-price">'+usd(r.resale)+'</td>';
+      rows+='<td style="font-weight:500;color:'+(res>=70?'var(--manteco)':res>=50?'var(--amber)':'var(--red)')+';">'+res+'%</td>';
+      rows+='<td>'+(r.age||'&mdash;')+'</td>';
+      rows+='<td><button onclick="deleteResale('+i+')" style="background:none;border:none;cursor:pointer;color:var(--red);">&#10005;</button></td>';
+      rows+='</tr>';
+    });
   }
-  document.getElementById('s4-tbody').innerHTML = rows;
+  document.getElementById('s4-tbody').innerHTML=rows;
 }
 
-function addResaleListing() {
-  var pairId   = document.getElementById('s4-pair').value;
-  var side     = document.getElementById('s4-side').value;
-  var retail   = parseFloat(document.getElementById('s4-retail').value);
-  var resale   = parseFloat(document.getElementById('s4-resale').value);
-  var platform = document.getElementById('s4-platform').value;
-  var age      = parseFloat(document.getElementById('s4-age').value)||null;
-  if(!pairId||!retail||!resale) { alert('Fill in Pair, Original Retail, and Resale Price.'); return; }
-  var listing = {pairId:pairId,side:side,retail:retail,resale:resale,platform:platform,age:age};
+function addResale(){
+  var pairId=document.getElementById('s4-pair').value;
+  var side=document.getElementById('s4-side').value;
+  var retail=parseFloat(document.getElementById('s4-retail').value);
+  var resale=parseFloat(document.getElementById('s4-resale').value);
+  var platform=document.getElementById('s4-platform').value;
+  var age=parseFloat(document.getElementById('s4-age').value)||null;
+  if(!pairId||!retail||!resale){alert('Fill in Pair, Original Retail, and Resale Price.');return;}
+  var listing={pairId:pairId,side:side,retail:retail,resale:resale,platform:platform,age:age};
   resaleListings.push(listing);
-  saveToServer('/data/resale','POST',listing);
+  save('/data/resale','POST',listing);
   document.getElementById('s4-retail').value='';
   document.getElementById('s4-resale').value='';
   document.getElementById('s4-age').value='';
-  renderS4(); renderOverview();
+  renderS4();
 }
 
-function removeResale(idx) {
+function deleteResale(idx){
   resaleListings.splice(idx,1);
-  saveToServer('/data/resale/'+idx,'DELETE',{});
-  renderS4(); renderOverview();
+  save('/data/resale/'+idx,'DELETE',{});
+  renderS4();
 }
 
-// ── PAIRS TABLE ───────────────────────────────────────────────────────────────
-function renderPairsTable() {
-  var q    = document.getElementById('pairs-search').value.toLowerCase();
-  var tier = document.getElementById('pairs-filter-tier').value;
-  var rows = '';
-  for(var i=0;i<pairs.length;i++) {
-    var p=pairs[i];
-    if(q && (p.brand+' '+p.m_name+' '+p.c_name+' '+p.tier+' '+p.id).toLowerCase().indexOf(q)===-1) continue;
-    if(tier && p.tier!==tier) continue;
-    var prem=retailPremium(p);
-    var mdm=mdPct(p.m_retail,p.m_sale), mdc=mdPct(p.c_retail,p.c_sale);
-    var mdD=(mdm!==null&&mdc!==null)?mdc-mdm:null;
-    var pc=prem!==null?(prem>=0.1?'delta-pos':prem>0?'delta-neu':'delta-neg'):'delta-neu';
-    var mdc_class=mdD!==null?(mdD>0?'delta-pos':'delta-neg'):'delta-neu';
-    var btnLabel=p.c_retail?'&#9998; Edit control':'+ Assign control';
-    rows += '<tr>';
-    rows += '<td class="pair-id">'+esc(p.id)+'</td>';
-    rows += '<td><div class="pair-brand">'+esc(p.brand)+'</div><div style="font-size:10px;color:var(--ink3);">'+esc(p.tier)+'</div></td>';
-    rows += '<td style="font-size:11px;">'+esc(p.cat)+'</td>';
-    rows += '<td style="background:#f9fdf9;"><div class="manteco-name" title="'+esc(p.m_name)+'">'+esc(p.m_name)+'</div></td>';
-    rows += '<td style="background:#f9fdf9;" class="editable price-val" onclick="makeEditable(this,'+i+',\'m_retail\')">'+fmtUSD(p.m_retail)+'</td>';
-    rows += '<td style="background:#f9fdf9;" class="editable price-val" onclick="makeEditable(this,'+i+',\'m_sale\')">'+fmtUSD(p.m_sale)+'</td>';
-    rows += '<td style="background:#f6faff;"><div class="control-name" title="'+esc(p.c_name)+'">'+esc(p.c_name)+'</div></td>';
-    rows += '<td style="background:#f6faff;" class="editable price-val" onclick="makeEditable(this,'+i+',\'c_retail\')">'+fmtUSD(p.c_retail)+'</td>';
-    rows += '<td style="background:#f6faff;" class="editable price-val" onclick="makeEditable(this,'+i+',\'c_sale\')">'+fmtUSD(p.c_sale)+'</td>';
-    rows += '<td class="'+pc+'">'+fmtPct(prem)+'</td>';
-    rows += '<td class="'+mdc_class+'">'+(mdD!==null?'+'+Math.round(mdD*100)+'pp':'&#x2014;')+'</td>';
-    rows += '<td>'+confBadge(confStatus(p))+'</td>';
-    rows += '<td style="display:flex;gap:6px;align-items:center;">';
-    rows += '<button onclick="openControlModal('+i+')" style="font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--white);cursor:pointer;color:var(--control);white-space:nowrap;font-family:var(--sans);">'+btnLabel+'</button>';
-    rows += '<button onclick="deletePair('+i+')" title="Delete pair" style="font-size:11px;padding:4px 8px;border-radius:20px;border:1px solid var(--border2);background:var(--white);cursor:pointer;color:var(--red);font-family:var(--sans);">&#10005;</button>';
-    rows += '</td>';
-    rows += '</tr>';
-  }
-  document.getElementById('pairs-tbody').innerHTML = rows || '<tr><td colspan="13" style="text-align:center;padding:20px;color:var(--ink3);">No pairs match filters</td></tr>';
-}
-
-function addNewPair() {
-  var id = 'P'+(pairs.length+1<10?'0':'')+(pairs.length+1);
-  var np = {id:id,brand:'New Brand',tier:'Contemporary',cat:'Coat',season:'FW24',m_name:'Manteco product',m_retail:null,m_sale:null,m_url:'',c_name:'Control product',c_retail:null,c_sale:null,c_url:''};
-  pairs.push(np);
-  saveToServer('/data/pairs','POST',np);
-  refreshAll();
-}
-
-function deletePair(idx) {
-  var p = pairs[idx];
-  if(!confirm('Delete pair ' + p.id + ' (' + p.brand + ')? This cannot be undone.')) return;
-  pairs.splice(idx, 1);
-  // Save full pairs array to server
-  saveToServer('/data/pairs', 'PUT', pairs);
-  refreshAll();
-}
-
-function exportCSV() {
-  var hdrs = ['Pair','Brand','Tier','Category','Season','M: Product','M: Retail','M: Sale','M: MD%','C: Product','C: Retail','C: Sale','C: MD%','Retail Premium%','MD Delta'];
-  var rows = [hdrs];
-  for(var i=0;i<pairs.length;i++) {
-    var p=pairs[i];
-    var prem=retailPremium(p);
-    var mm=mdPct(p.m_retail,p.m_sale), mc=mdPct(p.c_retail,p.c_sale);
-    rows.push([p.id,p.brand,p.tier,p.cat,p.season,p.m_name,p.m_retail||'',p.m_sale||'',mm!==null?Math.round(mm*100)+'%':'',p.c_name,p.c_retail||'',p.c_sale||'',mc!==null?Math.round(mc*100)+'%':'',prem!==null?Math.round(prem*100)+'%':'',(mm!==null&&mc!==null)?Math.round((mc-mm)*100)+'pp':'']);
-  }
-  var csv = rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download='manteco_pairs_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
-}
-
-function populateSelects() {
+// ── SELECTS ───────────────────────────────────────────────────────────────────
+function populateSelects(){
   var opts='<option value="">Select...</option>';
-  for(var i=0;i<pairs.length;i++) opts+='<option value="'+pairs[i].id+'">'+pairs[i].id+' \u2014 '+pairs[i].brand+'</option>';
-  document.getElementById('s4-pair').innerHTML = opts;
-  var aopts='<option value="">Auto-detect</option>';
-  for(var i=0;i<pairs.length;i++) aopts+='<option value="'+pairs[i].id+'">'+pairs[i].id+' \u2014 '+pairs[i].brand+'</option>';
-  document.getElementById('assign-pair').innerHTML = aopts;
+  pairs.forEach(function(p){opts+='<option value="'+p.id+'">'+p.id+' &mdash; '+esc(p.brand||'?')+'</option>';});
+  document.getElementById('s4-pair').innerHTML=opts;
 }
 
-// ── SCRAPER ──────────────────────────────────────────────────
-var scrapedM = [];
-var scrapedC = [];
-
-function addLog(msg, type) {
-  var t = new Date().toTimeString().slice(0,8);
-  logs.push({t:t, msg:msg, type:type||'info'});
-  var b = document.getElementById('scrape-log');
-  var h = '';
-  for(var i=logs.length-1; i>=Math.max(0,logs.length-30); i--) {
-    h += '<div class="log-entry"><span class="log-time">'+logs[i].t+'</span><span class="log-'+logs[i].type+'">'+esc(logs[i].msg)+'</span></div>';
+// ── SCRAPER ───────────────────────────────────────────────────────────────────
+function addLog(msg,type){
+  var t=new Date().toTimeString().slice(0,8);
+  sessionLogs.push({t:t,msg:msg,type:type||'info'});
+  var b=document.getElementById('scrape-log');
+  var h='';
+  for(var i=sessionLogs.length-1;i>=Math.max(0,sessionLogs.length-40);i--){
+    h+='<div class="log-entry"><span class="log-time">'+sessionLogs[i].t+'</span><span class="log-'+sessionLogs[i].type+'">'+esc(sessionLogs[i].msg)+'</span></div>';
   }
-  b.innerHTML = h;
+  b.innerHTML=h;
 }
 
-async function startScrape(side) {
-  var inputId = side==='M' ? 'url-input-m' : 'url-input-c';
-  var btnId   = side==='M' ? 'scrape-btn-m' : 'scrape-btn-c';
-  var urls = document.getElementById(inputId).value.trim()
+async function startScrape(){
+  var urls=document.getElementById('url-input').value.trim()
     .split('\n').map(function(u){return u.trim();})
     .filter(function(u){return u.indexOf('http')===0;});
-  if(!urls.length){ alert('Paste at least one URL in the '+(side==='M'?'Manteco':'Control')+' box.'); return; }
-  var btn = document.getElementById(btnId);
+  if(!urls.length){alert('Paste at least one URL.');return;}
+  var btn=document.getElementById('scrape-btn');
   btn.disabled=true; btn.textContent='Scraping...';
-  document.getElementById('progress-wrap').style.display='';
-  addLog('Scraping '+(side==='M'?'Manteco':'Control')+' — '+urls.length+' URL(s)');
-  var server = getServer();
-  if(!server){ addLog('No server connected — connect first','err'); btn.disabled=false; btn.textContent=side==='M'?'Scrape Manteco URLs':'Scrape Control URLs'; return; }
-  try {
-    var res=await fetch(server+'/scrape',{method:'POST',headers:authHdrs(),body:JSON.stringify({urls:urls})});
+  document.getElementById('progress-section').style.display='';
+  addLog('Scraping '+urls.length+' URL(s)...');
+  try{
+    var res=await fetch(RAILWAY_URL+'/scrape',{method:'POST',headers:authHdrs(),body:JSON.stringify({urls:urls})});
     if(!res.ok){var e=await res.json();throw new Error(e.error||res.statusText);}
     var reader=res.body.getReader(),decoder=new TextDecoder(),buf='';
     while(true){
@@ -1151,314 +1405,104 @@ async function startScrape(side) {
       var lines=buf.split('\n'); buf=lines.pop();
       for(var li=0;li<lines.length;li++){
         if(lines[li].indexOf('data: ')!==0) continue;
-        try{var evt=JSON.parse(lines[li].slice(6));handleScrapeEvt(evt,urls.length,side);}catch(pe){}
+        try{
+          var evt=JSON.parse(lines[li].slice(6));
+          if(evt.type==='progress'){
+            document.getElementById('progress-fill').style.width=Math.round((evt.index-1)/evt.total*100)+'%';
+            document.getElementById('progress-msg').textContent=evt.message;
+            addLog(evt.message);
+          }
+          if(evt.type==='product'){
+            products.push(evt.data);
+            recentScraped.push(evt.data);
+            addLog((evt.data.brand||'?')+' — '+(evt.data.price_retail||'n/a')+' — type: '+(evt.data.type),'ok');
+            renderRecentScraped();
+            refreshAll();
+          }
+          if(evt.type==='error') addLog((evt.url||'').slice(0,50)+' — '+evt.message,'err');
+          if(evt.type==='done'){
+            document.getElementById('progress-fill').style.width='100%';
+            document.getElementById('progress-msg').textContent='Done — '+recentScraped.length+' products added to library';
+            addLog('Done. Go to Products to review and edit, then Pair Builder to create pairs.','ok');
+          }
+        }catch(pe){}
       }
     }
-  } catch(e){ addLog('Error: '+e.message,'err'); alert('Scrape failed: '+e.message); }
-  btn.disabled=false;
-  btn.textContent=side==='M'?'Scrape Manteco URLs':'Scrape Control URLs';
+  }catch(e){addLog('Error: '+e.message,'err');alert('Scrape failed: '+e.message);}
+  btn.disabled=false; btn.textContent='Scrape & add to library';
 }
 
-function handleScrapeEvt(evt,total,side) {
-  if(evt.type==='progress'){
-    document.getElementById('progress-fill').style.width=Math.round((evt.index-1)/total*100)+'%';
-    document.getElementById('progress-msg').textContent=evt.message;
-    addLog(evt.message);
-  }
-  if(evt.type==='product'){
-    evt.data._side=side;
-    if(side==='M') scrapedM.push(evt.data);
-    else           scrapedC.push(evt.data);
-    addLog((evt.data.brand||'?')+' — '+(evt.data.price_retail||'n/a')+(evt.data.manteco?' [Manteco ✓]':''),'ok');
-    renderScraperResults();
-    updatePairBuilder();
-  }
-  if(evt.type==='error') addLog((evt.url||'').slice(0,55)+' — '+evt.message,'err');
-  if(evt.type==='done'){
-    document.getElementById('progress-fill').style.width='100%';
-    document.getElementById('progress-msg').textContent='Done — Manteco: '+scrapedM.length+', Control: '+scrapedC.length;
-    addLog('Done. Manteco: '+scrapedM.length+', Control: '+scrapedC.length+'.','ok');
-  }
+function renderRecentScraped(){
+  var body=document.getElementById('recent-scraped');
+  if(!recentScraped.length){body.innerHTML='<div class="empty"><div class="empty-sub">No products scraped yet this session</div></div>';return;}
+  var h='<div class="table-wrap"><table class="t"><thead><tr><th>Type</th><th>Brand</th><th>Product</th><th>Retail</th><th>Sale</th><th>Manteco detected</th></tr></thead><tbody>';
+  recentScraped.forEach(function(p){
+    h+='<tr>';
+    h+='<td><span class="badge '+(p.type==='manteco'?'badge-manteco':'badge-control')+'">'+p.type+'</span></td>';
+    h+='<td class="t-brand">'+esc(p.brand||'&mdash;')+'</td>';
+    h+='<td><div class="t-name" title="'+esc(p.name||'')+'">'+esc(p.name||'&mdash;')+'</div></td>';
+    h+='<td class="t-price">'+esc(p.price_retail||'&mdash;')+'</td>';
+    h+='<td class="t-sale">'+esc(p.price_sale||'&mdash;')+'</td>';
+    h+='<td>'+(p.manteco?'<span class="badge badge-manteco">Yes</span>':'<span class="badge badge-control">No</span>')+'</td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  body.innerHTML=h;
 }
 
-function renderScraperResults() {
-  var mDiv=document.getElementById('results-m');
-  if(!scrapedM.length){ mDiv.innerHTML='<div class="empty"><div style="font-size:12px;color:var(--ink3);">Scrape Manteco URLs above</div></div>'; }
-  else {
-    var h='<div class="pairs-table-wrap"><table class="pairs"><thead><tr><th>Brand</th><th>Product</th><th>Retail</th><th>Sale</th><th>M?</th></tr></thead><tbody>';
-    for(var i=0;i<scrapedM.length;i++){
-      var p=scrapedM[i];
-      h+='<tr><td class="pair-brand" style="color:var(--manteco);">'+esc(p.brand||'—')+'</td>';
-      h+='<td style="font-size:11px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+esc(p.name||'')+'">'+esc(p.name||'—')+'</td>';
-      h+='<td class="price-val">'+esc(p.price_retail||'—')+'</td>';
-      h+='<td class="price-val" style="color:var(--red);">'+esc(p.price_sale||'—')+'</td>';
-      h+='<td>'+(p.manteco?'<span class="badge badge-m">✓</span>':'<span style="color:var(--ink3);font-size:11px;">—</span>')+'</td></tr>';
-    }
-    h+='</tbody></table></div>';
-    mDiv.innerHTML=h;
-  }
-  var cDiv=document.getElementById('results-c');
-  if(!scrapedC.length){ cDiv.innerHTML='<div class="empty"><div style="font-size:12px;color:var(--ink3);">Scrape control URLs above</div></div>'; }
-  else {
-    var h='<div class="pairs-table-wrap"><table class="pairs"><thead><tr><th>Brand</th><th>Product</th><th>Retail</th><th>Sale</th></tr></thead><tbody>';
-    for(var i=0;i<scrapedC.length;i++){
-      var p=scrapedC[i];
-      h+='<tr><td class="pair-brand" style="color:var(--control);">'+esc(p.brand||'—')+'</td>';
-      h+='<td style="font-size:11px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+esc(p.name||'')+'">'+esc(p.name||'—')+'</td>';
-      h+='<td class="price-val">'+esc(p.price_retail||'—')+'</td>';
-      h+='<td class="price-val" style="color:var(--red);">'+esc(p.price_sale||'—')+'</td></tr>';
-    }
-    h+='</tbody></table></div>';
-    cDiv.innerHTML=h;
-  }
+// ── EXPORTS ───────────────────────────────────────────────────────────────────
+function exportProductsCSV(){
+  var hdrs=['ID','Type','Brand','Name','Retail','Sale','MD%','Fabric','URL','Scraped At'];
+  var rows=[hdrs];
+  products.forEach(function(p){
+    var md=mdPct(p);
+    rows.push([p.id,p.type,p.brand||'',p.name||'',p.price_retail||'',p.price_sale||'',md!==null?Math.round(md*100)+'%':'',p.fabric||'',p.url||'',p.scraped_at||'']);
+  });
+  dlCSV(rows,'manteco_products_'+new Date().toISOString().slice(0,10)+'.csv');
 }
 
-function updatePairBuilder() {
-  if(!scrapedM.length && !scrapedC.length){ document.getElementById('pair-builder-card').style.display='none'; return; }
-  document.getElementById('pair-builder-card').style.display='';
-  var ms=document.getElementById('pb-manteco'), cs=document.getElementById('pb-control');
-  ms.innerHTML='<option value="">Select Manteco product...</option>';
-  for(var i=0;i<scrapedM.length;i++){
-    var p=scrapedM[i];
-    ms.innerHTML+='<option value="'+i+'">'+(p.brand||'?')+' — '+(p.name||'?').slice(0,45)+(p.price_retail?' ('+p.price_retail+')':'')+'</option>';
-  }
-  cs.innerHTML='<option value="">Select control product...</option>';
-  for(var i=0;i<scrapedC.length;i++){
-    var p=scrapedC[i];
-    cs.innerHTML+='<option value="'+i+'">'+(p.brand||'?')+' — '+(p.name||'?').slice(0,45)+(p.price_retail?' ('+p.price_retail+')':'')+'</option>';
-  }
-  if(scrapedM.length && !document.getElementById('pb-brand').value)
-    document.getElementById('pb-brand').value=scrapedM[0].brand||'';
+function exportPairsCSV(){
+  var hdrs=['Pair ID','Brand','Tier','Category','Season','Manteco Product','M: Retail','M: Sale','M: MD%','Control Products','C: Avg Retail','C: Avg Sale','C: Avg MD%','Retail Premium%','MD Delta'];
+  var rows=[hdrs];
+  pairs.forEach(function(pair){
+    var mp=getProduct(pair.manteco_id);
+    var cps=(pair.control_ids||[]).map(function(cid){return getProduct(cid);}).filter(Boolean);
+    var cRetails=cps.map(function(cp){return px(cp.price_retail)||0;}).filter(Boolean);
+    var avgCR=cRetails.length?cRetails.reduce(function(a,b){return a+b;},0)/cRetails.length:null;
+    var cSales=cps.map(function(cp){return px(cp.price_sale)||0;}).filter(Boolean);
+    var avgCS=cSales.length?cSales.reduce(function(a,b){return a+b;},0)/cSales.length:null;
+    var mm=mp?mdPct(mp):null;
+    var cMDs=cps.map(function(cp){return mdPct(cp);}).filter(function(v){return v!==null;});
+    var avgMc=cMDs.length?cMDs.reduce(function(a,b){return a+b;},0)/cMDs.length:null;
+    var mRet=mp?px(mp.price_retail):null;
+    var prem=(mRet&&avgCR)?(mRet-avgCR)/avgCR:null;
+    var delta=(mm!==null&&avgMc!==null)?avgMc-mm:null;
+    rows.push([
+      pair.id,pair.brand||'',pair.tier||'',pair.cat||'',pair.season||'',
+      mp?mp.name||'':'',mp?mp.price_retail||'':'',mp?mp.price_sale||'':'',mm!==null?Math.round(mm*100)+'%':'',
+      cps.map(function(cp){return cp.name||'?';}).join('; '),
+      avgCR?'$'+Math.round(avgCR):'',avgCS?'$'+Math.round(avgCS):'',avgMc!==null?Math.round(avgMc*100)+'%':'',
+      prem!==null?Math.round(prem*100)+'%':'',delta!==null?Math.round(delta*100)+'pp':''
+    ]);
+  });
+  dlCSV(rows,'manteco_pairs_'+new Date().toISOString().slice(0,10)+'.csv');
 }
 
-document.getElementById('pb-manteco').addEventListener('change',function(){
-  var idx=parseInt(this.value);
-  if(!isNaN(idx)&&scrapedM[idx]) document.getElementById('pb-brand').value=scrapedM[idx].brand||'';
-});
-
-function createPair() {
-  var mIdx=parseInt(document.getElementById('pb-manteco').value);
-  var cIdx=parseInt(document.getElementById('pb-control').value);
-  var brand=document.getElementById('pb-brand').value.trim();
-  var tier=document.getElementById('pb-tier').value;
-  var season=document.getElementById('pb-season').value.trim();
-  if(isNaN(mIdx)){alert('Select a Manteco product.');return;}
-  if(!brand){alert('Enter a brand name.');return;}
-  var sm=scrapedM[mIdx];
-  var sc=!isNaN(cIdx)?scrapedC[cIdx]:null;
-  var nextNum=pairs.length+1;
-  var id='P'+(nextNum<10?'0':'')+nextNum;
-  var newPair={id:id,brand:brand,tier:tier,cat:sm.category||'Coat',season:season,
-    m_name:sm.name||'',m_retail:parsePx(sm.price_retail),m_sale:parsePx(sm.price_sale),m_fabric:sm.fabric||null,m_url:sm.url||'',
-    c_name:sc?(sc.name||''):'',c_retail:sc?parsePx(sc.price_retail):null,c_sale:sc?parsePx(sc.price_sale):null,c_fabric:sc?(sc.fabric||null):null,c_url:sc?(sc.url||''):'',c_notes:null};
-  pairs.push(newPair);
-  saveToServer('/data/pairs','POST',newPair);
-  addLog('Created pair '+id+': '+brand,'ok');
-  document.getElementById('pb-manteco').value='';
-  document.getElementById('pb-control').value='';
-  refreshAll();
-  showView('pairs');
-}
-
-// ── CONTROL MODAL ─────────────────────────────────────────────────────────────
-function openControlModal(idx) {
-  modalPairIdx=idx; scrapedControlData=null;
-  var p=pairs[idx];
-  document.getElementById('modal-pair-label').textContent=p.id+' \u2014 '+p.brand+' \u00b7 '+p.tier;
-  document.getElementById('modal-m-name').textContent=p.m_name||'&#x2014;';
-  document.getElementById('modal-m-price').textContent=(p.m_retail?'$'+Number(p.m_retail).toLocaleString():'Price TBD')+(p.m_sale?' / Sale $'+Number(p.m_sale).toLocaleString():'');
-  document.getElementById('modal-c-url').value=(p.c_url&&p.c_url.indexOf('http')===0)?p.c_url:'';
-  document.getElementById('mc-name').value  =(p.c_name&&p.c_name.indexOf('TBD')===-1)?p.c_name:'';
-  document.getElementById('mc-retail').value=p.c_retail||'';
-  document.getElementById('mc-sale').value  =p.c_sale||'';
-  document.getElementById('mc-fabric').value=p.c_fabric||'';
-  document.getElementById('mc-url').value   =(p.c_url&&p.c_url.indexOf('http')===0)?p.c_url:'';
-  document.getElementById('mc-notes').value =p.c_notes||'';
-  document.getElementById('scrape-preview').className='scrape-preview';
-  switchModalTab('scrape');
-  document.getElementById('control-modal').className='modal-overlay open';
-}
-function closeControlModal() {
-  document.getElementById('control-modal').className='modal-overlay';
-  modalPairIdx=null; scrapedControlData=null;
-}
-document.getElementById('control-modal').onclick=function(e){if(e.target===this)closeControlModal();};
-
-function switchModalTab(name) {
-  document.getElementById('mtab-scrape').className='modal-tab'+(name==='scrape'?' active':'');
-  document.getElementById('mtab-manual').className='modal-tab'+(name==='manual'?' active':'');
-  document.getElementById('mpane-scrape').className='modal-tab-pane'+(name==='scrape'?' active':'');
-  document.getElementById('mpane-manual').className='modal-tab-pane'+(name==='manual'?' active':'');
-}
-
-async function scrapeControlItem() {
-  var url=document.getElementById('modal-c-url').value.trim();
-  if(!url||url.indexOf('http')!==0){alert('Enter a valid URL.');return;}
-  var btn=document.getElementById('modal-scrape-btn');
-  btn.textContent='Scraping...'; btn.disabled=true;
-  scrapedControlData=null;
-  var server=getServer();
-  if(!server){scrapedControlData=guessFromUrl(url);showPreview(scrapedControlData);btn.textContent='Scrape product';btn.disabled=false;return;}
-  try {
-    var res=await fetch(server+'/scrape',{method:'POST',headers:authHdrs(),body:JSON.stringify({urls:[url]})});
-    var reader=res.body.getReader(),decoder=new TextDecoder(),buf='';
-    while(true){
-      var rd=await reader.read(); if(rd.done) break;
-      buf+=decoder.decode(rd.value,{stream:true});
-      var lines=buf.split('\n'); buf=lines.pop();
-      for(var i=0;i<lines.length;i++){
-        if(lines[i].indexOf('data: ')!==0) continue;
-        try{var e=JSON.parse(lines[i].slice(6));if(e.type==='product'){scrapedControlData=e.data;showPreview(e.data);}}catch(pe){}
-      }
-    }
-    if(!scrapedControlData){scrapedControlData=guessFromUrl(url);showPreview(scrapedControlData);}
-  } catch(e){scrapedControlData=guessFromUrl(url);showPreview(scrapedControlData);}
-  btn.textContent='Scrape product'; btn.disabled=false;
-}
-
-function guessFromUrl(url) {
-  var slug=(url.split('/').filter(Boolean).pop()||'').replace(/\.html?$/,'').replace(/[_-]/g,' ').replace(/\s+/g,' ').trim();
-  var name=slug.split(' ').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');
-  var domain=''; try{domain=new URL(url).hostname.replace('www.','').replace('shop.','');}catch(e){}
-  var bmap={'karenmillen.com':'Karen Millen','woolrich.com':'Woolrich','mango.com':'Mango','cos.com':'COS','zara.com':'Zara','naadam.co':'NAADAM','24s.com':'24S','nordstrom.com':'Nordstrom','macys.com':"Macy's",'farfetch.com':'Farfetch'};
-  var brand=bmap[domain]||(domain.split('.')[0]||'').charAt(0).toUpperCase()+(domain.split('.')[0]||'').slice(1);
-  return {brand:brand,name:name||'Product',price_retail:null,price_sale:null,fabric:null,manteco:false,url:url};
-}
-
-function showPreview(data) {
-  document.getElementById('scrape-preview').className='scrape-preview show';
-  document.getElementById('prev-name').textContent   =data.name||'&#x2014;';
-  document.getElementById('prev-retail').textContent =data.price_retail||'&#x2014;';
-  document.getElementById('prev-sale').textContent   =data.price_sale||'&#x2014;';
-  document.getElementById('prev-fabric').textContent =data.fabric||'&#x2014;';
-  document.getElementById('prev-manteco').textContent=data.manteco?'Manteco detected':'None detected';
-  document.getElementById('prev-manteco').style.color=data.manteco?'var(--amber)':'var(--manteco)';
-  if(data.name)         document.getElementById('mc-name').value  =data.name;
-  if(data.price_retail) document.getElementById('mc-retail').value=parsePx(data.price_retail)||'';
-  if(data.price_sale)   document.getElementById('mc-sale').value  =parsePx(data.price_sale)||'';
-  if(data.fabric)       document.getElementById('mc-fabric').value=data.fabric;
-  if(data.url)          document.getElementById('mc-url').value   =data.url;
-}
-
-function assignControl() {
-  if(modalPairIdx===null) return;
-  var isManual=document.getElementById('mpane-manual').className.indexOf('active')>-1;
-  var c_name,c_retail,c_sale,c_fabric,c_url,c_notes;
-  if(!isManual&&scrapedControlData) {
-    c_name=scrapedControlData.name; c_retail=parsePx(scrapedControlData.price_retail);
-    c_sale=parsePx(scrapedControlData.price_sale); c_fabric=scrapedControlData.fabric;
-    c_url=scrapedControlData.url||document.getElementById('modal-c-url').value.trim();
-  } else {
-    c_name  =document.getElementById('mc-name').value.trim();
-    c_retail=parseFloat(document.getElementById('mc-retail').value)||null;
-    c_sale  =parseFloat(document.getElementById('mc-sale').value)||null;
-    c_fabric=document.getElementById('mc-fabric').value.trim()||null;
-    c_url   =document.getElementById('mc-url').value.trim()||null;
-    c_notes =document.getElementById('mc-notes').value.trim()||null;
-  }
-  if(!c_name){alert('Product name is required.');return;}
-  var updates={c_name:c_name,c_retail:c_retail,c_sale:c_sale,c_fabric:c_fabric,c_url:c_url,c_notes:c_notes||null};
-  Object.assign(pairs[modalPairIdx],updates);
-  saveToServer('/data/pairs/'+pairs[modalPairIdx].id,'PATCH',updates);
-  closeControlModal();
-  refreshAll();
-  showView('pairs');
+function dlCSV(rows,filename){
+  var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=filename; a.click();
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-// ── SET YOUR RAILWAY URL HERE ────────────────────────────────────────────────
-// After deploying to Railway, paste your URL below (e.g. https://manteco-dashboard-production.up.railway.app)
-var RAILWAY_URL = 'https://manteco-dashboard-production.up.railway.app';
-// ─────────────────────────────────────────────────────────────────────────────
-
-var savedServer = RAILWAY_URL !== 'PASTE_YOUR_RAILWAY_URL_HERE' ? RAILWAY_URL : (localStorage.getItem('manteco_server') || '');
-var savedKey    = localStorage.getItem('manteco_key');
-
-// Always use the embedded URL if set — no need for users to type it
-if(RAILWAY_URL !== 'PASTE_YOUR_RAILWAY_URL_HERE') {
-  savedServer = RAILWAY_URL;
-  localStorage.setItem('manteco_server', RAILWAY_URL);
-}
-
-// Pre-fill login — server URL hidden from user, they only see password field
-if(savedServer) document.getElementById('login-server').value   = savedServer;
-if(savedKey)    document.getElementById('login-password').value = savedKey;
-
-// Also sync to scraper fields
-if(savedServer) document.getElementById('server-url').value = savedServer;
-if(savedKey)    document.getElementById('secret-key').value  = savedKey;
-
-// Auto-login if password is saved
-if(savedServer && savedKey) {
+var savedKey=localStorage.getItem('manteco_key');
+if(savedKey){
+  document.getElementById('login-password').value=savedKey;
   doLogin();
 } else {
-  // Show login screen
-  document.getElementById('login-screen').classList.remove('hidden');
+  refreshAll();
 }
-
-async function doLogin() {
-  var server   = document.getElementById('login-server').value.trim().replace(/\/$/,'');
-  var password = document.getElementById('login-password').value.trim();
-  var errEl    = document.getElementById('login-error');
-  var btn      = document.getElementById('login-btn');
-
-  errEl.textContent = '';
-
-  if(!server)   { errEl.textContent = 'Please enter the server URL.';   return; }
-  if(!password) { errEl.textContent = 'Please enter the team password.'; return; }
-
-  btn.disabled = true;
-  btn.textContent = 'Connecting...';
-
-  try {
-    // Test connection and auth by hitting /health
-    var res  = await fetch(server+'/health', {signal:AbortSignal.timeout(6000)});
-    var data = await res.json();
-
-    if(data.status !== 'ok') throw new Error('Server returned unexpected status');
-
-    // Save credentials
-    localStorage.setItem('manteco_server', server);
-    localStorage.setItem('manteco_key',    password);
-
-    // Sync to scraper panel fields
-    document.getElementById('server-url').value = server;
-    document.getElementById('secret-key').value  = password;
-
-    // Load data
-    var dataRes  = await fetch(server+'/data');
-    var teamData = await dataRes.json();
-    if(teamData.pairs && teamData.pairs.length)   pairs          = teamData.pairs;
-    if(teamData.resale_listings)                  resaleListings = teamData.resale_listings;
-    if(teamData.scraped_products)                 scrapedProducts= teamData.scraped_products;
-
-    // Hide login, show dashboard
-    document.getElementById('login-screen').classList.add('hidden');
-    refreshAll();
-
-  } catch(e) {
-    if(e.name === 'TimeoutError' || e.message.includes('fetch')) {
-      errEl.textContent = 'Cannot reach server. Check the URL and try again.';
-    } else {
-      errEl.textContent = 'Connection failed: ' + e.message;
-    }
-    btn.disabled = false;
-    btn.textContent = 'Sign in →';
-  }
-}
-
-function signOut() {
-  localStorage.removeItem('manteco_server');
-  localStorage.removeItem('manteco_key');
-  pairs = []; resaleListings = []; scrapedProducts = [];
-  document.getElementById('login-server').value   = '';
-  document.getElementById('login-password').value = '';
-  document.getElementById('login-error').textContent = '';
-  document.getElementById('login-screen').classList.remove('hidden');
-}
-
-checkServer();
-setInterval(checkServer, 15000);
 </script>
-
 </body>
+</html>
