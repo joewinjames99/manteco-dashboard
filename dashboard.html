@@ -255,7 +255,7 @@ input.cell-input{width:100%;font-size:12px;font-family:var(--mono);padding:2px 6
     <div class="topbar-stat"><strong id="top-products">0</strong> products</div>
     <div class="topbar-stat"><strong id="top-pairs">0</strong> pairs</div>
     <div class="topbar-stat">Premium <strong id="top-premium">&mdash;</strong></div>
-    <div class="sync-indicator"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">syncing</span></div>
+    <div class="sync-indicator"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">no sheet</span></div>
     <button class="signout-btn" onclick="signOut()">Sign out</button>
   </div>
 </div>
@@ -540,6 +540,23 @@ input.cell-input{width:100%;font-size:12px;font-family:var(--mono);padding:2px 6
     <div><div class="section-title">Data Collection</div><div class="section-sub">Paste product URLs &mdash; Manteco is auto-detected, you can override</div></div>
   </div>
   <div class="grid-2" style="margin-bottom:16px;">
+    <!-- Google Sheets Connection -->
+    <div class="card" style="margin-bottom:16px;border-left:3px solid var(--manteco);">
+      <div class="card-title">Google Sheets connection</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:8px;">
+        <div class="form-field">
+          <label>Google Sheet URL</label>
+          <input type="text" id="sheet-url-input" placeholder="https://docs.google.com/spreadsheets/d/..." value="" style="font-size:11px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-family:var(--mono);">
+        </div>
+        <button class="btn btn-primary" onclick="connectSheet()" style="white-space:nowrap;">Connect Sheet</button>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div id="sheet-status" style="font-size:11px;color:var(--ink3);">Not connected &mdash; scraped products will not be saved to Sheets</div>
+        <div style="font-size:10px;color:var(--ink3);">Sheet must have edit access shared with your Google account</div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-title">Add product URLs</div>
       <div class="form-field" style="margin-bottom:12px;">
@@ -609,6 +626,11 @@ input.cell-input{width:100%;font-size:12px;font-family:var(--mono);padding:2px 6
 
 
 
+
+
+
+
+
 var RAILWAY_URL = 'https://manteco-dashboard-production.up.railway.app';
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -621,6 +643,72 @@ var recentScraped   = [];
 var pbSelectedM     = [];
 var pbSelectedC     = [];
 var editingType     = 'manteco';
+
+// Google Sheets state — no OAuth needed (sheet is public-editable)
+var googleSheetId  = localStorage.getItem('google_sheet_id') || '';
+var sheetConnected = false;
+
+function updateSheetStatus(msg, ok) {
+  var el  = document.getElementById('sheet-status');
+  if(el) { el.textContent = msg; el.style.color = ok ? 'var(--manteco)' : 'var(--amber)'; }
+  var dot = document.getElementById('sync-dot');
+  if(dot) dot.className = 'sync-dot' + (ok ? ' live' : '');
+  var lbl = document.getElementById('sync-label');
+  if(lbl) lbl.textContent = ok ? 'live' : (googleSheetId ? 'sheet' : 'no sheet');
+}
+
+async function loadProductsFromSheet() {
+  if(!googleSheetId) return false;
+  try {
+    var res  = await fetch(RAILWAY_URL+'/sheet/read?sheet_id='+encodeURIComponent(googleSheetId));
+    if(!res.ok) { var e=await res.json(); updateSheetStatus('Error: '+(e.error||res.status), false); return false; }
+    var data = await res.json();
+    if(data.products !== undefined) {
+      products = data.products;
+      sheetConnected = true;
+      updateSheetStatus('Connected — '+products.length+' products', true);
+      return true;
+    }
+  } catch(e) {
+    updateSheetStatus('Could not load sheet: '+e.message, false);
+  }
+  return false;
+}
+
+async function saveProductToSheet(product, isUpdate) {
+  if(!googleSheetId) return false;
+  var endpoint = isUpdate ? '/sheet/update' : '/sheet/append';
+  try {
+    var res = await fetch(RAILWAY_URL+endpoint, {
+      method: 'POST', headers: authHdrs(),
+      body: JSON.stringify({sheet_id: googleSheetId, product: product})
+    });
+    return res.ok;
+  } catch(e) { return false; }
+}
+
+async function deleteProductFromSheet(product_id) {
+  if(!googleSheetId) return false;
+  try {
+    var res = await fetch(RAILWAY_URL+'/sheet/delete', {
+      method: 'POST', headers: authHdrs(),
+      body: JSON.stringify({sheet_id: googleSheetId, product_id: product_id})
+    });
+    return res.ok;
+  } catch(e) { return false; }
+}
+
+async function connectSheet() {
+  var url = document.getElementById('sheet-url-input').value.trim();
+  if(!url) { alert('Paste your Google Sheet URL first.'); return; }
+  var m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if(!m) { alert('Invalid URL. Copy the full Google Sheet URL from your browser.'); return; }
+  googleSheetId = m[1];
+  localStorage.setItem('google_sheet_id', googleSheetId);
+  updateSheetStatus('Connecting...', false);
+  var ok = await loadProductsFromSheet();
+  if(ok) refreshAll();
+}
 
 // Charts
 var chartOverview=null, chartS2=null, chartS3=null, chartS4=null;
@@ -690,20 +778,43 @@ function signOut(){
 }
 
 async function loadAllData(){
+  // Load pairs + resale from Railway
   try {
-    var res  = await fetch(RAILWAY_URL+'/data');
+    var res  = await fetch(RAILWAY_URL+'/pairs/data');
     var data = await res.json();
-    if(data.products)        products       = data.products;
     if(data.pairs)           pairs          = data.pairs;
     if(data.resale_listings) resaleListings = data.resale_listings;
     if(data.version)         serverVersion  = data.version;
-    document.getElementById('sync-dot').classList.add('live');
-    document.getElementById('sync-label').textContent='live';
-    refreshAll();
-  } catch(e){
-    document.getElementById('sync-label').textContent='offline';
-    refreshAll();
+  } catch(e){ console.warn('Pairs load failed:', e); }
+
+  // Load products from Google Sheet if connected
+  if(googleSheetId) {
+    var ok = await loadProductsFromSheet();
+    if(ok) {
+      document.getElementById('sync-dot').classList.add('live');
+      document.getElementById('sync-label').textContent = 'live';
+    }
+  } else {
+    document.getElementById('sync-label').textContent = 'no sheet';
   }
+  refreshAll();
+}
+
+// Save to server - increments local version so polling won't overwrite
+function save(endpoint, method, body){
+  serverVersion += 1000; // Large jump so poll sees our version as newest
+  fetch(RAILWAY_URL + endpoint, {
+    method: method,
+    headers: authHdrs(),
+    body: JSON.stringify(body)
+  }).then(function(res){
+    return res.json();
+  }).then(function(data){
+    // Server confirms save with its real version number
+    if(data.version) serverVersion = data.version;
+  }).catch(function(e){
+    console.warn('Save failed:', e);
+  });
 }
 
 function startPolling(){
@@ -711,14 +822,17 @@ function startPolling(){
     try {
       var res  = await fetch(RAILWAY_URL+'/data?since_version='+serverVersion);
       var data = await res.json();
+      // Only update if server has newer data than us
       if(data.up_to_date) return;
-      if(data.products)        products       = data.products;
-      if(data.pairs)           pairs          = data.pairs;
-      if(data.resale_listings) resaleListings = data.resale_listings;
-      if(data.version)         serverVersion  = data.version;
+      if(!data.version || data.version <= serverVersion) return;
+      products       = data.products       || products;
+      pairs          = data.pairs          || pairs;
+      resaleListings = data.resale_listings|| resaleListings;
+      serverVersion  = data.version;
       refreshAll();
       document.getElementById('sync-dot').classList.add('live');
-      document.getElementById('sync-label').textContent='live';
+      document.getElementById('sync-label').textContent='updated';
+      setTimeout(function(){ document.getElementById('sync-label').textContent='live'; }, 2000);
     } catch(e){
       document.getElementById('sync-dot').classList.remove('live');
       document.getElementById('sync-label').textContent='offline';
@@ -969,7 +1083,7 @@ function quickToggleType(idx, flag){
   var p=products[idx]; if(!p) return;
   p.type=flag===0?'manteco':'control';
   save('/data/products/'+p.id,'PATCH',{type:p.type});
-  renderProducts(); renderPairBuilder();
+  refreshAll();
 }
 
 function deleteProduct(idx){
@@ -1001,18 +1115,22 @@ function setEditType(type){
   document.getElementById('edit-type-c').className=type==='control'?'active-c':'';
 }
 function saveEditModal(){
-  var pid    =document.getElementById('edit-pid').value;
-  var updates={
-    brand:       document.getElementById('edit-brand').value.trim(),
-    name:        document.getElementById('edit-name').value.trim(),
-    price_retail:document.getElementById('edit-retail').value.trim()||null,
-    price_sale:  document.getElementById('edit-sale').value.trim()||null,
-    fabric:      document.getElementById('edit-fabric').value.trim()||null,
-    url:         document.getElementById('edit-url').value.trim()||null,
-    type:        editingType,
+  var pid = document.getElementById('edit-pid').value;
+  var p   = getProduct(pid);
+  if(!p){ closeEditModal(); return; }
+  var updates = {
+    brand:        document.getElementById('edit-brand').value.trim()  || null,
+    name:         document.getElementById('edit-name').value.trim()   || null,
+    price_retail: document.getElementById('edit-retail').value.trim() || null,
+    price_sale:   document.getElementById('edit-sale').value.trim()   || null,
+    fabric:       document.getElementById('edit-fabric').value.trim() || null,
+    url:          document.getElementById('edit-url').value.trim()    || null,
+    type:         editingType,
   };
-  var p=getProduct(pid); if(p) Object.assign(p,updates);
-  save('/data/products/'+pid,'PATCH',updates);
+  // Update local state immediately
+  Object.assign(p, updates);
+  // Persist to server
+  save('/data/products/'+pid, 'PATCH', updates);
   closeEditModal();
   refreshAll();
 }
@@ -1438,7 +1556,8 @@ async function startScrape(){
   document.getElementById('progress-section').style.display='';
   addLog('Scraping '+urls.length+' URL(s)...');
   try{
-    var res=await fetch(RAILWAY_URL+'/scrape',{method:'POST',headers:authHdrs(),body:JSON.stringify({urls:urls})});
+    var scrapeBody = {urls:urls, sheet_id:googleSheetId};
+    var res=await fetch(RAILWAY_URL+'/scrape',{method:'POST',headers:authHdrs(),body:JSON.stringify(scrapeBody)});
     if(!res.ok){var e=await res.json();throw new Error(e.error||res.statusText);}
     var reader=res.body.getReader(),decoder=new TextDecoder(),buf='';
     while(true){
@@ -1455,7 +1574,9 @@ async function startScrape(){
             addLog(evt.message);
           }
           if(evt.type==='product'){
-            products.push(evt.data);
+            // Add locally — sheet poll will sync for teammates
+            if(!googleSheetId) products.push(evt.data);
+            else products.push(evt.data); // also keep locally for immediate display
             recentScraped.push(evt.data);
             addLog((evt.data.brand||'?')+' — '+(evt.data.price_retail||'n/a')+' — type: '+(evt.data.type),'ok');
             renderRecentScraped();
@@ -1538,15 +1659,25 @@ function dlCSV(rows,filename){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+// Pre-fill sheet URL input
+if(googleSheetId) {
+  var sheetInput = document.getElementById('sheet-url-input');
+  if(sheetInput) sheetInput.value = 'https://docs.google.com/spreadsheets/d/'+googleSheetId;
+}
+
 // Auto-login if password saved
 var savedKey = localStorage.getItem('manteco_key');
 if(savedKey){
   document.getElementById('login-password').value = savedKey;
-  // Small delay to ensure DOM is ready
   setTimeout(function(){ doLogin(); }, 100);
 } else {
   refreshAll();
 }
+
+
+
+
+
 
 
 
