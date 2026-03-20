@@ -631,6 +631,8 @@ input.cell-input{width:100%;font-size:12px;font-family:var(--mono);padding:2px 6
 
 
 
+
+
 var RAILWAY_URL = 'https://manteco-dashboard-production.up.railway.app';
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -645,8 +647,10 @@ var pbSelectedC     = [];
 var editingType     = 'manteco';
 
 // Google Sheets state — no OAuth needed (sheet is public-editable)
-var googleSheetId  = localStorage.getItem('google_sheet_id') || '';
-var sheetConnected = false;
+var googleSheetId      = localStorage.getItem('google_sheet_id')      || '';
+var googleAccessToken  = localStorage.getItem('google_access_token')  || '';
+var googleRefreshToken = localStorage.getItem('google_refresh_token') || '';
+var sheetConnected     = false;
 
 function updateSheetStatus(msg, ok) {
   var el  = document.getElementById('sheet-status');
@@ -660,7 +664,14 @@ function updateSheetStatus(msg, ok) {
 async function loadProductsFromSheet() {
   if(!googleSheetId) return false;
   try {
-    var res  = await fetch(RAILWAY_URL+'/sheet/read?sheet_id='+encodeURIComponent(googleSheetId));
+    var res = await fetch(RAILWAY_URL+'/sheet/read?sheet_id='+encodeURIComponent(googleSheetId), {
+      headers: {'X-Google-Token': googleAccessToken}
+    });
+    if(res.status === 401) {
+      var refreshed = await refreshGoogleToken();
+      if(!refreshed) { updateSheetStatus('Token expired — reconnect your Sheet', false); return false; }
+      return loadProductsFromSheet();
+    }
     if(!res.ok) { var e=await res.json(); updateSheetStatus('Error: '+(e.error||res.status), false); return false; }
     var data = await res.json();
     if(data.products !== undefined) {
@@ -698,17 +709,7 @@ async function deleteProductFromSheet(product_id) {
   } catch(e) { return false; }
 }
 
-async function connectSheet() {
-  var url = document.getElementById('sheet-url-input').value.trim();
-  if(!url) { alert('Paste your Google Sheet URL first.'); return; }
-  var m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  if(!m) { alert('Invalid URL. Copy the full Google Sheet URL from your browser.'); return; }
-  googleSheetId = m[1];
-  localStorage.setItem('google_sheet_id', googleSheetId);
-  updateSheetStatus('Connecting...', false);
-  var ok = await loadProductsFromSheet();
-  if(ok) refreshAll();
-}
+async function connectSheet(){ return connectGoogleSheets(); }
 
 // Charts
 var chartOverview=null, chartS2=null, chartS3=null, chartS4=null;
@@ -841,6 +842,89 @@ function startPolling(){
 }
 
 
+
+// ── GOOGLE OAUTH FUNCTIONS ───────────────────────────────
+
+async function refreshGoogleToken() {
+  if(!googleRefreshToken) return false;
+  try {
+    var res  = await fetch(RAILWAY_URL+'/oauth/refresh', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({refresh_token: googleRefreshToken})
+    });
+    var d = await res.json();
+    if(d.access_token) {
+      googleAccessToken = d.access_token;
+      localStorage.setItem('google_access_token', googleAccessToken);
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+async function connectGoogleSheets() {
+  var sheetUrl = document.getElementById('sheet-url-input').value.trim();
+  if(!sheetUrl) { alert('Paste your Google Sheet URL first.'); return; }
+  var match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if(!match) { alert('Invalid Google Sheet URL. Copy the full URL from your browser.'); return; }
+  googleSheetId = match[1];
+  localStorage.setItem('google_sheet_id', googleSheetId);
+  if(!googleAccessToken) {
+    // Trigger OAuth flow
+    try {
+      var redirectUri = window.location.href.split('?')[0] + '?oauth=callback';
+      var res  = await fetch(RAILWAY_URL+'/oauth/url?redirect_uri='+encodeURIComponent(redirectUri));
+      var data = await res.json();
+      if(data.url) {
+        localStorage.setItem('oauth_redirect_uri', redirectUri);
+        window.location.href = data.url;
+        return;
+      }
+    } catch(e) {}
+    // OAuth not configured — show manual token input
+    document.getElementById('sheet-manual-token').style.display = '';
+    updateSheetStatus('OAuth not configured on server — use manual token below', false);
+  } else {
+    // Already have token, just load
+    var ok = await loadProductsFromSheet();
+    if(ok) refreshAll();
+  }
+}
+
+async function submitManualToken() {
+  var t = document.getElementById('manual-token-input').value.trim();
+  if(!t) return;
+  googleAccessToken = t;
+  localStorage.setItem('google_access_token', t);
+  document.getElementById('sheet-manual-token').style.display = 'none';
+  var ok = await loadProductsFromSheet();
+  if(ok) refreshAll();
+}
+
+async function handleOAuthCallback() {
+  var params = new URLSearchParams(window.location.search);
+  var code   = params.get('code');
+  if(!code) return;
+  window.history.replaceState({}, '', window.location.pathname);
+  var redirectUri = localStorage.getItem('oauth_redirect_uri') || window.location.href.split('?')[0];
+  try {
+    var res  = await fetch(RAILWAY_URL+'/oauth/token', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({code: code, redirect_uri: redirectUri})
+    });
+    var d = await res.json();
+    if(d.access_token) {
+      googleAccessToken  = d.access_token;
+      googleRefreshToken = d.refresh_token || '';
+      localStorage.setItem('google_access_token',  googleAccessToken);
+      localStorage.setItem('google_refresh_token', googleRefreshToken);
+      // Load sheet data then show dashboard
+      await loadProductsFromSheet();
+      document.getElementById('login-screen').classList.add('hidden');
+      refreshAll();
+    }
+  } catch(e) { console.warn('OAuth callback failed:', e); }
+}
 
 // ── NAVIGATION ─────────────────────────────────────────────────
 function showView(name){
@@ -1556,7 +1640,7 @@ async function startScrape(){
   document.getElementById('progress-section').style.display='';
   addLog('Scraping '+urls.length+' URL(s)...');
   try{
-    var scrapeBody = {urls:urls, sheet_id:googleSheetId};
+    var scrapeBody = {urls:urls, sheet_id:googleSheetId, access_token:googleAccessToken};
     var res=await fetch(RAILWAY_URL+'/scrape',{method:'POST',headers:authHdrs(),body:JSON.stringify(scrapeBody)});
     if(!res.ok){var e=await res.json();throw new Error(e.error||res.statusText);}
     var reader=res.body.getReader(),decoder=new TextDecoder(),buf='';
@@ -1666,13 +1750,26 @@ if(googleSheetId) {
 }
 
 // Auto-login if password saved
-var savedKey = localStorage.getItem('manteco_key');
-if(savedKey){
-  document.getElementById('login-password').value = savedKey;
-  setTimeout(function(){ doLogin(); }, 100);
-} else {
-  refreshAll();
+// Pre-fill sheet URL if saved
+if(googleSheetId && document.getElementById('sheet-url-input')) {
+  document.getElementById('sheet-url-input').value = 'https://docs.google.com/spreadsheets/d/'+googleSheetId;
 }
+
+// Handle OAuth callback
+if(window.location.search.includes('code=') && window.location.search.includes('state=') || 
+   window.location.search.includes('oauth=callback')) {
+  handleOAuthCallback();
+} else {
+  var savedKey = localStorage.getItem('manteco_key');
+  if(savedKey){
+    document.getElementById('login-password').value = savedKey;
+    setTimeout(function(){ doLogin(); }, 100);
+  } else {
+    refreshAll();
+  }
+}
+
+
 
 
 
