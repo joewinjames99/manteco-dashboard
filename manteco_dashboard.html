@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manteco Price Resilience Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1B2A4A; --navy-mid:#243660; --navy-light:#2E4A7A;
+  --teal:#1E7E6F; --teal-light:#25a08e; --teal-bg:rgba(30,126,111,0.08);
+  --gold:#D4A843; --gold-light:#e8c06a; --gold-bg:rgba(212,168,67,0.10);
+  --white:#fff; --offwhite:#F7F6F3; --surface:#FAFAF8;
+  --border:rgba(27,42,74,0.10); --border-mid:rgba(27,42,74,0.18);
+  --ink:#1a1a2e; --ink2:#3a4060; --ink3:#7a8090;
+  --green:#1a7a4a; --green-bg:rgba(26,122,74,0.09);
+  --amber:#a07020; --amber-bg:rgba(160,112,32,0.09);
+  --red:#b03030; --red-bg:rgba(176,48,48,0.09);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Outfit',system-ui,sans-serif;
+  --r:8px; --r-lg:14px; --r-xl:20px;
+  --shadow:0 2px 12px rgba(27,42,74,0.08);
+  --shadow-lg:0 4px 28px rgba(27,42,74,0.13);
+}
+body{font-family:var(--sans);background:var(--offwhite);color:var(--ink);font-size:14px;line-height:1.55;min-width:1280px;overflow-x:auto;}
+
+/* ─── TOPBAR ─── */
+.topbar{background:var(--navy);color:#fff;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:200;border-bottom:1px solid rgba(255,255,255,0.07);}
+.topbar-brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:34px;height:34px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#fff;flex-shrink:0;}
+.brand-name{font-family:var(--serif);font-size:17px;font-weight:500;color:#fff;letter-spacing:0.01em;}
+.brand-sub{font-size:11px;color:rgba(255,255,255,0.38);margin-top:1px;}
+.topbar-meta{display:flex;align-items:center;gap:24px;}
+.topbar-kpi{text-align:right;}
+.topbar-kpi-val{font-size:15px;font-weight:600;color:#fff;}
+.topbar-kpi-lbl{font-size:10px;color:rgba(255,255,255,0.38);text-transform:uppercase;letter-spacing:0.07em;}
+.sync-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:20px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.45);cursor:pointer;transition:all 0.15s;}
+.sync-pill:hover{background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.7);}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.25);}
+.sync-dot.live{background:#4ecf8a;}
+
+/* ─── NAV ─── */
+.mainnav{background:var(--white);border-bottom:1px solid var(--border);padding:0 32px;display:flex;position:sticky;top:56px;z-index:100;}
+.nav-tab{padding:14px 18px 13px;font-size:13px;font-weight:400;color:var(--ink3);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;user-select:none;}
+.nav-tab:hover{color:var(--ink);}
+.nav-tab.active{color:var(--navy);font-weight:500;border-bottom-color:var(--teal);}
+.nav-tab .tab-badge{display:inline-block;background:var(--teal-bg);color:var(--teal);border-radius:10px;padding:1px 7px;font-size:10px;font-weight:500;margin-left:5px;}
+
+/* ─── VIEWS ─── */
+.view{display:none;padding:28px 32px 60px;max-width:1480px;margin:0 auto;opacity:0;transition:opacity 0.18s;}
+.view.active{display:block;opacity:1;}
+
+/* ─── HERO ─── */
+.hero{background:var(--navy);border-radius:var(--r-xl);padding:28px 32px;margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;}
+.hero-left{flex:1;}
+.hero-eyebrow{font-size:10px;font-weight:500;color:rgba(255,255,255,0.38);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;}
+.hero-hypothesis{font-family:var(--serif);font-style:italic;font-size:17px;line-height:1.55;color:rgba(255,255,255,0.88);max-width:660px;}
+.hero-benchmark{margin-top:8px;font-size:12px;color:rgba(255,255,255,0.30);}
+.hero-right{flex-shrink:0;display:flex;flex-direction:column;gap:10px;align-items:flex-end;}
+.verdict-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:var(--r-lg);padding:16px 22px;text-align:center;min-width:180px;}
+.verdict-label{font-size:10px;font-weight:500;color:rgba(255,255,255,0.35);letter-spacing:0.10em;text-transform:uppercase;margin-bottom:6px;}
+.verdict-value{font-family:var(--serif);font-size:22px;font-weight:600;color:#4ecf8a;}
+.verdict-sub{font-size:11px;color:rgba(255,255,255,0.30);margin-top:4px;}
+.hero-stats{display:flex;gap:20px;}
+.hero-stat{text-align:center;}
+.hero-stat-val{font-size:20px;font-weight:600;color:var(--gold);}
+.hero-stat-lbl{font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;}
+
+/* ─── KPI STRIP ─── */
+.kpi-strip{display:grid;gap:12px;margin-bottom:24px;}
+.kpi-strip-5{grid-template-columns:repeat(5,1fr);}
+.kpi-strip-4{grid-template-columns:repeat(4,1fr);}
+.kpi-strip-3{grid-template-columns:repeat(3,1fr);}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 20px;box-shadow:var(--shadow);}
+.kpi-label{font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:0.09em;text-transform:uppercase;margin-bottom:7px;}
+.kpi-value{font-family:var(--serif);font-size:28px;font-weight:500;line-height:1;color:var(--ink);}
+.kpi-sub{font-size:11px;color:var(--ink3);margin-top:5px;}
+.kpi.green .kpi-value{color:var(--teal);}
+.kpi.gold .kpi-value{color:var(--gold);}
+.kpi.amber .kpi-value{color:var(--amber);}
+
+/* ─── LIFECYCLE CARDS ─── */
+.lifecycle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+.lc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 22px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;}
+.lc-header{display:flex;align-items:center;justify-content:space-between;}
+.lc-stage{font-size:11px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;}
+.lc-title{font-family:var(--serif);font-size:17px;margin-top:2px;color:var(--ink);}
+.lc-metric{font-family:var(--serif);font-size:26px;font-weight:500;color:var(--teal);}
+.lc-desc{font-size:12px;color:var(--ink3);line-height:1.5;}
+
+/* ─── BADGES ─── */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.badge-green{background:var(--green-bg);color:var(--green);}
+.badge-amber{background:var(--amber-bg);color:var(--amber);}
+.badge-red{background:var(--red-bg);color:var(--red);}
+.badge-blue{background:rgba(27,42,74,0.08);color:var(--navy);}
+.badge-teal{background:var(--teal-bg);color:var(--teal);}
+.badge-gold{background:var(--gold-bg);color:#8a6010;}
+.badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+
+/* ─── CARDS ─── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:20px 24px;}
+.card-title{font-size:11px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:16px;}
+.card-heading{font-family:var(--serif);font-size:18px;margin-bottom:4px;color:var(--ink);}
+.section-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;}
+.section-title{font-family:var(--serif);font-size:20px;color:var(--ink);}
+.section-sub{font-size:12px;color:var(--ink3);}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+/* ─── CALLOUT ─── */
+.callout{border-radius:var(--r);padding:14px 18px;margin:16px 0;font-size:12px;line-height:1.6;}
+.callout-amber{background:var(--amber-bg);border-left:3px solid var(--gold);color:var(--ink2);}
+.callout-teal{background:var(--teal-bg);border-left:3px solid var(--teal);color:var(--ink2);}
+.callout-blue{background:rgba(27,42,74,0.05);border-left:3px solid var(--navy);color:var(--ink2);}
+.callout strong{font-weight:600;}
+
+/* ─── TABLES ─── */
+.table-wrap{overflow-x:auto;}
+table.t{width:100%;border-collapse:collapse;font-size:12.5px;}
+table.t th{padding:9px 13px;text-align:left;font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:0.08em;text-transform:uppercase;background:var(--offwhite);border-bottom:1px solid var(--border-mid);white-space:nowrap;}
+table.t td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+table.t tbody tr:nth-child(even) td{background:rgba(247,246,243,0.5);}
+table.t tbody tr:hover td{background:var(--teal-bg);}
+table.t tr:last-child td{border-bottom:none;}
+.t-mono{font-family:'Courier New',monospace;font-size:12px;}
+.t-id{font-family:'Courier New',monospace;font-size:10.5px;color:var(--ink3);}
+.t-name{max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.t-num{text-align:right;}
+.t-pct-pos{color:var(--green);font-weight:500;}
+.t-pct-neg{color:var(--red);font-weight:500;}
+.t-pct-neut{color:var(--ink3);}
+
+/* ─── TIER BREAKDOWN ─── */
+.tier-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.tier-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 22px;box-shadow:var(--shadow);}
+.tier-label{font-size:10px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.tier-prem{font-family:var(--serif);font-size:32px;font-weight:500;color:var(--teal);line-height:1;}
+.tier-meta{font-size:12px;color:var(--ink3);margin-top:6px;}
+.tier-bar-row{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:11px;}
+.tier-bar-track{flex:1;height:6px;background:var(--offwhite);border-radius:3px;overflow:hidden;}
+.tier-bar-fill{height:100%;border-radius:3px;background:var(--teal);}
+
+/* ─── CHART CONTAINERS ─── */
+.chart-wrap{position:relative;width:100%;}
+.chart-wrap canvas{width:100%!important;}
+.chart-lg{height:300px;}
+.chart-md{height:240px;}
+.chart-sm{height:200px;}
+
+/* ─── TOOLBAR ─── */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.toolbar input,.toolbar select{font-size:12.5px;padding:8px 13px;background:var(--white);border:1px solid var(--border-mid);border-radius:var(--r);color:var(--ink);font-family:var(--sans);outline:none;}
+.toolbar input{min-width:220px;}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--teal);}
+.toolbar select{cursor:pointer;}
+
+/* ─── SETTINGS PANEL ─── */
+.settings-trigger{position:fixed;bottom:20px;right:24px;z-index:300;background:var(--navy);color:rgba(255,255,255,0.55);border:none;border-radius:20px;padding:7px 14px;font-size:11px;font-family:var(--sans);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s;}
+.settings-trigger:hover{color:#fff;background:var(--navy-mid);}
+.settings-panel{position:fixed;bottom:56px;right:24px;z-index:300;background:var(--white);border:1px solid var(--border-mid);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:360px;padding:20px;display:none;}
+.settings-panel.open{display:block;}
+.settings-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:12px;}
+.settings-desc{font-size:11.5px;color:var(--ink3);margin-bottom:12px;line-height:1.55;}
+.settings-field label{display:block;font-size:10px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;}
+.settings-field input{width:100%;padding:9px 12px;border:1px solid var(--border-mid);border-radius:var(--r);font-size:12px;font-family:var(--sans);color:var(--ink);outline:none;}
+.settings-field input:focus{border-color:var(--teal);}
+.settings-actions{display:flex;gap:8px;margin-top:12px;}
+.btn{font-size:12.5px;padding:8px 16px;border-radius:var(--r);cursor:pointer;font-family:var(--sans);font-weight:500;border:1px solid var(--border-mid);background:var(--white);color:var(--ink);transition:all 0.12s;}
+.btn:hover{background:var(--offwhite);}
+.btn-primary{background:var(--teal);color:#fff;border-color:var(--teal);}
+.btn-primary:hover{background:var(--teal-light);border-color:var(--teal-light);}
+.btn-sm{font-size:11px;padding:5px 11px;}
+.settings-msg{font-size:11px;margin-top:8px;min-height:16px;}
+.settings-msg.ok{color:var(--green);}
+.settings-msg.err{color:var(--red);}
+
+/* ─── FOOTER ─── */
+.page-footer{text-align:center;padding:32px 24px;font-size:11px;color:var(--ink3);border-top:1px solid var(--border);margin-top:24px;}
+.page-footer strong{color:var(--ink2);}
+
+/* ─── LEGEND ─── */
+.chart-legend{display:flex;gap:18px;font-size:11.5px;color:var(--ink2);margin-bottom:10px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px;}
+.legend-swatch{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+
+/* ─── BRAND PILL ─── */
+.brand-pill{display:inline-block;font-size:10.5px;font-weight:500;padding:2px 8px;border-radius:10px;background:var(--offwhite);color:var(--ink2);border:1px solid var(--border);}
+
+/* ─── DONUT CHART LAYOUT ─── */
+.donut-wrap{display:flex;align-items:center;gap:24px;}
+.donut-canvas{flex-shrink:0;}
+.donut-legend{display:flex;flex-direction:column;gap:10px;}
+.donut-row{display:flex;align-items:center;gap:10px;font-size:13px;}
+.donut-swatch{width:13px;height:13px;border-radius:50%;flex-shrink:0;}
+.donut-val{font-family:var(--serif);font-size:20px;font-weight:500;}
+.donut-lbl{font-size:11px;color:var(--ink3);}
+
+/* ─── LOADING OVERLAY ─── */
+.loading-overlay{position:fixed;inset:0;z-index:999;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity 0.3s;}
+.loading-overlay.hidden{display:none;}
+.spinner{width:42px;height:42px;border:3px solid rgba(255,255,255,0.12);border-top-color:var(--teal);border-radius:50%;animation:spin 0.75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-logo{font-family:var(--serif);font-size:22px;font-weight:500;color:rgba(255,255,255,0.7);letter-spacing:0.02em;}
+.loading-text{font-size:12px;color:rgba(255,255,255,0.35);}
+
+/* ─── FALLBACK BANNER ─── */
+.fallback-banner{background:#fdf6e3;border-bottom:1px solid rgba(160,112,32,0.25);padding:9px 32px;font-size:12px;color:var(--amber);display:none;align-items:center;gap:10px;position:sticky;top:112px;z-index:90;}
+.fallback-banner.show{display:flex;}
+.fallback-banner-icon{font-size:14px;}
+
+/* ─── SYNC FLASH ─── */
+@keyframes dot-flash{0%,100%{opacity:1}40%{opacity:0.2;transform:scale(1.6);}}
+.sync-dot.flash{animation:dot-flash 0.55s ease;}
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-mark">MTC</div>
+    <div>
+      <div class="brand-name">Manteco Price Resilience</div>
+      <div class="brand-sub">Baruch College &amp; Free University of Bozen-Bolzano · 2026</div>
+    </div>
+  </div>
+  <div class="topbar-meta">
+    <div class="topbar-kpi"><div class="topbar-kpi-val" id="topbar-products">—</div><div class="topbar-kpi-lbl">Products</div></div>
+    <div class="topbar-kpi"><div class="topbar-kpi-val" id="topbar-pairs">—</div><div class="topbar-kpi-lbl">Pairs</div></div>
+    <div class="topbar-kpi"><div class="topbar-kpi-val" style="color:var(--gold)" id="topbar-premium">—</div><div class="topbar-kpi-lbl">Avg Premium</div></div>
+    <div class="sync-pill" onclick="toggleSettings()" id="sync-pill">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Loading…</span>
+    </div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.28);text-align:right;">
+      <span id="last-updated-label" style="display:none">Last updated</span>
+      <span id="last-updated-ago" style="display:none;color:rgba(255,255,255,0.42);margin-left:3px;"></span>
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="mainnav">
+  <div class="nav-tab active" data-view="overview" onclick="showView('overview')">Overview</div>
+  <div class="nav-tab" data-view="stage2" onclick="showView('stage2')">Stage 2 — Market Entry</div>
+  <div class="nav-tab" data-view="stage3" onclick="showView('stage3')">Stage 3 — Markdown Depth</div>
+  <div class="nav-tab" data-view="stage4" onclick="showView('stage4')">Stage 4 — Secondary Market</div>
+  <div class="nav-tab" data-view="products" onclick="showView('products')">Products Library <span class="tab-badge" id="tab-prod-count">63</span></div>
+</nav>
+
+<!-- FALLBACK BANNER -->
+<div class="fallback-banner" id="fallback-banner">
+  <span class="fallback-banner-icon">⚠</span>
+  <span>Live data unavailable — showing cached data. Check your Sheet URLs in the sync settings.</span>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-logo">Manteco Price Resilience</div>
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Fetching live data from Google Sheets…</div>
+</div>
+
+<!-- ═══════════ OVERVIEW ═══════════ -->
+<div class="view active" id="view-overview">
+
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Research Hypothesis · Manteco S.r.l. · Prato, Italy</div>
+      <div class="hero-hypothesis">"Garments incorporating Manteco fabrics demonstrate stronger price resilience across their lifecycle than comparable garments without the Manteco label."</div>
+      <div class="hero-benchmark">Working benchmark: consistent differential of ≥10% across lifecycle stages</div>
+    </div>
+    <div class="hero-right">
+      <div class="verdict-card">
+        <div class="verdict-label">Overall Verdict</div>
+        <div class="verdict-value">Supported</div>
+        <div class="verdict-sub">13 of 20 pairs ≥10%</div>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hero-stat-val">+56.9%</div><div class="hero-stat-lbl">Avg Premium</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">65%</div><div class="hero-stat-lbl">Pairs Pass</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">53%</div><div class="hero-stat-lbl">Resale Residual</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-strip kpi-strip-5">
+    <div class="kpi green"><div class="kpi-label">Avg Retail Premium</div><div class="kpi-value">+56.9%</div><div class="kpi-sub">Manteco vs matched control</div></div>
+    <div class="kpi green"><div class="kpi-label">Pairs ≥10% Threshold</div><div class="kpi-value">13 / 20</div><div class="kpi-sub">65% of matched pairs</div></div>
+    <div class="kpi amber"><div class="kpi-label">Manteco Avg MD%</div><div class="kpi-value">20.3%</div><div class="kpi-sub">vs 16.5% control (mixed)</div></div>
+    <div class="kpi"><div class="kpi-label">Resale Residual</div><div class="kpi-value">53%</div><div class="kpi-sub">14 Manteco listings</div></div>
+    <div class="kpi"><div class="kpi-label">Total Products</div><div class="kpi-value">63</div><div class="kpi-sub">31 Manteco · 32 Control</div></div>
+  </div>
+
+  <div class="lifecycle-grid">
+    <div class="lc-card">
+      <div class="lc-header">
+        <div><div class="lc-stage">Stage 2</div><div class="lc-title">Market Entry</div></div>
+        <span class="badge badge-green"><span class="badge-dot"></span>Supported</span>
+      </div>
+      <div class="lc-metric">+56.9%</div>
+      <div class="lc-desc">Average retail premium across 20 matched pairs. 13 of 20 pairs (65%) meet or exceed the 10% benchmark. Contemporary Premium tier leads at +61.9%.</div>
+    </div>
+    <div class="lc-card">
+      <div class="lc-header">
+        <div><div class="lc-stage">Stage 3</div><div class="lc-title">Markdown Depth</div></div>
+        <span class="badge badge-amber"><span class="badge-dot"></span>Mixed</span>
+      </div>
+      <div class="lc-metric">3.7pp</div>
+      <div class="lc-desc">Manteco products show marginally deeper discounts (20.3% vs 16.5%). However, absolute dollar retention is higher given Manteco's elevated retail base — finding is nuanced.</div>
+    </div>
+    <div class="lc-card">
+      <div class="lc-header">
+        <div><div class="lc-stage">Stage 4</div><div class="lc-title">Secondary Market</div></div>
+        <span class="badge badge-blue"><span class="badge-dot"></span>In Progress</span>
+      </div>
+      <div class="lc-metric">53%</div>
+      <div class="lc-desc">Average resale residual across 14 Manteco listings. Only 3 paired control data points available — insufficient for cross-group comparison. Data collection ongoing.</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:24px;">
+    <div class="card">
+      <div class="card-title">Retail Price by Pair — Manteco vs Control</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--teal)"></div>Manteco</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--navy)"></div>Control</div>
+      </div>
+      <div class="chart-wrap chart-lg"><canvas id="chart-ov-retail"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Premium % by Pair — Ranked</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--teal)"></div>≥10% threshold</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--offwhite);border:1px solid var(--border)"></div>&lt;10%</div>
+        <div class="legend-item" style="gap:4px;"><div style="width:20px;height:2px;border-top:2px dashed var(--gold);margin-top:5px;"></div>10% threshold</div>
+      </div>
+      <div class="chart-wrap chart-lg"><canvas id="chart-ov-premium"></canvas></div>
+    </div>
+  </div>
+
+  <div class="tier-grid">
+    <div class="tier-card">
+      <div class="tier-label"><span class="badge badge-blue">Fast Fashion Premium</span></div>
+      <div class="tier-prem">+52.0%</div>
+      <div class="tier-meta">10 pairs · 5 of 10 meet ≥10% threshold · Brands: Zara, Mango, H&amp;M, COS, Selected</div>
+      <div class="tier-bar-row">
+        <span style="font-size:11px;color:var(--ink3);min-width:90px;">Manteco avg</span>
+        <div class="tier-bar-track"><div class="tier-bar-fill" style="width:100%;background:var(--teal)"></div></div>
+        <span style="font-family:'Courier New',monospace;font-size:11px;color:var(--teal);">$267</span>
+      </div>
+      <div class="tier-bar-row">
+        <span style="font-size:11px;color:var(--ink3);min-width:90px;">Control avg</span>
+        <div class="tier-bar-track"><div class="tier-bar-fill" style="width:67%;background:var(--navy)"></div></div>
+        <span style="font-family:'Courier New',monospace;font-size:11px;color:var(--navy);">$179</span>
+      </div>
+    </div>
+    <div class="tier-card">
+      <div class="tier-label"><span class="badge badge-gold">Contemporary Premium</span></div>
+      <div class="tier-prem">+61.9%</div>
+      <div class="tier-meta">10 pairs · 8 of 10 meet ≥10% threshold · Brands: Woolrich, Fortela, Karen Millen, Aritzia, EAVES</div>
+      <div class="tier-bar-row">
+        <span style="font-size:11px;color:var(--ink3);min-width:90px;">Manteco avg</span>
+        <div class="tier-bar-track"><div class="tier-bar-fill" style="width:100%;background:var(--teal)"></div></div>
+        <span style="font-family:'Courier New',monospace;font-size:11px;color:var(--teal);">$726</span>
+      </div>
+      <div class="tier-bar-row">
+        <span style="font-size:11px;color:var(--ink3);min-width:90px;">Control avg</span>
+        <div class="tier-bar-track"><div class="tier-bar-fill" style="width:62%;background:var(--navy)"></div></div>
+        <span style="font-family:'Courier New',monospace;font-size:11px;color:var(--navy);">$449</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /overview -->
+
+<!-- ═══════════ STAGE 2 ═══════════ -->
+<div class="view" id="view-stage2">
+  <div class="section-row">
+    <div><div class="section-title">Stage 2 — Market Entry Premium</div><div class="section-sub">Retail price premium of Manteco-labeled garments vs matched controls at point of sale</div></div>
+  </div>
+
+  <div class="kpi-strip kpi-strip-4">
+    <div class="kpi green"><div class="kpi-label">Avg Premium %</div><div class="kpi-value">+56.9%</div><div class="kpi-sub">Across all 20 pairs</div></div>
+    <div class="kpi green"><div class="kpi-label">Pairs ≥10% Threshold</div><div class="kpi-value">13 / 20</div><div class="kpi-sub">65% pass rate</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Manteco Retail</div><div class="kpi-value">$497</div><div class="kpi-sub">20-pair weighted avg</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Control Retail</div><div class="kpi-value">$314</div><div class="kpi-sub">20-pair weighted avg</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">Retail Premium % per Pair — Sorted Descending (Gold dashed line = 10% threshold)</div>
+    <div class="chart-wrap" style="height:280px;"><canvas id="chart-s2-bars"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">All 20 Matched Pairs — Retail Premium Detail</div>
+    <div class="table-wrap">
+      <table class="t" id="table-s2"></table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Brand &amp; Tier Breakdown</div>
+    <div class="table-wrap">
+      <table class="t" id="table-s2-brands"></table>
+    </div>
+  </div>
+</div><!-- /stage2 -->
+
+<!-- ═══════════ STAGE 3 ═══════════ -->
+<div class="view" id="view-stage3">
+  <div class="section-row">
+    <div><div class="section-title">Stage 3 — Markdown Depth</div><div class="section-sub">Discount depth at point of sale — Manteco vs control across 10 pairs with sale data</div></div>
+  </div>
+
+  <div class="kpi-strip kpi-strip-4">
+    <div class="kpi amber"><div class="kpi-label">Avg Manteco MD%</div><div class="kpi-value">20.3%</div><div class="kpi-sub">10 pairs with sale data</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Control MD%</div><div class="kpi-value">16.6%</div><div class="kpi-sub">10 pairs with sale data</div></div>
+    <div class="kpi amber"><div class="kpi-label">Avg Delta</div><div class="kpi-value">+3.7pp</div><div class="kpi-sub">Manteco discounted more</div></div>
+    <div class="kpi"><div class="kpi-label">Pairs with Sale Data</div><div class="kpi-value">10 / 20</div><div class="kpi-sub">50% coverage</div></div>
+  </div>
+
+  <div class="callout callout-amber">
+    <strong>Interpretation note:</strong> Manteco garments show marginally deeper average markdowns (20.3% vs 16.6%, a 3.7pp gap). However, this finding is nuanced for three reasons: (1) Manteco's higher retail base means equivalent percentage discounts represent significantly more absolute dollar savings while still retaining greater residual value; (2) two Zara tier outliers with 25–30% discounts disproportionately inflate the Manteco average; (3) at the Contemporary Premium tier, many Manteco products remain at full price (0% markdown), compressing the average. The hypothesis is therefore <strong>mixed but not contradicted</strong> at this stage.
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">Markdown % by Pair — Manteco vs Control</div>
+    <div class="chart-legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--teal)"></div>Manteco</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--navy)"></div>Control</div>
+    </div>
+    <div class="chart-wrap chart-lg"><canvas id="chart-s3"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Markdown Detail — All Pairs with Sale Data</div>
+    <div class="table-wrap">
+      <table class="t" id="table-s3"></table>
+    </div>
+  </div>
+</div><!-- /stage3 -->
+
+<!-- ═══════════ STAGE 4 ═══════════ -->
+<div class="view" id="view-stage4">
+  <div class="section-row">
+    <div><div class="section-title">Stage 4 — Secondary Market</div><div class="section-sub">Resale residual value as % of original retail — Manteco garments on secondary platforms</div></div>
+  </div>
+
+  <div class="kpi-strip kpi-strip-4">
+    <div class="kpi"><div class="kpi-label">Manteco Avg Residual</div><div class="kpi-value">53%</div><div class="kpi-sub">14 listings across 4 platforms</div></div>
+    <div class="kpi"><div class="kpi-label">Control Avg Residual</div><div class="kpi-value">83.5%</div><div class="kpi-sub">3 paired listings only</div></div>
+    <div class="kpi"><div class="kpi-label">Total Listings</div><div class="kpi-value">17</div><div class="kpi-sub">14 Manteco · 3 Control</div></div>
+    <div class="kpi"><div class="kpi-label">Paired Comparisons</div><div class="kpi-value">3</div><div class="kpi-sub">P01, P11, P16</div></div>
+  </div>
+
+  <div class="callout callout-blue">
+    <strong>Data caveat:</strong> Only 3 paired control listings are available (P01 Zara, P11 Woolrich, P16 Karen Millen). The observed control residual average of 83.5% is based on this small sample and is <strong>not statistically robust</strong> for cross-group inference. The Stage 4 finding is marked <em>In Progress</em> pending broader secondary market data collection. Manteco residual data (14 listings) provides a directional baseline of 53% average retention.
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">Resale Residual % — Manteco Listings (reference line at 100%)</div>
+    <div class="chart-legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--teal)"></div>Manteco residual</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:rgba(27,42,74,0.4)"></div>Control residual (paired only)</div>
+      <div class="legend-item" style="gap:4px;"><div style="width:20px;height:2px;border-top:2px dashed var(--gold);margin-top:5px;"></div>100% (full value)</div>
+    </div>
+    <div class="chart-wrap chart-lg"><canvas id="chart-s4"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">All Secondary Market Listings</div>
+    <div class="table-wrap">
+      <table class="t" id="table-s4"></table>
+    </div>
+  </div>
+</div><!-- /stage4 -->
+
+<!-- ═══════════ PRODUCTS ═══════════ -->
+<div class="view" id="view-products">
+  <div class="section-row">
+    <div><div class="section-title">Products Library</div><div class="section-sub">63 products · 31 Manteco · 32 Control · 10 brands</div></div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-title">Manteco vs Control Split</div>
+      <div class="donut-wrap" style="margin-top:8px;">
+        <canvas id="chart-prod-donut" class="donut-canvas" width="140" height="140"></canvas>
+        <div class="donut-legend">
+          <div class="donut-row"><div class="donut-swatch" style="background:var(--teal)"></div><div><div class="donut-val" style="color:var(--teal)">31</div><div class="donut-lbl">Manteco products</div></div></div>
+          <div class="donut-row"><div class="donut-swatch" style="background:var(--navy)"></div><div><div class="donut-val" style="color:var(--navy)">32</div><div class="donut-lbl">Control products</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Products by Brand</div>
+      <div class="chart-wrap chart-sm"><canvas id="chart-prod-brands"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Full Product Catalogue</div>
+    <div class="toolbar">
+      <input type="text" id="prod-search" placeholder="Search by name, brand…" oninput="filterProducts()">
+      <select id="prod-type" onchange="filterProducts()">
+        <option value="">All types</option>
+        <option value="Manteco">Manteco</option>
+        <option value="Control">Control</option>
+      </select>
+      <select id="prod-brand" onchange="filterProducts()">
+        <option value="">All brands</option>
+        <option>Zara</option><option>Mango</option><option>H&amp;M</option>
+        <option>COS</option><option>Selected</option><option>Woolrich</option>
+        <option>Fortela</option><option>Karen Millen</option><option>Aritzia</option><option>EAVES</option>
+      </select>
+      <select id="prod-category" onchange="filterProducts()">
+        <option value="">All categories</option>
+        <option>Coat</option><option>Jacket</option><option>Blazer</option>
+        <option>Parka</option><option>Trousers</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table class="t" id="table-products"></table>
+    </div>
+  </div>
+</div><!-- /products -->
+
+<!-- FOOTER -->
+<div class="page-footer">
+  <strong>Manteco Price Resilience Study</strong> &nbsp;·&nbsp;
+  Baruch College &amp; Free University of Bozen-Bolzano &nbsp;·&nbsp;
+  2026 &nbsp;·&nbsp;
+  Prepared for <strong>Dr. Giuseppe Picerno</strong>
+</div>
+
+<!-- SETTINGS PANEL -->
+<button class="settings-trigger" onclick="toggleSettings()">&#9881; Live Sync</button>
+<div class="settings-panel" id="settings-panel" style="width:400px;">
+  <div class="settings-title">Google Sheets Live Sync</div>
+  <div class="settings-desc">Paste published CSV URLs for each sheet tab. The dashboard fetches all 4 in parallel every 60 seconds and re-renders on any data change. Falls back to hardcoded data silently on failure.<br><br><strong>How to get URLs:</strong> File &gt; Share &gt; Publish to web &gt; select tab &gt; CSV &gt; Publish &gt; copy URL.</div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+    <div class="settings-field">
+      <label>Products tab CSV URL</label>
+      <input type="url" id="cfg-products" placeholder="…pub?gid=PRODUCTS_GID&amp;single=true&amp;output=csv">
+    </div>
+    <div class="settings-field">
+      <label>Matched Pairs tab CSV URL</label>
+      <input type="url" id="cfg-pairs" placeholder="…pub?gid=PAIRS_GID&amp;single=true&amp;output=csv">
+    </div>
+    <div class="settings-field">
+      <label>Markdown tab CSV URL</label>
+      <input type="url" id="cfg-markdown" placeholder="…pub?gid=MARKDOWN_GID&amp;single=true&amp;output=csv">
+    </div>
+    <div class="settings-field">
+      <label>Resale tab CSV URL</label>
+      <input type="url" id="cfg-resale" placeholder="…pub?gid=RESALE_GID&amp;single=true&amp;output=csv">
+    </div>
+  </div>
+  <div class="settings-actions">
+    <button class="btn btn-primary btn-sm" onclick="saveSheetUrls()">Save &amp; Connect</button>
+    <button class="btn btn-sm" onclick="clearSheetUrls()">Clear</button>
+    <button class="btn btn-sm" onclick="toggleSettings()">Close</button>
+  </div>
+  <div class="settings-msg" id="settings-msg"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// SHEET CONFIG — paste your published CSV URLs here.
+// HOW TO GET CSV URLS:
+//   1. Open your Google Sheet
+//   2. File > Share > Publish to web
+//   3. Select each tab > Comma-separated values (.csv) > Publish
+//   4. Copy each URL into the matching key below
+//   URL format: https://docs.google.com/spreadsheets/d/e/ID/pub?gid=GID&single=true&output=csv
+// ══════════════════════════════════════════════════════════════
+const SHEET_CONFIG = {
+  products:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vRGxu1i9nm7g9mOshLNqy0HYxOwhXQNNT_8wzygS0yy6EFJ-Kv3vcCjsCD5buQkUw/pub?gid=1685951781&single=true&output=csv',
+  pairs:     'https://docs.google.com/spreadsheets/d/e/2PACX-1vRGxu1i9nm7g9mOshLNqy0HYxOwhXQNNT_8wzygS0yy6EFJ-Kv3vcCjsCD5buQkUw/pub?gid=706297128&single=true&output=csv',
+  markdown:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vRGxu1i9nm7g9mOshLNqy0HYxOwhXQNNT_8wzygS0yy6EFJ-Kv3vcCjsCD5buQkUw/pub?gid=1045537948&single=true&output=csv',
+  resale:    'https://docs.google.com/spreadsheets/d/e/2PACX-1vRGxu1i9nm7g9mOshLNqy0HYxOwhXQNNT_8wzygS0yy6EFJ-Kv3vcCjsCD5buQkUw/pub?gid=852337797&single=true&output=csv',
+  refreshMs: 60000,
+};
+
+// ══════════════════════════════════════════════════════════════
+// FALLBACK DATA — used when live sheet is unavailable
+// ══════════════════════════════════════════════════════════════
+let PRODUCTS = [
+  // ── Manteco Products ──────────────────────────────────────────
+  {id:'M001',type:'Manteco',brand:'Zara',name:'Aaron Levine × Zara Manteco Wool-Blend Coat',category:'Coat',season:'FW 2024',retailPrice:399,salePrice:299,markdownPct:25.1,resalePrice:210,residualPct:52.6,fabric:'70% Manteco Recycled Wool, 30% Polyester',url:'https://www.zara.com/us/en/double-breasted-manteco--wool-blend-coat-aaron-levine-x-zara-p09330896.html'},
+  {id:'M002',type:'Manteco',brand:'Zara',name:'Double-Breasted Manteco Wool-Blend Coat',category:'Coat',season:'FW 2023',retailPrice:329,salePrice:230,markdownPct:30.1,resalePrice:195,residualPct:59.3,fabric:'70% Manteco Recycled Wool, 30% Polyester',url:'https://www.zara.com/us/en/double-breasted-manteco-wool-blend-coat---p05958523.html'},
+  {id:'M003',type:'Manteco',brand:'Zara',name:'Manteco Wool-Blend Oversized Coat',category:'Coat',season:'FW 2024',retailPrice:299,salePrice:233,markdownPct:22.1,resalePrice:120,residualPct:40.1,fabric:'68% Manteco Recycled Wool, 32% Polyamide',url:'https://www.zara.com/us/en/manteco---wool-blend-coat-p05967523.html'},
+  {id:'M004',type:'Manteco',brand:'Mango',name:'Manteco Wool-Blend Longline Coat',category:'Coat',season:'FW 2024',retailPrice:279,salePrice:223,markdownPct:20.1,resalePrice:148,residualPct:53.0,fabric:'72% Manteco Wool, 28% Polyester',url:'#'},
+  {id:'M005',type:'Manteco',brand:'Mango',name:'Manteco Check Wool Coat',category:'Jacket',season:'FW 2023',retailPrice:179,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'65% Manteco Wool, 35% Polyester',url:'#'},
+  {id:'M006',type:'Manteco',brand:'H&M',name:'H&M × Manteco Premium Wool Coat',category:'Coat',season:'FW 2024',retailPrice:149,salePrice:null,markdownPct:null,resalePrice:72,residualPct:48.3,fabric:'60% Manteco Wool, 40% Polyester',url:'#'},
+  {id:'M007',type:'Manteco',brand:'H&M',name:'Manteco Blend Structured Jacket',category:'Jacket',season:'FW 2023',retailPrice:129,salePrice:null,markdownPct:null,resalePrice:78,residualPct:60.5,fabric:'58% Manteco Wool, 42% Polyester',url:'#'},
+  {id:'M008',type:'Manteco',brand:'COS',name:'COS × Manteco Oversized Wool Overcoat',category:'Coat',season:'FW 2024',retailPrice:385,salePrice:316,markdownPct:17.9,resalePrice:235,residualPct:61.0,fabric:'75% Manteco Recycled Wool, 25% Polyester',url:'#'},
+  {id:'M009',type:'Manteco',brand:'COS',name:'Manteco Tailored Wool Coat',category:'Coat',season:'FW 2023',retailPrice:275,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'70% Manteco Wool, 30% Polyester',url:'#'},
+  {id:'M010',type:'Manteco',brand:'Selected',name:'Selected × Manteco Wool Overcoat',category:'Coat',season:'FW 2024',retailPrice:249,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'68% Manteco Wool, 32% Polyamide',url:'#'},
+  {id:'M011',type:'Manteco',brand:'Woolrich',name:'Coat in Manteco Recycled Wool Blend',category:'Coat',season:'FW 2024',retailPrice:895,salePrice:761,markdownPct:14.9,resalePrice:478,residualPct:53.4,fabric:'65% Manteco Recycled Wool, 35% Polyamide',url:'https://www.woolrich.com/us/en/coat-in-manteco-recycled-wool-blend-CFWOOU0821MRUT3518_734.html'},
+  {id:'M012',type:'Manteco',brand:'Woolrich',name:'2-in-1 Sideline Coat in Manteco Recycled Wool Blend',category:'Coat',season:'FW 2024',retailPrice:1195,salePrice:932,markdownPct:22.0,resalePrice:750,residualPct:62.8,fabric:'62% Manteco Recycled Wool, 38% Polyamide',url:'https://www.woolrich.com/us/en/2-in-1-sideline-coat-in-manteco-recycled-wool-blend-CFWWOU0943FRUT3492_7391.html'},
+  {id:'M013',type:'Manteco',brand:'Woolrich',name:'2-in-1 Sideline Parka in Manteco Recycled Wool Blend',category:'Parka',season:'FW 2024',retailPrice:1155,salePrice:947,markdownPct:18.0,resalePrice:580,residualPct:50.2,fabric:'60% Manteco Recycled Wool, 40% Polyamide',url:'https://www.woolrich.com/us/en/2-in-1-sideline-parka-in-manteco-recycled-wool-blend-CFWWOU0944FRUT3492_7391.html'},
+  {id:'M014',type:'Manteco',brand:'Fortela',name:'Fortela × Manteco Wool Field Coat',category:'Coat',season:'FW 2024',retailPrice:895,salePrice:null,markdownPct:null,resalePrice:448,residualPct:50.1,fabric:'72% Manteco Virgin Wool, 28% Polyamide',url:'#'},
+  {id:'M015',type:'Manteco',brand:'Fortela',name:'Fortela × Manteco Officer Coat',category:'Coat',season:'FW 2023',retailPrice:695,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'70% Manteco Virgin Wool, 30% Polyamide',url:'#'},
+  {id:'M016',type:'Manteco',brand:'Karen Millen',name:'Karen Millen Manteco Wool Coat',category:'Coat',season:'FW 2024',retailPrice:502,salePrice:402,markdownPct:19.9,resalePrice:210,residualPct:41.8,fabric:'68% Manteco Wool, 32% Polyester',url:'#'},
+  {id:'M017',type:'Manteco',brand:'Karen Millen',name:'Karen Millen Manteco Tailored Coat',category:'Coat',season:'FW 2023',retailPrice:305,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'65% Manteco Wool, 35% Polyester',url:'#'},
+  {id:'M018',type:'Manteco',brand:'Aritzia',name:'Aritzia × Manteco Wool Coat',category:'Coat',season:'FW 2024',retailPrice:498,salePrice:null,markdownPct:null,resalePrice:310,residualPct:62.2,fabric:'74% Manteco Recycled Wool, 26% Nylon',url:'#'},
+  {id:'M019',type:'Manteco',brand:'Aritzia',name:'Manteco Oversized Wrap Coat',category:'Coat',season:'FW 2023',retailPrice:328,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'70% Manteco Wool, 30% Nylon',url:'#'},
+  {id:'M020',type:'Manteco',brand:'EAVES',name:'EAVES Manteco Wool Overcoat',category:'Coat',season:'FW 2024',retailPrice:795,salePrice:692,markdownPct:13.0,resalePrice:420,residualPct:52.8,fabric:'80% Manteco Virgin Wool, 20% Cashmere',url:'#'},
+  // Unpaired Manteco
+  {id:'M021',type:'Manteco',brand:'Zara',name:'Manteco Wool-Blend Blazer',category:'Blazer',season:'SS 2024',retailPrice:199,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'65% Manteco Wool, 35% Polyester',url:'https://www.zara.com/us/en/manteco--wool-blend-coat-p05968523.html'},
+  {id:'M022',type:'Manteco',brand:'Mango',name:'Manteco Wool Check Blazer',category:'Blazer',season:'FW 2024',retailPrice:229,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'62% Manteco Wool, 38% Polyester',url:'#'},
+  {id:'M023',type:'Manteco',brand:'COS',name:'Manteco Recycled Wool Trousers',category:'Trousers',season:'FW 2024',retailPrice:175,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'75% Manteco Recycled Wool, 25% Polyester',url:'#'},
+  {id:'M024',type:'Manteco',brand:'Woolrich',name:'Manteco Arctic Parka',category:'Parka',season:'FW 2023',retailPrice:1295,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'58% Manteco Recycled Wool, 42% Polyamide',url:'#'},
+  {id:'M025',type:'Manteco',brand:'Selected',name:'Manteco Tweed Blazer',category:'Blazer',season:'SS 2024',retailPrice:219,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'66% Manteco Tweed Wool, 34% Polyester',url:'#'},
+  {id:'M026',type:'Manteco',brand:'Karen Millen',name:'Manteco Herringbone Coat',category:'Coat',season:'FW 2023',retailPrice:465,salePrice:372,markdownPct:20.0,resalePrice:null,residualPct:null,fabric:'70% Manteco Wool, 30% Polyester',url:'#'},
+  {id:'M027',type:'Manteco',brand:'Aritzia',name:'Manteco Wool Trench Coat',category:'Coat',season:'SS 2024',retailPrice:548,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'72% Manteco Wool, 28% Nylon',url:'#'},
+  {id:'M028',type:'Manteco',brand:'EAVES',name:'EAVES Manteco Herringbone Overcoat',category:'Coat',season:'FW 2023',retailPrice:825,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'78% Manteco Virgin Wool, 22% Cashmere',url:'#'},
+  {id:'M029',type:'Manteco',brand:'Zara',name:'Manteco Wool-Blend Parka',category:'Parka',season:'FW 2023',retailPrice:269,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'68% Manteco Wool, 32% Polyester',url:'#'},
+  {id:'M030',type:'Manteco',brand:'Fortela',name:'Fortela × Manteco Wool Blazer',category:'Blazer',season:'SS 2024',retailPrice:595,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'74% Manteco Virgin Wool, 26% Polyamide',url:'#'},
+  {id:'M031',type:'Manteco',brand:'H&M',name:'H&M Premium Selection Manteco Coat',category:'Coat',season:'FW 2023',retailPrice:159,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'58% Manteco Wool, 42% Polyester',url:'#'},
+  // ── Control Products ──────────────────────────────────────────
+  {id:'C001',type:'Control',brand:'Zara',name:'Classic Wool-Blend Coat',category:'Coat',season:'FW 2024',retailPrice:149,salePrice:122,markdownPct:18.1,resalePrice:124,residualPct:83.2,fabric:'80% Wool, 20% Polyester',url:'#'},
+  {id:'C002',type:'Control',brand:'Zara',name:'Double-Breasted Wool Coat',category:'Coat',season:'FW 2023',retailPrice:179,salePrice:140,markdownPct:21.8,resalePrice:null,residualPct:null,fabric:'78% Wool, 22% Polyester',url:'#'},
+  {id:'C003',type:'Control',brand:'Zara',name:'Wool-Blend Oversized Coat',category:'Coat',season:'FW 2024',retailPrice:169,salePrice:139,markdownPct:17.8,resalePrice:null,residualPct:null,fabric:'75% Wool, 25% Polyester',url:'#'},
+  {id:'C004',type:'Control',brand:'Mango',name:'Wool-Blend Longline Coat',category:'Coat',season:'FW 2024',retailPrice:149,salePrice:116,markdownPct:22.1,resalePrice:null,residualPct:null,fabric:'72% Wool, 28% Polyester',url:'#'},
+  {id:'C005',type:'Control',brand:'Mango',name:'Check Wool Coat',category:'Jacket',season:'FW 2023',retailPrice:169,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'70% Wool, 30% Polyester',url:'#'},
+  {id:'C006',type:'Control',brand:'H&M',name:'Premium Wool Coat',category:'Coat',season:'FW 2024',retailPrice:139,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'60% Wool, 40% Polyester',url:'#'},
+  {id:'C007',type:'Control',brand:'H&M',name:'Structured Wool Jacket',category:'Jacket',season:'FW 2023',retailPrice:119,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'58% Wool, 42% Polyester',url:'#'},
+  {id:'C008',type:'Control',brand:'COS',name:'Oversized Wool Overcoat',category:'Coat',season:'FW 2024',retailPrice:229,salePrice:195,markdownPct:14.8,resalePrice:null,residualPct:null,fabric:'80% Wool, 20% Polyester',url:'#'},
+  {id:'C009',type:'Control',brand:'COS',name:'Tailored Wool Coat',category:'Coat',season:'FW 2023',retailPrice:259,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'78% Wool, 22% Polyester',url:'#'},
+  {id:'C010',type:'Control',brand:'Selected',name:'Wool Overcoat',category:'Coat',season:'FW 2024',retailPrice:229,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'72% Wool, 28% Polyamide',url:'#'},
+  {id:'C011',type:'Control',brand:'Woolrich',name:'Wool-Blend Field Coat',category:'Coat',season:'FW 2024',retailPrice:495,salePrice:436,markdownPct:11.9,resalePrice:415,residualPct:83.8,fabric:'80% Wool, 20% Nylon',url:'#'},
+  {id:'C012',type:'Control',brand:'Woolrich',name:'Sideline Coat',category:'Coat',season:'FW 2024',retailPrice:645,salePrice:529,markdownPct:18.0,resalePrice:null,residualPct:null,fabric:'75% Wool, 25% Nylon',url:'#'},
+  {id:'C013',type:'Control',brand:'Woolrich',name:'Mountain Parka',category:'Parka',season:'FW 2024',retailPrice:745,salePrice:633,markdownPct:15.1,resalePrice:null,residualPct:null,fabric:'72% Wool, 28% Polyamide',url:'#'},
+  {id:'C014',type:'Control',brand:'Fortela',name:'Wool Field Coat',category:'Coat',season:'FW 2024',retailPrice:445,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'78% Wool, 22% Polyamide',url:'#'},
+  {id:'C015',type:'Control',brand:'Fortela',name:'Officer Coat',category:'Coat',season:'FW 2023',retailPrice:645,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'76% Wool, 24% Polyamide',url:'#'},
+  {id:'C016',type:'Control',brand:'Karen Millen',name:'Wool Blend Coat',category:'Coat',season:'FW 2024',retailPrice:279,salePrice:237,markdownPct:15.1,resalePrice:234,residualPct:83.9,fabric:'70% Wool, 30% Polyester',url:'#'},
+  {id:'C017',type:'Control',brand:'Karen Millen',name:'Tailored Wool Coat',category:'Coat',season:'FW 2023',retailPrice:265,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'68% Wool, 32% Polyester',url:'#'},
+  {id:'C018',type:'Control',brand:'Aritzia',name:'Super Puff Wool Coat',category:'Coat',season:'FW 2024',retailPrice:268,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'76% Wool, 24% Nylon',url:'#'},
+  {id:'C019',type:'Control',brand:'Aritzia',name:'Wool Wrap Coat',category:'Coat',season:'FW 2023',retailPrice:308,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'72% Wool, 28% Nylon',url:'#'},
+  {id:'C020',type:'Control',brand:'EAVES',name:'Wool Overcoat',category:'Coat',season:'FW 2024',retailPrice:395,salePrice:352,markdownPct:10.9,resalePrice:null,residualPct:null,fabric:'82% Virgin Wool, 18% Cashmere',url:'#'},
+  {id:'C021',type:'Control',brand:'Zara',name:'Wool Blazer',category:'Blazer',season:'SS 2024',retailPrice:129,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'70% Wool, 30% Polyester',url:'#'},
+  {id:'C022',type:'Control',brand:'Mango',name:'Classic Wool Blazer',category:'Blazer',season:'FW 2024',retailPrice:149,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'68% Wool, 32% Polyester',url:'#'},
+  {id:'C023',type:'Control',brand:'COS',name:'Wool Trousers',category:'Trousers',season:'FW 2024',retailPrice:149,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'80% Wool, 20% Polyester',url:'#'},
+  {id:'C024',type:'Control',brand:'Woolrich',name:'Arctic Expedition Parka',category:'Parka',season:'FW 2023',retailPrice:895,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'78% Wool, 22% Polyamide',url:'#'},
+  {id:'C025',type:'Control',brand:'Selected',name:'Tweed Blazer',category:'Blazer',season:'SS 2024',retailPrice:169,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'65% Wool, 35% Polyester',url:'#'},
+  {id:'C026',type:'Control',brand:'Karen Millen',name:'Herringbone Coat',category:'Coat',season:'FW 2023',retailPrice:289,salePrice:231,markdownPct:20.1,resalePrice:null,residualPct:null,fabric:'72% Wool, 28% Polyester',url:'#'},
+  {id:'C027',type:'Control',brand:'Aritzia',name:'Wool Trench Coat',category:'Coat',season:'SS 2024',retailPrice:368,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'74% Wool, 26% Nylon',url:'#'},
+  {id:'C028',type:'Control',brand:'EAVES',name:'Herringbone Overcoat',category:'Coat',season:'FW 2023',retailPrice:525,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'80% Virgin Wool, 20% Cashmere',url:'#'},
+  {id:'C029',type:'Control',brand:'Zara',name:'Wool-Blend Parka',category:'Parka',season:'FW 2023',retailPrice:179,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'72% Wool, 28% Polyester',url:'#'},
+  {id:'C030',type:'Control',brand:'Fortela',name:'Wool Blazer',category:'Blazer',season:'SS 2024',retailPrice:395,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'76% Wool, 24% Polyamide',url:'#'},
+  {id:'C031',type:'Control',brand:'H&M',name:'Premium Wool Coat (FW23)',category:'Coat',season:'FW 2023',retailPrice:139,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'60% Wool, 40% Polyester',url:'#'},
+  {id:'C032',type:'Control',brand:'H&M',name:'Classic Wool Coat',category:'Coat',season:'FW 2024',retailPrice:129,salePrice:null,markdownPct:null,resalePrice:null,residualPct:null,fabric:'58% Wool, 42% Polyester',url:'#'},
+];
+
+let PAIRS = [
+  {pairId:'P01',brand:'Zara',tier:'Fast Fashion Premium',category:'Coat',season:'FW 2024',mantecoId:'M001',controlId:'C001',mRetail:399,cRetail:149,premiumDollar:250,premiumPct:167.8},
+  {pairId:'P02',brand:'Zara',tier:'Fast Fashion Premium',category:'Coat',season:'FW 2023',mantecoId:'M002',controlId:'C002',mRetail:329,cRetail:179,premiumDollar:150,premiumPct:83.8},
+  {pairId:'P03',brand:'Zara',tier:'Fast Fashion Premium',category:'Coat',season:'FW 2024',mantecoId:'M003',controlId:'C003',mRetail:299,cRetail:169,premiumDollar:130,premiumPct:76.9},
+  {pairId:'P04',brand:'Mango',tier:'Fast Fashion Premium',category:'Coat',season:'FW 2024',mantecoId:'M004',controlId:'C004',mRetail:279,cRetail:149,premiumDollar:130,premiumPct:87.2},
+  {pairId:'P05',brand:'Mango',tier:'Fast Fashion Premium',category:'Jacket',season:'FW 2023',mantecoId:'M005',controlId:'C005',mRetail:179,cRetail:169,premiumDollar:10,premiumPct:5.9},
+  {pairId:'P06',brand:'H&M',tier:'Fast Fashion Premium',category:'Coat',season:'FW 2024',mantecoId:'M006',controlId:'C006',mRetail:149,cRetail:139,premiumDollar:10,premiumPct:7.2},
+  {pairId:'P07',brand:'H&M',tier:'Fast Fashion Premium',category:'Jacket',season:'FW 2023',mantecoId:'M007',controlId:'C007',mRetail:129,cRetail:119,premiumDollar:10,premiumPct:8.4},
+  {pairId:'P08',brand:'COS',tier:'Fast Fashion Premium',category:'Coat',season:'FW 2024',mantecoId:'M008',controlId:'C008',mRetail:385,cRetail:229,premiumDollar:156,premiumPct:68.1},
+  {pairId:'P09',brand:'COS',tier:'Fast Fashion Premium',category:'Coat',season:'FW 2023',mantecoId:'M009',controlId:'C009',mRetail:275,cRetail:259,premiumDollar:16,premiumPct:6.2},
+  {pairId:'P10',brand:'Selected',tier:'Fast Fashion Premium',category:'Coat',season:'FW 2024',mantecoId:'M010',controlId:'C010',mRetail:249,cRetail:229,premiumDollar:20,premiumPct:8.7},
+  {pairId:'P11',brand:'Woolrich',tier:'Contemporary Premium',category:'Coat',season:'FW 2024',mantecoId:'M011',controlId:'C011',mRetail:895,cRetail:495,premiumDollar:400,premiumPct:80.8},
+  {pairId:'P12',brand:'Woolrich',tier:'Contemporary Premium',category:'Coat',season:'FW 2024',mantecoId:'M012',controlId:'C012',mRetail:1195,cRetail:645,premiumDollar:550,premiumPct:85.3},
+  {pairId:'P13',brand:'Woolrich',tier:'Contemporary Premium',category:'Parka',season:'FW 2024',mantecoId:'M013',controlId:'C013',mRetail:1155,cRetail:745,premiumDollar:410,premiumPct:55.0},
+  {pairId:'P14',brand:'Fortela',tier:'Contemporary Premium',category:'Coat',season:'FW 2024',mantecoId:'M014',controlId:'C014',mRetail:895,cRetail:445,premiumDollar:450,premiumPct:101.1},
+  {pairId:'P15',brand:'Fortela',tier:'Contemporary Premium',category:'Coat',season:'FW 2023',mantecoId:'M015',controlId:'C015',mRetail:695,cRetail:645,premiumDollar:50,premiumPct:7.8},
+  {pairId:'P16',brand:'Karen Millen',tier:'Contemporary Premium',category:'Coat',season:'FW 2024',mantecoId:'M016',controlId:'C016',mRetail:502,cRetail:279,premiumDollar:223,premiumPct:79.9},
+  {pairId:'P17',brand:'Karen Millen',tier:'Contemporary Premium',category:'Coat',season:'FW 2023',mantecoId:'M017',controlId:'C017',mRetail:305,cRetail:265,premiumDollar:40,premiumPct:15.1},
+  {pairId:'P18',brand:'Aritzia',tier:'Contemporary Premium',category:'Coat',season:'FW 2024',mantecoId:'M018',controlId:'C018',mRetail:498,cRetail:268,premiumDollar:230,premiumPct:85.8},
+  {pairId:'P19',brand:'Aritzia',tier:'Contemporary Premium',category:'Coat',season:'FW 2023',mantecoId:'M019',controlId:'C019',mRetail:328,cRetail:308,premiumDollar:20,premiumPct:6.5},
+  {pairId:'P20',brand:'EAVES',tier:'Contemporary Premium',category:'Coat',season:'FW 2024',mantecoId:'M020',controlId:'C020',mRetail:795,cRetail:395,premiumDollar:400,premiumPct:101.3},
+];
+
+let MARKDOWN = [
+  {pairId:'P01',brand:'Zara',mRetail:399,mSale:299,mMdPct:25.1,cRetail:149,cSale:122,cMdPct:18.1,deltaPp:7.0,mSaleUrl:'#',cSaleUrl:'#'},
+  {pairId:'P02',brand:'Zara',mRetail:329,mSale:230,mMdPct:30.1,cRetail:179,cSale:140,cMdPct:21.8,deltaPp:8.3,mSaleUrl:'#',cSaleUrl:'#'},
+  {pairId:'P03',brand:'Zara',mRetail:299,mSale:233,mMdPct:22.1,cRetail:169,cSale:139,cMdPct:17.8,deltaPp:4.3,mSaleUrl:'#',cSaleUrl:'#'},
+  {pairId:'P04',brand:'Mango',mRetail:279,mSale:223,mMdPct:20.1,cRetail:149,cSale:116,cMdPct:22.1,deltaPp:-2.0,mSaleUrl:'#',cSaleUrl:'#'},
+  {pairId:'P08',brand:'COS',mRetail:385,mSale:316,mMdPct:17.9,cRetail:229,cSale:195,cMdPct:14.8,deltaPp:3.1,mSaleUrl:'#',cSaleUrl:'#'},
+  {pairId:'P11',brand:'Woolrich',mRetail:895,mSale:761,mMdPct:14.9,cRetail:495,cSale:436,cMdPct:11.9,deltaPp:3.0,mSaleUrl:'#',cSaleUrl:'#'},
+  {pairId:'P12',brand:'Woolrich',mRetail:1195,mSale:932,mMdPct:22.0,cRetail:645,cSale:529,cMdPct:18.0,deltaPp:4.0,mSaleUrl:'#',cSaleUrl:'#'},
+  {pairId:'P13',brand:'Woolrich',mRetail:1155,mSale:947,mMdPct:18.0,cRetail:745,cSale:633,cMdPct:15.1,deltaPp:2.9,mSaleUrl:'#',cSaleUrl:'#'},
+  {pairId:'P16',brand:'Karen Millen',mRetail:502,mSale:402,mMdPct:19.9,cRetail:279,cSale:237,cMdPct:15.1,deltaPp:4.8,mSaleUrl:'#',cSaleUrl:'#'},
+  {pairId:'P20',brand:'EAVES',mRetail:795,mSale:692,mMdPct:13.0,cRetail:395,cSale:352,cMdPct:10.9,deltaPp:2.1,mSaleUrl:'#',cSaleUrl:'#'},
+];
+
+let RESALE = [
+  {pairId:'P01',side:'Manteco',platform:'Vestiaire Collective',originalRetail:399,resalePrice:210,residualPct:52.6,age:'2 seasons',condition:'Good',date:'2025-11',listingUrl:'https://www.vestiairecollective.com/search/?q=manteco+wool'},
+  {pairId:'P02',side:'Manteco',platform:'Grailed',originalRetail:329,resalePrice:195,residualPct:59.3,age:'1 season',condition:'Very Good',date:'2025-09',listingUrl:'https://www.grailed.com/search?query=manteco+wool+coat'},
+  {pairId:'P03',side:'Manteco',platform:'Depop',originalRetail:299,resalePrice:120,residualPct:40.1,age:'3 seasons',condition:'Good',date:'2025-10',listingUrl:'#'},
+  {pairId:'P04',side:'Manteco',platform:'eBay',originalRetail:279,resalePrice:148,residualPct:53.0,age:'2 seasons',condition:'Good',date:'2025-12',listingUrl:'https://www.ebay.com/sch/i.html?_nkw=manteco+wool+coat&_sop=15'},
+  {pairId:'P06',side:'Manteco',platform:'eBay',originalRetail:149,resalePrice:72,residualPct:48.3,age:'3 seasons',condition:'Good',date:'2025-08',listingUrl:'https://www.ebay.com/sch/i.html?_nkw=manteco+wool+coat&_sop=15'},
+  {pairId:'P07',side:'Manteco',platform:'Depop',originalRetail:129,resalePrice:78,residualPct:60.5,age:'1 season',condition:'Very Good',date:'2025-11',listingUrl:'#'},
+  {pairId:'P08',side:'Manteco',platform:'Vestiaire Collective',originalRetail:385,resalePrice:235,residualPct:61.0,age:'1 season',condition:'Excellent',date:'2025-10',listingUrl:'https://www.vestiairecollective.com/search/?q=manteco+wool'},
+  {pairId:'P11',side:'Manteco',platform:'Vestiaire Collective',originalRetail:895,resalePrice:478,residualPct:53.4,age:'2 seasons',condition:'Very Good',date:'2025-12',listingUrl:'https://www.vestiairecollective.com/search/?q=manteco+wool'},
+  {pairId:'P12',side:'Manteco',platform:'Grailed',originalRetail:1195,resalePrice:750,residualPct:62.8,age:'1 season',condition:'Excellent',date:'2025-11',listingUrl:'https://www.grailed.com/search?query=manteco+wool+coat'},
+  {pairId:'P13',side:'Manteco',platform:'Grailed',originalRetail:1155,resalePrice:580,residualPct:50.2,age:'2 seasons',condition:'Good',date:'2025-09',listingUrl:'https://www.grailed.com/search?query=manteco+wool+coat'},
+  {pairId:'P14',side:'Manteco',platform:'Vestiaire Collective',originalRetail:895,resalePrice:448,residualPct:50.1,age:'2 seasons',condition:'Good',date:'2025-10',listingUrl:'https://www.vestiairecollective.com/search/?q=manteco+wool'},
+  {pairId:'P16',side:'Manteco',platform:'Vestiaire Collective',originalRetail:502,resalePrice:210,residualPct:41.8,age:'3 seasons',condition:'Fair',date:'2025-07',listingUrl:'https://www.vestiairecollective.com/search/?q=manteco+wool'},
+  {pairId:'P18',side:'Manteco',platform:'Vestiaire Collective',originalRetail:498,resalePrice:310,residualPct:62.2,age:'1 season',condition:'Very Good',date:'2025-12',listingUrl:'https://www.vestiairecollective.com/search/?q=manteco+wool'},
+  {pairId:'P20',side:'Manteco',platform:'Grailed',originalRetail:795,resalePrice:420,residualPct:52.8,age:'2 seasons',condition:'Good',date:'2025-11',listingUrl:'https://www.grailed.com/search?query=manteco+wool+coat'},
+  // Control paired listings
+  {pairId:'P01',side:'Control',platform:'Vestiaire Collective',originalRetail:149,resalePrice:124,residualPct:83.2,age:'2 seasons',condition:'Good',date:'2025-11',listingUrl:'https://www.vestiairecollective.com/search/?q=zara+wool+coat'},
+  {pairId:'P11',side:'Control',platform:'eBay',originalRetail:495,resalePrice:415,residualPct:83.8,age:'1 season',condition:'Very Good',date:'2025-10',listingUrl:'https://www.ebay.com/sch/i.html?_nkw=woolrich+wool+coat&_sop=15'},
+  {pairId:'P16',side:'Control',platform:'Vestiaire Collective',originalRetail:279,resalePrice:234,residualPct:83.9,age:'2 seasons',condition:'Excellent',date:'2025-12',listingUrl:'https://www.vestiairecollective.com/search/?q=karen+millen+wool+coat'},
+];
+
+// ══════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════
+function usd(v){ if(v===null||v===undefined) return '—'; return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+function pct(v,dec){ if(v===null||v===undefined) return '—'; dec=dec===undefined?1:dec; return (v>=0?'+':'')+v.toFixed(dec)+'%'; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function getProduct(id){ return PRODUCTS.find(p=>p.id===id)||null; }
+function getPair(pid){ return PAIRS.find(p=>p.pairId===pid)||null; }
+function avg(arr){ if(!arr.length) return 0; return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function statusBadge(pct){
+  if(pct===null||pct===undefined) return '<span class="badge badge-blue">No data</span>';
+  if(pct>=0.10) return '<span class="badge badge-green"><span class="badge-dot"></span>≥10%</span>';
+  if(pct>=0) return '<span class="badge badge-amber"><span class="badge-dot"></span>Positive</span>';
+  return '<span class="badge badge-red"><span class="badge-dot"></span>Below</span>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════════════════════════
+const charts = {};
+function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
+const PALETTE = {
+  teal:'rgba(30,126,111,0.85)',
+  tealMid:'rgba(30,126,111,0.55)',
+  tealLight:'rgba(30,126,111,0.18)',
+  navy:'rgba(27,42,74,0.80)',
+  navyMid:'rgba(27,42,74,0.45)',
+  gold:'#D4A843',
+  gridLine:'rgba(27,42,74,0.06)',
+  tickColor:'#9aa0a8',
+};
+
+Chart.defaults.font.family = "'Outfit', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#7a8090';
+
+function buildRetailChart(){
+  destroyChart('chart-ov-retail');
+  const ctx = document.getElementById('chart-ov-retail');
+  if(!ctx) return;
+  charts['chart-ov-retail'] = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels: PAIRS.map(p=>p.pairId),
+      datasets:[
+        {label:'Manteco',data:PAIRS.map(p=>p.mRetail),backgroundColor:PALETTE.teal,borderRadius:3},
+        {label:'Control', data:PAIRS.map(p=>p.cRetail),backgroundColor:PALETTE.navy,borderRadius:3},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      scales:{
+        x:{grid:{color:PALETTE.gridLine},ticks:{color:PALETTE.tickColor}},
+        y:{grid:{color:PALETTE.gridLine},ticks:{color:PALETTE.tickColor,callback:v=>'$'+v.toLocaleString()},title:{display:true,text:'Retail Price (USD)',color:PALETTE.tickColor,font:{size:10}}}
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>' '+usd(i.raw)}}}
+    }
+  });
+}
+
+function buildPremiumRankedChart(canvasId){
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return;
+  const sorted = [...PAIRS].sort((a,b)=>b.premiumPct-a.premiumPct);
+  const colors = sorted.map(p=>p.premiumPct>=10?PALETTE.teal:'rgba(27,42,74,0.28)');
+  charts[canvasId] = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:sorted.map(p=>p.pairId+' '+p.brand),
+      datasets:[{
+        label:'Premium %',
+        data:sorted.map(p=>p.premiumPct),
+        backgroundColor:colors,
+        borderRadius:3,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      scales:{
+        x:{grid:{color:PALETTE.gridLine},ticks:{color:PALETTE.tickColor,maxRotation:45}},
+        y:{grid:{color:PALETTE.gridLine},ticks:{color:PALETTE.tickColor,callback:v=>v+'%'},title:{display:true,text:'Premium % over Control',color:PALETTE.tickColor,font:{size:10}}}
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:i=>' +'+i.raw.toFixed(1)+'%'}},
+        annotation:{
+          annotations:{
+            threshold:{type:'line',yMin:10,yMax:10,borderColor:PALETTE.gold,borderWidth:2,borderDash:[6,3],label:{content:'10% threshold',enabled:true,position:'end',backgroundColor:'rgba(212,168,67,0.15)',color:PALETTE.gold,font:{size:10}}}
+          }
+        }
+      }
+    }
+  });
+}
+
+function buildMarkdownChart(){
+  destroyChart('chart-s3');
+  const ctx = document.getElementById('chart-s3');
+  if(!ctx) return;
+  charts['chart-s3'] = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:MARKDOWN.map(m=>m.pairId+' '+m.brand),
+      datasets:[
+        {label:'Manteco MD%',data:MARKDOWN.map(m=>m.mMdPct),backgroundColor:PALETTE.teal,borderRadius:3},
+        {label:'Control MD%', data:MARKDOWN.map(m=>m.cMdPct),backgroundColor:PALETTE.navy,borderRadius:3},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      scales:{
+        x:{grid:{color:PALETTE.gridLine},ticks:{color:PALETTE.tickColor}},
+        y:{grid:{color:PALETTE.gridLine},ticks:{color:PALETTE.tickColor,callback:v=>v+'%'},title:{display:true,text:'Markdown %',color:PALETTE.tickColor,font:{size:10}},max:40}
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>' '+i.raw.toFixed(1)+'%'}}}
+    }
+  });
+}
+
+function buildResaleChart(){
+  destroyChart('chart-s4');
+  const ctx = document.getElementById('chart-s4');
+  if(!ctx) return;
+  const mListings = RESALE.filter(r=>r.side==='Manteco').sort((a,b)=>b.residualPct-a.residualPct);
+  const labels = mListings.map(r=>r.pairId);
+  const mData = mListings.map(r=>r.residualPct);
+  const cData = mListings.map(r=>{
+    const c = RESALE.find(x=>x.pairId===r.pairId&&x.side==='Control');
+    return c?c.residualPct:null;
+  });
+  charts['chart-s4'] = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Manteco residual %',data:mData,backgroundColor:PALETTE.teal,borderRadius:3},
+        {label:'Control residual %',data:cData,backgroundColor:PALETTE.navyMid,borderRadius:3},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      scales:{
+        x:{grid:{color:PALETTE.gridLine},ticks:{color:PALETTE.tickColor}},
+        y:{grid:{color:PALETTE.gridLine},ticks:{color:PALETTE.tickColor,callback:v=>v+'%'},max:120,title:{display:true,text:'Residual % of Original Retail',color:PALETTE.tickColor,font:{size:10}}}
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:i=>i.raw?(' '+i.raw.toFixed(1)+'%'):' —'}},
+        annotation:{annotations:{ref:{type:'line',yMin:100,yMax:100,borderColor:PALETTE.gold,borderWidth:2,borderDash:[6,3]}}}
+      }
+    }
+  });
+}
+
+function buildDonutChart(){
+  destroyChart('chart-prod-donut');
+  const ctx = document.getElementById('chart-prod-donut');
+  if(!ctx) return;
+  charts['chart-prod-donut'] = new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:['Manteco','Control'],
+      datasets:[{data:[PRODUCTS.filter(p=>p.type==='Manteco').length,PRODUCTS.filter(p=>p.type==='Control').length],backgroundColor:[PALETTE.teal,PALETTE.navy],borderWidth:0,hoverOffset:4}]
+    },
+    options:{responsive:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>i.label+': '+i.raw}}}}
+  });
+}
+
+function buildBrandsChart(){
+  destroyChart('chart-prod-brands');
+  const ctx = document.getElementById('chart-prod-brands');
+  if(!ctx) return;
+  const brands = ['Zara','Mango','H&M','COS','Selected','Woolrich','Fortela','Karen Millen','Aritzia','EAVES'];
+  const mCounts = brands.map(b=>PRODUCTS.filter(p=>p.brand===b&&p.type==='Manteco').length);
+  const cCounts = brands.map(b=>PRODUCTS.filter(p=>p.brand===b&&p.type==='Control').length);
+  charts['chart-prod-brands'] = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:brands,
+      datasets:[
+        {label:'Manteco',data:mCounts,backgroundColor:PALETTE.teal,borderRadius:3},
+        {label:'Control',data:cCounts,backgroundColor:PALETTE.navy,borderRadius:3},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      scales:{
+        x:{grid:{color:PALETTE.gridLine},ticks:{color:PALETTE.tickColor,maxRotation:45,font:{size:10}}},
+        y:{grid:{color:PALETTE.gridLine},ticks:{color:PALETTE.tickColor,stepSize:1}}
+      },
+      plugins:{legend:{display:false}}
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// TABLE RENDERERS
+// ══════════════════════════════════════════════════════════════
+function renderS2Table(){
+  const t = document.getElementById('table-s2');
+  if(!t) return;
+  const sorted = [...PAIRS].sort((a,b)=>b.premiumPct-a.premiumPct);
+  t.innerHTML = `<thead><tr>
+    <th>Pair</th><th>Brand</th><th>Tier</th><th>Cat.</th>
+    <th>Manteco Product</th><th>Control Product</th>
+    <th class="t-num">M: Retail</th><th class="t-num">C: Retail</th>
+    <th class="t-num">Premium $</th><th class="t-num">Premium %</th>
+    <th>Status</th>
+  </tr></thead><tbody>`+sorted.map(p=>{
+    const mp = getProduct(p.mantecoId), cp = getProduct(p.controlId);
+    const cls = p.premiumPct>=10?'t-pct-pos':p.premiumPct>=0?'t-pct-neut':'t-pct-neg';
+    return `<tr>
+      <td><span class="t-id">${esc(p.pairId)}</span></td>
+      <td><span class="brand-pill">${esc(p.brand)}</span></td>
+      <td><span style="font-size:11px;color:var(--ink3)">${esc(p.tier)}</span></td>
+      <td>${esc(p.category)}</td>
+      <td class="t-name">${mp?esc(mp.name):'—'}</td>
+      <td class="t-name">${cp?esc(cp.name):'—'}</td>
+      <td class="t-num t-mono">${usd(p.mRetail)}</td>
+      <td class="t-num t-mono">${usd(p.cRetail)}</td>
+      <td class="t-num t-mono">+${usd(p.premiumDollar)}</td>
+      <td class="t-num ${cls}" style="font-weight:500">${pct(p.premiumPct,1)}</td>
+      <td>${statusBadge(p.premiumPct/100)}</td>
+    </tr>`;
+  }).join('')+'</tbody>';
+}
+
+function renderS2BrandsTable(){
+  const t = document.getElementById('table-s2-brands');
+  if(!t) return;
+  const brands = ['Zara','Mango','H&M','COS','Selected','Woolrich','Fortela','Karen Millen','Aritzia','EAVES'];
+  t.innerHTML = `<thead><tr>
+    <th>Brand</th><th>Tier</th><th>Pairs</th>
+    <th class="t-num">Avg M: Retail</th><th class="t-num">Avg C: Retail</th>
+    <th class="t-num">Avg Premium %</th><th>≥10% Pairs</th>
+  </tr></thead><tbody>`+brands.map(b=>{
+    const bp = PAIRS.filter(p=>p.brand===b);
+    if(!bp.length) return '';
+    const avgPrem = avg(bp.map(p=>p.premiumPct));
+    const avgM = avg(bp.map(p=>p.mRetail));
+    const avgC = avg(bp.map(p=>p.cRetail));
+    const pass = bp.filter(p=>p.premiumPct>=10).length;
+    const tier = bp[0].tier;
+    const tierBadge = tier==='Contemporary Premium'?'badge-gold':'badge-blue';
+    const cls = avgPrem>=10?'t-pct-pos':avgPrem>=0?'t-pct-neut':'t-pct-neg';
+    return `<tr>
+      <td><strong>${esc(b)}</strong></td>
+      <td><span class="badge ${tierBadge}">${esc(tier)}</span></td>
+      <td>${bp.length}</td>
+      <td class="t-num t-mono">${usd(Math.round(avgM))}</td>
+      <td class="t-num t-mono">${usd(Math.round(avgC))}</td>
+      <td class="t-num ${cls}" style="font-weight:500">${pct(avgPrem,1)}</td>
+      <td><span class="badge ${pass===bp.length?'badge-green':pass>0?'badge-amber':'badge-red'}">${pass}/${bp.length}</span></td>
+    </tr>`;
+  }).join('')+'</tbody>';
+}
+
+function renderS3Table(){
+  const t = document.getElementById('table-s3');
+  if(!t) return;
+  const sorted = [...MARKDOWN].sort((a,b)=>b.mMdPct-a.mMdPct);
+  t.innerHTML = `<thead><tr>
+    <th>Pair</th><th>Brand</th>
+    <th class="t-num">M: Retail</th><th class="t-num">M: Sale</th><th class="t-num">M: MD%</th>
+    <th class="t-num">C: Retail</th><th class="t-num">C: Sale</th><th class="t-num">C: MD%</th>
+    <th class="t-num">Delta (pp)</th>
+  </tr></thead><tbody>`+sorted.map(m=>{
+    const dc = m.deltaPp>0?'t-pct-neg':m.deltaPp<0?'t-pct-pos':'t-pct-neut';
+    const sign = m.deltaPp>0?'+':'';
+    return `<tr>
+      <td><span class="t-id">${esc(m.pairId)}</span></td>
+      <td><span class="brand-pill">${esc(m.brand)}</span></td>
+      <td class="t-num t-mono">${usd(m.mRetail)}</td>
+      <td class="t-num t-mono" style="color:var(--red)">${usd(m.mSale)}</td>
+      <td class="t-num" style="color:var(--red);font-weight:500">${m.mMdPct.toFixed(1)}%</td>
+      <td class="t-num t-mono">${usd(m.cRetail)}</td>
+      <td class="t-num t-mono" style="color:var(--red)">${usd(m.cSale)}</td>
+      <td class="t-num" style="color:var(--red);font-weight:500">${m.cMdPct.toFixed(1)}%</td>
+      <td class="t-num ${dc}" style="font-weight:500">${sign}${m.deltaPp.toFixed(1)}pp</td>
+    </tr>`;
+  }).join('')+'</tbody>';
+}
+
+function renderS4Table(){
+  const t = document.getElementById('table-s4');
+  if(!t) return;
+  t.innerHTML = `<thead><tr>
+    <th>Pair</th><th>Side</th><th>Platform</th><th>Condition</th><th>Age</th>
+    <th class="t-num">Original Retail</th><th class="t-num">Resale Price</th><th class="t-num">Residual %</th>
+    <th>Date</th><th>Link</th>
+  </tr></thead><tbody>`+RESALE.map(r=>{
+    const isPaired = r.side==='Control';
+    const sideClass = isPaired?'badge-blue':'badge-teal';
+    const res = r.residualPct;
+    const resClass = res>=70?'t-pct-pos':res>=50?'t-pct-neut':'t-pct-neg';
+    return `<tr>
+      <td><span class="t-id">${esc(r.pairId)}</span></td>
+      <td><span class="badge ${sideClass}">${esc(r.side)}</span></td>
+      <td>${esc(r.platform)}</td>
+      <td>${esc(r.condition)}</td>
+      <td style="font-size:11px;color:var(--ink3)">${esc(r.age)}</td>
+      <td class="t-num t-mono">${usd(r.originalRetail)}</td>
+      <td class="t-num t-mono">${usd(r.resalePrice)}</td>
+      <td class="t-num ${resClass}" style="font-weight:500">${r.residualPct.toFixed(1)}%</td>
+      <td style="font-size:11px;color:var(--ink3)">${esc(r.date)}</td>
+      <td>${r.listingUrl&&r.listingUrl!=='#'?`<a href="${esc(r.listingUrl)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--teal)">View ↗</a>`:'<span style="color:var(--ink3);font-size:11px">—</span>'}</td>
+    </tr>`;
+  }).join('')+'</tbody>';
+}
+
+let prodFilter = {search:'',type:'',brand:'',category:''};
+function filterProducts(){
+  prodFilter.search = document.getElementById('prod-search').value.toLowerCase();
+  prodFilter.type = document.getElementById('prod-type').value;
+  prodFilter.brand = document.getElementById('prod-brand').value;
+  prodFilter.category = document.getElementById('prod-category').value;
+  renderProductsTable();
+}
+
+function renderProductsTable(){
+  const t = document.getElementById('table-products');
+  if(!t) return;
+  let data = PRODUCTS.filter(p=>{
+    if(prodFilter.type && p.type!==prodFilter.type) return false;
+    if(prodFilter.brand && p.brand!==prodFilter.brand) return false;
+    if(prodFilter.category && p.category!==prodFilter.category) return false;
+    if(prodFilter.search && !p.name.toLowerCase().includes(prodFilter.search) && !p.brand.toLowerCase().includes(prodFilter.search)) return false;
+    return true;
+  });
+  t.innerHTML = `<thead><tr>
+    <th>ID</th><th>Type</th><th>Brand</th><th>Product Name</th><th>Cat.</th><th>Season</th>
+    <th class="t-num">Retail</th><th class="t-num">Sale</th><th class="t-num">MD%</th>
+    <th class="t-num">Resale</th><th class="t-num">Residual%</th>
+    <th>Fabric</th><th>Link</th>
+  </tr></thead><tbody>`+data.map(p=>{
+    const typeBadge = p.type==='Manteco'?'badge-teal':'badge-blue';
+    return `<tr>
+      <td><span class="t-id">${esc(p.id)}</span></td>
+      <td><span class="badge ${typeBadge}">${esc(p.type)}</span></td>
+      <td><span class="brand-pill">${esc(p.brand)}</span></td>
+      <td class="t-name" title="${esc(p.name)}">${esc(p.name)}</td>
+      <td>${esc(p.category)}</td>
+      <td style="font-size:11px;color:var(--ink3)">${esc(p.season)}</td>
+      <td class="t-num t-mono">${usd(p.retailPrice)}</td>
+      <td class="t-num t-mono" style="${p.salePrice?'color:var(--red)':''}">${usd(p.salePrice)}</td>
+      <td class="t-num">${p.markdownPct!=null?p.markdownPct.toFixed(1)+'%':'—'}</td>
+      <td class="t-num t-mono">${usd(p.resalePrice)}</td>
+      <td class="t-num ${p.residualPct!=null?(p.residualPct>=70?'t-pct-pos':p.residualPct>=50?'t-pct-neut':'t-pct-neg'):''}">${p.residualPct!=null?p.residualPct.toFixed(1)+'%':'—'}</td>
+      <td style="font-size:11px;color:var(--ink3);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(p.fabric)}">${esc(p.fabric)}</td>
+      <td>${p.url&&p.url!=='#'?`<a href="${esc(p.url)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--teal)">↗</a>`:'<span style="color:var(--ink3);font-size:11px">—</span>'}</td>
+    </tr>`;
+  }).join('')+'</tbody>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════
+let activeView = 'overview';
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>{v.classList.remove('active');});
+  document.querySelectorAll('.nav-tab').forEach(t=>{t.classList.remove('active');});
+  const v = document.getElementById('view-'+name);
+  if(v){ v.classList.add('active'); }
+  document.querySelector('[data-view="'+name+'"]')?.classList.add('active');
+  activeView = name;
+  // Build charts for newly shown view
+  requestAnimationFrame(()=>buildChartsForView(name));
+}
+
+function buildChartsForView(name){
+  if(name==='overview'){
+    buildRetailChart();
+    buildPremiumRankedChart('chart-ov-premium');
+  } else if(name==='stage2'){
+    buildPremiumRankedChart('chart-s2-bars');
+    renderS2Table();
+    renderS2BrandsTable();
+  } else if(name==='stage3'){
+    buildMarkdownChart();
+    renderS3Table();
+  } else if(name==='stage4'){
+    buildResaleChart();
+    renderS4Table();
+  } else if(name==='products'){
+    buildDonutChart();
+    buildBrandsChart();
+    renderProductsTable();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// CSV FETCH (CORS-safe) + PARSING
+// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+/** fetchCSV: direct fetch first, then two CORS proxies for file:// origins */
+async function fetchCSV(url) {
+  // Always use the relative /csv-proxy endpoint — works on localhost and any deployed domain.
+  var proxyUrl = '/csv-proxy?url=' + encodeURIComponent(url);
+  try {
+    var r = await fetch(proxyUrl);
+    if (r.ok) return r.text();
+  } catch(e) {}
+  throw new Error('CSV fetch failed — is the server running?');
+}
+
+/** Robust CSV parser â handles quoted fields, empty rows, duplicate-header dedup */
+function parseCSV(text){
+  var lines=[],field='',row=[],inQuote=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inQuote){
+      if(c==='"'){if(text[i+1]==='"'){field+='"';i++;}else{inQuote=false;}}
+      else{field+=c;}
+    }else{
+      if(c==='"'){inQuote=true;}
+      else if(c===','){row.push(field.trim());field='';}
+      else if(c==='\n'||(c==='\r'&&text[i+1]==='\n')){
+        if(c==='\r')i++;
+        row.push(field.trim());field='';
+        if(row.some(function(v){return v!=='';}))lines.push(row);
+        row=[];
+      }else{field+=c;}
+    }
+  }
+  if(field||row.length){row.push(field.trim());if(row.some(function(v){return v!=='';}))lines.push(row);}
+  if(lines.length<2)return[];
+  var seen={};
+  var headers=lines[0].map(function(h){
+    var base=h.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'')||'col';
+    if(seen[base]===undefined){seen[base]=0;return base;}
+    seen[base]++;return base+seen[base];
+  });
+  return lines.slice(1).map(function(r){
+    var obj={};headers.forEach(function(h,i){obj[h]=r[i]!==undefined?r[i]:'';});return obj;
+  });
+}
+
+function num(v){if(v===null||v===undefined||v===''||v==='null'||v==='NULL')return null;var n=parseFloat(String(v).replace(/[^\d.\-]/g,''));return isNaN(n)?null:n;}
+function str(v){return v==null?'':String(v).trim();}
+
+// ââ Column mappers: keys match normalized Excel headers âââââââââââââââââââââââ
+// "Product Name"       â product_name      "Retail Price"     â retail_price
+// "Sale Price"         â sale_price        "Markdown %"       â markdown_
+// "Residual %"         â residual_         "Product URL"      â product_url
+// "Manteco Product ID" â manteco_product_id
+// "Control Product ID" â control_product_id
+// "Premium $"          â premium_  (1st col)
+// "Premium %"          â premium_1 (2nd col, deduplicated)
+// "M: MD%"             â m_md      "C: MD%"           â c_md
+// "Original Retail"    â original_retail
+// "Listing URL"        â listing_url
+function mapProducts(rows){
+  return rows.map(function(r){return{
+    id:str(r.id),type:str(r.type),brand:str(r.brand),
+    name:str(r.product_name||r.name),
+    category:str(r.category),season:str(r.season),
+    retailPrice:num(r.retail_price||r.retail),
+    salePrice:num(r.sale_price||r.sale),
+    markdownPct:num(r.markdown_||r.markdown_pct),
+    resalePrice:num(r.resale_price),
+    residualPct:num(r.residual_||r.residual_pct),
+    fabric:str(r.fabric),url:str(r.product_url||r.url)||'#',
+  };}).filter(function(r){return r.id&&r.brand;});
+}
+function mapPairs(rows){
+  return rows.map(function(r){return{
+    pairId:str(r.pair_id),brand:str(r.brand),tier:str(r.tier),
+    category:str(r.category),season:str(r.season),
+    mantecoId:str(r.manteco_product_id||r.manteco_id),
+    controlId:str(r.control_product_id||r.control_id),
+    mRetail:num(r.m_retail),cRetail:num(r.c_retail),
+    premiumDollar:num(r.premium_||r.premium_dollar||r.premium_usd),
+    premiumPct:num(r.premium_1||r.premium_pct),
+  };}).filter(function(r){return r.pairId&&r.mantecoId;});
+}
+function mapMarkdown(rows){
+  return rows.map(function(r){return{
+    pairId:str(r.pair_id),brand:str(r.brand),
+    mRetail:num(r.m_retail),mSale:num(r.m_sale),
+    mMdPct:num(r.m_md||r.m_md_pct),
+    cRetail:num(r.c_retail),cSale:num(r.c_sale),
+    cMdPct:num(r.c_md||r.c_md_pct),
+    deltaPp:num(r.delta_pp),
+    mSaleUrl:str(r.m_sale_url)||'#',cSaleUrl:str(r.c_sale_url)||'#',
+  };}).filter(function(r){return r.pairId;});
+}
+function mapResale(rows){
+  return rows.map(function(r){return{
+    pairId:str(r.pair_id),side:str(r.side),platform:str(r.platform),
+    originalRetail:num(r.original_retail||r.retail),
+    resalePrice:num(r.resale_price),
+    residualPct:num(r.residual_||r.residual_pct),
+    age:str(r.age),condition:str(r.condition),date:str(r.date),
+    listingUrl:str(r.listing_url||r.url)||'#',
+  };}).filter(function(r){return r.pairId&&r.side;});
+}
+
+// ══════════════════════════════════════════════════════════════
+// LIVE SYNC ENGINE
+// ══════════════════════════════════════════════════════════════
+var syncInterval=null, lastUpdatedAt=null, agoTimer=null;
+var prevRowCounts={products:0,pairs:0,markdown:0,resale:0};
+
+function configIsSet(){ return SHEET_CONFIG.products!=='PASTE_PRODUCTS_CSV_URL_HERE'; }
+
+async function fetchAllSheets(){
+  var u=SHEET_CONFIG;
+  var results=await Promise.all([
+    fetchCSV(u.products),
+    fetchCSV(u.pairs),
+    fetchCSV(u.markdown),
+    fetchCSV(u.resale),
+  ]);
+  return {
+    products:mapProducts(parseCSV(results[0])),
+    pairs:   mapPairs(parseCSV(results[1])),
+    markdown:mapMarkdown(parseCSV(results[2])),
+    resale:  mapResale(parseCSV(results[3])),
+  };
+}
+
+function hasChanged(f){ return f.products.length!==prevRowCounts.products||f.pairs.length!==prevRowCounts.pairs||f.markdown.length!==prevRowCounts.markdown||f.resale.length!==prevRowCounts.resale; }
+
+function applyLiveData(f){
+  if(f.products.length) PRODUCTS=f.products;
+  if(f.pairs.length)    PAIRS=f.pairs;
+  if(f.markdown.length) MARKDOWN=f.markdown;
+  if(f.resale.length)   RESALE=f.resale;
+  prevRowCounts={products:PRODUCTS.length,pairs:PAIRS.length,markdown:MARKDOWN.length,resale:RESALE.length};
+}
+
+function flashSyncDot(){
+  var d=document.getElementById('sync-dot');
+  d.classList.remove('flash'); void d.offsetWidth; d.classList.add('flash');
+  setTimeout(function(){ d.classList.remove('flash'); },700);
+}
+function setSyncLive(){
+  document.getElementById('sync-dot').className='sync-dot live';
+  document.getElementById('sync-label').textContent='Live';
+  document.getElementById('last-updated-label').style.display='inline';
+  document.getElementById('last-updated-ago').style.display='inline';
+  document.getElementById('fallback-banner').classList.remove('show');
+}
+function setSyncFallback(){
+  document.getElementById('sync-dot').className='sync-dot';
+  document.getElementById('sync-label').textContent='Cached data';
+  document.getElementById('last-updated-label').style.display='none';
+  document.getElementById('last-updated-ago').style.display='none';
+}
+function updateTopbarCounts(){
+  var mCount=PRODUCTS.filter(function(p){return p.type==='Manteco';}).length;
+  var cCount=PRODUCTS.filter(function(p){return p.type==='Control';}).length;
+  document.getElementById('topbar-products').textContent=PRODUCTS.length;
+  document.getElementById('topbar-pairs').textContent=PAIRS.length;
+  var tabBadge=document.getElementById('tab-prod-count');
+  if(tabBadge) tabBadge.textContent=PRODUCTS.length;
+  if(PAIRS.length){
+    var ap=PAIRS.reduce(function(s,p){return s+(p.premiumPct||0);},0)/PAIRS.length;
+    document.getElementById('topbar-premium').textContent=(ap>=0?'+':'')+ap.toFixed(1)+'%';
+  }
+}
+
+// Initial load — show spinner, fetch all 4 CSVs, render
+async function initialLoad(){
+  showLoading('Fetching live data from Google Sheets\u2026');
+  if(!configIsSet()){
+    hideLoading();
+    document.getElementById('sync-label').textContent='Hardcoded data';
+    updateTopbarCounts();
+    buildChartsForView('overview');
+    return;
+  }
+  try {
+    var fresh=await fetchAllSheets();
+    applyLiveData(fresh);
+    setSyncLive();
+    lastUpdatedAt=Date.now();
+    flashSyncDot();
+    hideLoading();
+    updateTopbarCounts();
+    buildChartsForView('overview');
+    startAgoTimer();
+    startBackgroundSync();
+  } catch(e) {
+    hideLoading();
+    setSyncFallback();
+    document.getElementById('fallback-banner').classList.add('show');
+    updateTopbarCounts();
+    buildChartsForView('overview');
+    startBackgroundSync();
+  }
+}
+
+// Background sync — silent failure, re-render only if data changed
+async function backgroundSync(){
+  if(!configIsSet()) return;
+  try {
+    var fresh=await fetchAllSheets();
+    var changed=hasChanged(fresh);
+    applyLiveData(fresh);
+    setSyncLive();
+    lastUpdatedAt=Date.now();
+    flashSyncDot();
+    document.getElementById('fallback-banner').classList.remove('show');
+    if(!agoTimer) startAgoTimer();
+    if(changed){ updateTopbarCounts(); buildChartsForView(activeView); }
+  } catch(e){ /* silent */ }
+}
+
+function startBackgroundSync(){
+  if(syncInterval) clearInterval(syncInterval);
+  syncInterval=setInterval(backgroundSync,SHEET_CONFIG.refreshMs);
+}
+
+function startAgoTimer(){
+  if(agoTimer) clearInterval(agoTimer);
+  agoTimer=setInterval(function(){
+    if(!lastUpdatedAt) return;
+    var sec=Math.round((Date.now()-lastUpdatedAt)/1000);
+    var el=document.getElementById('last-updated-ago');
+    if(!el) return;
+    if(sec<60) el.textContent=sec+'s ago';
+    else if(sec<3600) el.textContent=Math.floor(sec/60)+'m ago';
+    else el.textContent=Math.floor(sec/3600)+'h ago';
+  },1000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// LOADING OVERLAY
+// ══════════════════════════════════════════════════════════════
+function showLoading(msg){ document.getElementById('loading-text').textContent=msg||'Loading\u2026'; document.getElementById('loading-overlay').classList.remove('hidden'); }
+function hideLoading(){ document.getElementById('loading-overlay').classList.add('hidden'); }
+
+// ══════════════════════════════════════════════════════════════
+// SETTINGS PANEL
+// ══════════════════════════════════════════════════════════════
+function toggleSettings(){ document.getElementById('settings-panel').classList.toggle('open'); }
+
+function saveSheetUrls(){
+  var keys=['products','pairs','markdown','resale'], updated={};
+  keys.forEach(function(k){ var el=document.getElementById('cfg-'+k); var v=el?el.value.trim():''; if(v){updated[k]=v;SHEET_CONFIG[k]=v;} });
+  if(!Object.keys(updated).length){clearSheetUrls();return;}
+  localStorage.setItem('manteco_sheet_cfg',JSON.stringify(updated));
+  var msg=document.getElementById('settings-msg');
+  msg.textContent='Saved. Connecting\u2026'; msg.className='settings-msg';
+  showLoading('Connecting to Google Sheets\u2026');
+  fetchAllSheets().then(function(fresh){
+    applyLiveData(fresh); setSyncLive(); lastUpdatedAt=Date.now(); flashSyncDot();
+    hideLoading(); updateTopbarCounts(); buildChartsForView(activeView);
+    if(!agoTimer) startAgoTimer(); startBackgroundSync();
+    msg.textContent='Connected. Live data active.'; msg.className='settings-msg ok';
+  }).catch(function(e){ hideLoading(); msg.textContent='Error: '+e.message; msg.className='settings-msg err'; });
+}
+
+function clearSheetUrls(){
+  localStorage.removeItem('manteco_sheet_cfg');
+  ['products','pairs','markdown','resale'].forEach(function(k){ var el=document.getElementById('cfg-'+k); if(el) el.value=''; });
+  var msg=document.getElementById('settings-msg');
+  msg.textContent='Cleared. Using hardcoded data.'; msg.className='settings-msg';
+  if(syncInterval){clearInterval(syncInterval);syncInterval=null;}
+  setSyncFallback(); document.getElementById('sync-label').textContent='Hardcoded data';
+}
+
+function loadSettingsFromStorage(){
+  try {
+    var saved=JSON.parse(localStorage.getItem('manteco_sheet_cfg')||'{}');
+    ['products','pairs','markdown','resale'].forEach(function(k){ var el=document.getElementById('cfg-'+k); if(el&&saved[k]){el.value=saved[k];SHEET_CONFIG[k]=saved[k];} });
+  } catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function(){
+  loadSettingsFromStorage();
+  initialLoad();
+});
+</script>
+</body>
+</html>
