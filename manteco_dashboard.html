@@ -251,7 +251,7 @@ table.t tr:last-child td{border-bottom:none;}
   <div class="nav-tab" data-view="stage2" onclick="showView('stage2')">Stage 2 — Market Entry</div>
   <div class="nav-tab" data-view="stage3" onclick="showView('stage3')">Stage 3 — Markdown Depth</div>
   <div class="nav-tab" data-view="stage4" onclick="showView('stage4')">Stage 4 — Secondary Market</div>
-  <div class="nav-tab" data-view="products" onclick="showView('products')">Products Library <span class="tab-badge" id="tab-prod-count">63</span></div>
+  <div class="nav-tab" data-view="products" onclick="showView('products')">Products Library <span class="tab-badge" id="tab-prod-count">62</span></div>
 </nav>
 
 <!-- FALLBACK BANNER -->
@@ -426,10 +426,6 @@ table.t tr:last-child td{border-bottom:none;}
     <div class="kpi"><div class="kpi-label">Pairs with Both Sides</div><div class="kpi-value" id="s3-kpi-coverage">5 / 20</div><div class="kpi-sub">PA06, PA07, PA13, PA14, PA20</div></div>
   </div>
 
-  <div class="callout callout-amber">
-    <strong>Interpretation note:</strong> Manteco garments show marginally deeper average markdowns (20.3% vs 16.6%, a 3.7pp gap). However, this finding is nuanced for three reasons: (1) Manteco's higher retail base means equivalent percentage discounts represent significantly more absolute dollar savings while still retaining greater residual value; (2) two Zara tier outliers with 25–30% discounts disproportionately inflate the Manteco average; (3) at the Contemporary Premium tier, many Manteco products remain at full price (0% markdown), compressing the average. The hypothesis is therefore <strong>mixed but not contradicted</strong> at this stage.
-  </div>
-
   <div class="card" style="margin-bottom:20px;">
     <div class="card-title">Markdown % by Pair — Manteco vs Control</div>
     <div class="chart-legend">
@@ -440,7 +436,7 @@ table.t tr:last-child td{border-bottom:none;}
   </div>
 
   <div class="card">
-    <div class="card-title">Markdown Detail — All Pairs with Sale Data</div>
+    <div class="card-title">Markdown Detail — All 20 Pairs</div>
     <div class="table-wrap">
       <table class="t" id="table-s3"></table>
     </div>
@@ -461,7 +457,7 @@ table.t tr:last-child td{border-bottom:none;}
   </div>
 
   <div class="callout callout-blue">
-    <strong>Data caveat:</strong> 4 paired comparisons available (PA04, PA05, PA06, PA11). Manteco leads in 3 of 4 pairs. The +3.0pp differential is directional and <strong>not yet statistically robust</strong> — data collection ongoing. Manteco avg residual 41.3% vs Control 38.3% across all available listings.
+    <strong>Data caveat:</strong> 4 paired comparisons available (PA04, PA05, PA06, PA11). Manteco leads in 3 of 4 pairs. The +3.0% differential is directional and <strong>not yet statistically robust</strong> — data collection ongoing. Manteco avg residual 41.3% vs Control 38.3% across all available listings.
   </div>
 
   <div class="card" style="margin-bottom:20px;">
@@ -485,7 +481,7 @@ table.t tr:last-child td{border-bottom:none;}
 <!-- ═══════════ PRODUCTS ═══════════ -->
 <div class="view" id="view-products">
   <div class="section-row">
-    <div><div class="section-title">Products Library</div><div class="section-sub">63 products · 31 Manteco · 32 Control · 10 brands</div></div>
+    <div><div class="section-title">Products Library</div><div class="section-sub">62 products · 31 Manteco · 31 Control · 10 brands</div></div>
   </div>
 
   <div class="grid-2" style="margin-bottom:20px;">
@@ -581,12 +577,11 @@ table.t tr:last-child td{border-bottom:none;}
 //   4. Copy each URL into the matching key below
 //   URL format: https://docs.google.com/spreadsheets/d/e/ID/pub?gid=GID&single=true&output=csv
 // ══════════════════════════════════════════════════════════════
-const SHEET_ID = '18x8YzY3UOXrwT2WaRt63gH3k3aXpWJtY';
 const SHEET_CONFIG = {
-  products:  'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet=Products',
-  pairs:     'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet=Matched%20Pairs',
-  markdown:  'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet=Markdown',
-  resale:    'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet=Resale',
+  products:  '/sheet/products',
+  pairs:     '/sheet/pairs',
+  markdown:  '/sheet/markdown',
+  resale:    '/sheet/resale',
   refreshMs: 60000,
 };
 
@@ -595,69 +590,69 @@ const SHEET_CONFIG = {
 // ══════════════════════════════════════════════════════════════
 let PRODUCTS = [
   // ── Real research data — 62 products (P01-P62) ──────────────
-  {id:'P01',type:'Manteco',brand:'MANGO',name:'Manteco wool coat with belt',category:'Coat',season:'CW26',retailPrice:299.99,salePrice:179.99,markdownPct:30.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P02',type:'Manteco',brand:'SELECTED',name:'CAPPOTTO IN MISTO LANA',category:'Coat',season:'FW25',retailPrice:279.99,salePrice:111.95,markdownPct:60.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
+  {id:'P01',type:'Manteco',brand:'MANGO',name:'Manteco wool coat with belt',category:'Coat',season:'CW26',retailPrice:299.99,salePrice:179.99,markdownPct:30.0,resalePrice:null,residualPct:null,fabric:'',url:'https://shop.mango.com/us/en/p/women/coats/coats/manteco-wool-coat-with-belt_27011306'},
+  {id:'P02',type:'Manteco',brand:'SELECTED',name:'CAPPOTTO IN MISTO LANA',category:'Coat',season:'FW25',retailPrice:279.99,salePrice:111.95,markdownPct:60.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.selected.com/p/100-wool-jacket/16098105_SkyCaptain'},
   // ── Real research data P03-P62 ───────────────────────────────
-  {id:'P03',type:'Manteco',brand:'EAVES',name:'Yaron Manteco Wool Coat',category:'Coat',season:'CW26',retailPrice:495,salePrice:421,markdownPct:14.9,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P04',type:'Manteco',brand:'EAVES',name:'x Coco Oak Manteco Wool Blazer Jacket',category:'Jacket',season:'FW25',retailPrice:499,salePrice:160,markdownPct:67.9,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P05',type:'Manteco',brand:'MANGO',name:'Manteco wool coat with fur collar',category:'Coat',season:'CW26',retailPrice:329,salePrice:249.99,markdownPct:24.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P06',type:'Manteco',brand:'MANGO',name:'Manteco wool coat with lapels',category:'Coat',season:'CW26',retailPrice:349.99,salePrice:149.99,markdownPct:57.1,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P07',type:'Manteco',brand:'Fortela',name:'Bobbie Giacca Classica Doppiopetto In Flanella',category:'Jacket',season:'FW25',retailPrice:800,salePrice:800,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P08',type:'Manteco',brand:'MANGO',name:"Men's Manteco wool coat with lapels",category:'Coat',season:'CW26',retailPrice:399,salePrice:279,markdownPct:30.1,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P09',type:'Manteco',brand:'Zara',name:'STRAIGHT COAT WITH MANTECO WOOL ZW COLLECTION',category:'Coat',season:'CW26',retailPrice:299,salePrice:299,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P10',type:'Control',brand:'Zara',name:'WOOL BLEND SHORT COAT ZW COLLECTION',category:'Coat',season:'CW26',retailPrice:169,salePrice:169,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P11',type:'Manteco',brand:'Zara',name:'MANTECO ORIGINS WATER REPELLENT TRENCH COAT',category:'Coat',season:'CW26',retailPrice:229,salePrice:229,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P12',type:'Control',brand:'Zara',name:'PARKA TECNICA CON GILET REMOVIBILE',category:'Coat',season:'CW26',retailPrice:139,salePrice:139,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P13',type:'Control',brand:'MANGO',name:'CAPPOTTO LANA SPIGATO',category:'Coat',season:'CW26',retailPrice:199.99,salePrice:99.99,markdownPct:50.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P14',type:'Control',brand:'MANGO',name:'Woollen coat with belt',category:'Coat',season:'CW26',retailPrice:429.99,salePrice:269.99,markdownPct:37.2,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P15',type:'Manteco',brand:'Woolrich',name:'2-in-1 Sideline Parka in Manteco Recycled Wool Blend',category:'Coat',season:'CW26',retailPrice:1320,salePrice:925,markdownPct:29.9,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P16',type:'Control',brand:'Woolrich',name:'Giacca a camicia in misto lana con motivo a quadri',category:'Jacket',season:'CW26',retailPrice:295,salePrice:149,markdownPct:49.5,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P17',type:'Manteco',brand:'KarenMillen',name:'Italian Manteco Wool Blend Wrap Belted Tailored Midi Coat',category:'Coat',season:'CW26',retailPrice:188,salePrice:48,markdownPct:74.5,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P18',type:'Control',brand:'KarenMillen',name:'Wool Tailored Flared Skirt Midi Coat',category:'Coat',season:'CW26',retailPrice:509,salePrice:305,markdownPct:40.1,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P19',type:'Manteco',brand:'Zara',name:'MANTECO WOOL COAT ZW COLLECTION LIMITED EDITION',category:'Coat',season:'CW26',retailPrice:269,salePrice:269,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P20',type:'Control',brand:'Zara',name:'CAPPOTTO DOPPIOPETTO MISTO LANA CON CINTURA',category:'Coat',season:'CW26',retailPrice:99.95,salePrice:99.95,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P21',type:'Manteco',brand:'Harrods',name:'Wool-Blend Overcoat',category:'Coat',season:'CW26',retailPrice:720,salePrice:720,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P22',type:'Control',brand:'Toteme',name:'double-breasted wool coat',category:'Coat',season:'CW26',retailPrice:1162,salePrice:1162,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P23',type:'Manteco',brand:'Degliuberti',name:'Installation Coat',category:'Coat',season:'CW26',retailPrice:850,salePrice:680,markdownPct:20.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P24',type:'Control',brand:'DE BONNE FACTURE',name:'Camargue Wool Coat',category:'Coat',season:'CW26',retailPrice:995,salePrice:995,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P25',type:'Manteco',brand:'Isto',name:'RECYCLED WOOL WORK JACKET',category:'Coat',season:'CW26',retailPrice:300,salePrice:150,markdownPct:50.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P26',type:'Control',brand:'Frame',name:'Wool Chore Jacket',category:'Coat',season:'CW26',retailPrice:650,salePrice:325,markdownPct:50.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P27',type:'Manteco',brand:'Zero Barra Cento',name:'Soft Short Recycled Wool Trench Coat',category:'Coat',season:'CW26',retailPrice:466.56,salePrice:466.56,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P28',type:'Control',brand:'Officine Generale',name:'Aretha Coat',category:'Coat',season:'CW26',retailPrice:903,salePrice:495,markdownPct:45.2,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P29',type:'Manteco',brand:'Aritzia',name:'Portfolio Double Face Coat',category:'Coat',season:'CW26',retailPrice:378,salePrice:188,markdownPct:50.3,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P30',type:'Control',brand:'Universal Standard',name:'Double Face Luxe Coat',category:'Coat',season:'CW26',retailPrice:388,salePrice:155,markdownPct:60.1,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P31',type:'Manteco',brand:'Cyrillus',name:'MANTEAU CABAN LAINAGE UNI FEMME',category:'Coat',season:'CW26',retailPrice:300,salePrice:300,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P32',type:'Control',brand:'Vestiere Collective',name:'Massimo Dutti-Capotto in lana',category:'Coat',season:'FW25',retailPrice:434,salePrice:434,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P33',type:'Manteco',brand:'COS',name:'WOOL-BLEND LONG TRENCH COAT',category:'Trench',season:'FW25',retailPrice:299,salePrice:299,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P34',type:'Manteco',brand:'COS',name:'OVERSIZED DOUBLE-BREASTED WOOL LONG COAT',category:'Coat',season:'CW26',retailPrice:449,salePrice:449,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P35',type:'Manteco',brand:'Fortela',name:'Fortela Winston Double-Breasted Checked Wool Coat',category:'Coat',season:'CW26',retailPrice:1740,salePrice:1740,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P36',type:'Control',brand:'Dries Van Noten',name:'Black Wool Coat',category:'Coat',season:'CW26',retailPrice:2235,salePrice:782,markdownPct:65.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P37',type:'Control',brand:'NN07',name:'Alban 8447 Wool-Blend Felt Jacket',category:'Jacket',season:'CW26',retailPrice:530,salePrice:530,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P38',type:'Control',brand:'Closed',name:'Classic wool-blend coat',category:'Coat',season:'CW26',retailPrice:650,salePrice:325,markdownPct:50.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P39',type:'Control',brand:'Bellerose',name:'DATAIR ANGORA-BLEND CARDIGAN',category:'Knitwear',season:'CW26',retailPrice:179,salePrice:179,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P40',type:'Control',brand:'Arket',name:'WOOL-ALPACA BLEND COAT',category:'Coat',season:'CW26',retailPrice:379,salePrice:379,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P41',type:'Manteco',brand:'H&M',name:'CAPPOTTO A DOPPIO PETTO IN LANA',category:'Coat',season:'CW26',retailPrice:249,salePrice:119,markdownPct:52.2,resalePrice:null,residualPct:null,fabric:'',url:'#'},
+  {id:'P03',type:'Manteco',brand:'EAVES',name:'Yaron Manteco Wool Coat',category:'Coat',season:'CW26',retailPrice:495,salePrice:421,markdownPct:14.9,resalePrice:null,residualPct:null,fabric:'',url:'https://www.revolve.com/eaves-yaron-manteco-wool-coat-in-light-grey/dp/EAVR-WO139/'},
+  {id:'P04',type:'Manteco',brand:'EAVES',name:'x Coco Oak Manteco Wool Blazer Jacket',category:'Jacket',season:'FW25',retailPrice:499,salePrice:160,markdownPct:67.9,resalePrice:null,residualPct:null,fabric:'',url:'https://www.revolve.com/eaves-x-coco-oak-manteco-wool-blazer-jacket-in-dark-grey/dp/EAVR-WO183/'},
+  {id:'P05',type:'Manteco',brand:'MANGO',name:'Manteco wool coat with fur collar',category:'Coat',season:'CW26',retailPrice:329,salePrice:249.99,markdownPct:24.0,resalePrice:null,residualPct:null,fabric:'',url:'https://shop.mango.com/us/en/p/women/coats/coats/manteco-wool-coat-with-fur-collar_27031309'},
+  {id:'P06',type:'Manteco',brand:'MANGO',name:'Manteco wool coat with lapels',category:'Coat',season:'CW26',retailPrice:349.99,salePrice:149.99,markdownPct:57.1,resalePrice:null,residualPct:null,fabric:'',url:'https://shop.mango.com/us/en/p/women/coats/coats/manteco-wool-coat-with-lapels_17016360'},
+  {id:'P07',type:'Manteco',brand:'Fortela',name:'Bobbie Giacca Classica Doppiopetto In Flanella',category:'Jacket',season:'FW25',retailPrice:800,salePrice:800,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.nordstrom.com/s/scotland-classic-manteco-wool-jacket/8858632'},
+  {id:'P08',type:'Manteco',brand:'MANGO',name:"Men's Manteco wool coat with lapels",category:'Coat',season:'CW26',retailPrice:399,salePrice:279,markdownPct:30.1,resalePrice:null,residualPct:null,fabric:'',url:'https://shop.mango.com/us/en/p/men/coats/coats/manteco-wool-coat-with-lapels_27061172'},
+  {id:'P09',type:'Manteco',brand:'Zara',name:'STRAIGHT COAT WITH MANTECO WOOL ZW COLLECTION',category:'Coat',season:'CW26',retailPrice:299,salePrice:299,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.zara.com/us/en/straight-coat-with-manteco-wool-zw-collection-p02046894.html'},
+  {id:'P10',type:'Control',brand:'Zara',name:'WOOL BLEND SHORT COAT ZW COLLECTION',category:'Coat',season:'CW26',retailPrice:169,salePrice:169,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.zara.com/us/en/zw-collection-short-wool-coat-p07522244.html'},
+  {id:'P11',type:'Manteco',brand:'Zara',name:'MANTECO ORIGINS WATER REPELLENT TRENCH COAT',category:'Coat',season:'CW26',retailPrice:229,salePrice:229,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.zara.com/us/en/manteco--origins-water-repellent-trench-coat-p04058500.html'},
+  {id:'P12',type:'Control',brand:'Zara',name:'PARKA TECNICA CON GILET REMOVIBILE',category:'Coat',season:'CW26',retailPrice:139,salePrice:139,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.zara.com/us/en/short-water-repellent-trench-coat-zw-collection-p00518043.html'},
+  {id:'P13',type:'Control',brand:'MANGO',name:'CAPPOTTO LANA SPIGATO',category:'Coat',season:'CW26',retailPrice:199.99,salePrice:99.99,markdownPct:50.0,resalePrice:null,residualPct:null,fabric:'',url:'https://shop.mango.com/us/en/p/men/coats/coats/lightweight-recycled-wool-coat_27041177'},
+  {id:'P14',type:'Control',brand:'MANGO',name:'Woollen coat with belt',category:'Coat',season:'CW26',retailPrice:429.99,salePrice:269.99,markdownPct:37.2,resalePrice:null,residualPct:null,fabric:'',url:'https://shop.mango.com/us/en/p/women/coats/coats/woollen-coat-with-belt_27044438'},
+  {id:'P15',type:'Manteco',brand:'Woolrich',name:'2-in-1 Sideline Parka in Manteco Recycled Wool Blend',category:'Coat',season:'CW26',retailPrice:1320,salePrice:925,markdownPct:29.9,resalePrice:null,residualPct:null,fabric:'',url:'https://www.woolrich.com/us/en/2-in-1-sideline-parka-in-manteco-recycled-wool-blend-CFWWOU0944FRUT3492_7391.html'},
+  {id:'P16',type:'Control',brand:'Woolrich',name:'Giacca a camicia in misto lana con motivo a quadri',category:'Jacket',season:'CW26',retailPrice:295,salePrice:149,markdownPct:49.5,resalePrice:null,residualPct:null,fabric:'',url:'https://www.woolrich.com/us/en/waterproof-parka-in-light-stretch-CFWWOU2156FRUT3342_100.html'},
+  {id:'P17',type:'Manteco',brand:'KarenMillen',name:'Italian Manteco Wool Blend Wrap Belted Tailored Midi Coat',category:'Coat',season:'CW26',retailPrice:188,salePrice:48,markdownPct:74.5,resalePrice:null,residualPct:null,fabric:'',url:'https://www.karenmillen.com/product/karen-millen-italian-manteco-wool-stitch-detail-trench-midi-coat_bkk13707'},
+  {id:'P18',type:'Control',brand:'KarenMillen',name:'Wool Tailored Flared Skirt Midi Coat',category:'Coat',season:'CW26',retailPrice:509,salePrice:305,markdownPct:40.1,resalePrice:null,residualPct:null,fabric:'',url:'https://www.karenmillen.com/us/product/karen-millen-italian-wool-double-breasted-military-midi-coat_bkk21259'},
+  {id:'P19',type:'Manteco',brand:'Zara',name:'MANTECO WOOL COAT ZW COLLECTION LIMITED EDITION',category:'Coat',season:'CW26',retailPrice:269,salePrice:269,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.zara.com/us/en/manteco-wool-coat-zw-collection-limited-edition-p02100762.html'},
+  {id:'P20',type:'Control',brand:'Zara',name:'CAPPOTTO DOPPIOPETTO MISTO LANA CON CINTURA',category:'Coat',season:'CW26',retailPrice:99.95,salePrice:99.95,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.zara.com/us/en/double-breasted-wool-blend-coat-p04080125.html'},
+  {id:'P21',type:'Manteco',brand:'Harrods',name:'Wool-Blend Overcoat',category:'Coat',season:'CW26',retailPrice:720,salePrice:720,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.harrods.com/en-it/p/samsoe-samsoe-wool-blend-overcoat-000000000007888237'},
+  {id:'P22',type:'Control',brand:'Toteme',name:'double-breasted wool coat',category:'Coat',season:'CW26',retailPrice:1162,salePrice:1162,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.farfetch.com/ro/shopping/women/toteme-double-breasted-wool-coat-item-32435140.aspx'},
+  {id:'P23',type:'Manteco',brand:'Degliuberti',name:'Installation Coat',category:'Coat',season:'CW26',retailPrice:850,salePrice:680,markdownPct:20.0,resalePrice:null,residualPct:null,fabric:'',url:'https://degliubertistore.com/products/installation-coat'},
+  {id:'P24',type:'Control',brand:'DE BONNE FACTURE',name:'Camargue Wool Coat',category:'Coat',season:'CW26',retailPrice:995,salePrice:995,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.mrporter.com/en-it/mens/product/de-bonne-facture/clothing/winter-coats/camargue-wool-coat/46376663162915350'},
+  {id:'P25',type:'Manteco',brand:'Isto',name:'RECYCLED WOOL WORK JACKET',category:'Coat',season:'CW26',retailPrice:300,salePrice:150,markdownPct:50.0,resalePrice:null,residualPct:null,fabric:'',url:'https://isto.pt/products/recycled-wool-work-jacket-navy'},
+  {id:'P26',type:'Control',brand:'Frame',name:'Wool Chore Jacket',category:'Coat',season:'CW26',retailPrice:650,salePrice:325,markdownPct:50.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.mrporter.com/en-us/mens/product/frame/clothing/lightweight-waterproof-jackets/wool-chore-jacket/1647597356004941'},
+  {id:'P27',type:'Manteco',brand:'Zero Barra Cento',name:'Soft Short Recycled Wool Trench Coat',category:'Coat',season:'CW26',retailPrice:466.56,salePrice:466.56,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://zerobarracento.com/products/soft-short-recycled-wool-trench-coat'},
+  {id:'P28',type:'Control',brand:'Officine Generale',name:'Aretha Coat',category:'Coat',season:'CW26',retailPrice:903,salePrice:495,markdownPct:45.2,resalePrice:null,residualPct:null,fabric:'',url:'https://www.farfetch.com/cz/shopping/women/officine-generale-aretha-coat-item-25126877.aspx'},
+  {id:'P29',type:'Manteco',brand:'Aritzia',name:'Portfolio Double Face Coat',category:'Coat',season:'CW26',retailPrice:378,salePrice:118,markdownPct:68.8,resalePrice:null,residualPct:null,fabric:'',url:'https://www.aritzia.com/intl/en/product/portfolio-double-face-coat/111630.html'},
+  {id:'P30',type:'Control',brand:'Universal Standard',name:'Double Face Luxe Coat',category:'Coat',season:'CW26',retailPrice:388,salePrice:155,markdownPct:60.1,resalePrice:null,residualPct:null,fabric:'',url:'https://www.universalstandard.com/products/double-face-luxe-coat-black'},
+  {id:'P31',type:'Manteco',brand:'Cyrillus',name:'MANTEAU CABAN LAINAGE UNI FEMME',category:'Coat',season:'CW26',retailPrice:300,salePrice:300,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://cyrillus.com/products/manteau-manteau-gris-chine-fonce_7033'},
+  {id:'P32',type:'Control',brand:'Vestiere Collective',name:'Massimo Dutti-Capotto in lana',category:'Coat',season:'FW25',retailPrice:434,salePrice:434,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://it.vestiairecollective.com/donna-abbigliamento/cappotti/massimo-dutti/cappotti-massimo-dutti-rosa-lana-54936609.shtml'},
+  {id:'P33',type:'Manteco',brand:'COS',name:'WOOL-BLEND LONG TRENCH COAT',category:'Trench',season:'FW25',retailPrice:299,salePrice:299,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.cos.com/en-eu/women/womenswear/coatsjackets/coats/product/wool-blend-trench-coat-navy-1308449002'},
+  {id:'P34',type:'Manteco',brand:'COS',name:'OVERSIZED DOUBLE-BREASTED WOOL LONG COAT',category:'Coat',season:'CW26',retailPrice:449,salePrice:449,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.cos.com/en-us/women/womenswear/coatsjackets/coats/product/oversized-double-breasted-wool-coat-camel-1298577004'},
+  {id:'P35',type:'Manteco',brand:'Fortela',name:'Fortela Winston Double-Breasted Checked Wool Coat',category:'Coat',season:'CW26',retailPrice:1740,salePrice:1740,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.thecoolhour.com/products/fortela-winston-double-breasted-checked-wool-coat/'},
+  {id:'P36',type:'Control',brand:'Dries Van Noten',name:'Black Wool Coat',category:'Coat',season:'CW26',retailPrice:2235,salePrice:782,markdownPct:65.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.ssense.com/en-us/women/product/dries-van-noten/black-wool-coat/18387891'},
+  {id:'P37',type:'Control',brand:'NN07',name:'Alban 8447 Wool-Blend Felt Jacket',category:'Jacket',season:'CW26',retailPrice:530,salePrice:530,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.mrporter.com/en-us/mens/product/nn07/clothing/lightweight-waterproof-jackets/alban-8447-wool-blend-felt-jacket/46376663163026302'},
+  {id:'P38',type:'Control',brand:'Closed',name:'Classic wool-blend coat',category:'Coat',season:'CW26',retailPrice:650,salePrice:325,markdownPct:50.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.closed.com/en/products/women-jackets-and-coats-classic-wool-blend-coat-silt-grey-c97230-66s-22-198.html'},
+  {id:'P39',type:'Control',brand:'Bellerose',name:'DATAIR ANGORA-BLEND CARDIGAN',category:'Knitwear',season:'CW26',retailPrice:179,salePrice:179,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://bellerose.com/products/women-knitwear-datair-parchemin'},
+  {id:'P40',type:'Control',brand:'Arket',name:'WOOL-ALPACA BLEND COAT',category:'Coat',season:'CW26',retailPrice:379,salePrice:379,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.arket.com/en-ww/product/wool-alpaca-blend-coat-black-1300194001/'},
+  {id:'P41',type:'Manteco',brand:'H&M',name:'CAPPOTTO A DOPPIO PETTO IN LANA',category:'Coat',season:'CW26',retailPrice:249,salePrice:119,markdownPct:52.2,resalePrice:null,residualPct:null,fabric:'',url:'https://www2.hm.com/it_it/productpage.1304699001.html'},
   {id:'P42',type:'Manteco',brand:'H&M',name:'CAPPOTTO LUNGO SARTORIALE DOPPIOPETTO IN LANA',category:'Coat',season:'CW26',retailPrice:279,salePrice:195,markdownPct:30.1,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P43',type:'Manteco',brand:'H&M',name:'CAPPOTTO A DOPPIO PETTO IN TWEED DI MISTO LANA',category:'Coat',season:'CW26',retailPrice:149,salePrice:119,markdownPct:20.1,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P44',type:'Manteco',brand:'SELECTED',name:'MISCELA DI LANA',category:'Coat',season:'CW26',retailPrice:279,salePrice:279,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P45',type:'Manteco',brand:'Mango',name:'CAPPOTTO LANA MANTECO COLLO PELLICCIA',category:'Coat',season:'CW26',retailPrice:199,salePrice:149,markdownPct:25.1,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P46',type:'Manteco',brand:'Zara',name:'GIUBBOTTO MISTO LANA MANTECO ORIGINS',category:'Coat',season:'CW26',retailPrice:179,salePrice:179,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P47',type:'Manteco',brand:'Zara',name:'CAPPOTTO MISTO LANA MANTECO ZW COLLECTION LIMITED EDITION',category:'Coat',season:'CW26',retailPrice:179,salePrice:179,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P48',type:'Manteco',brand:'Mango',name:'CAPPOTTO LANA MANTECO MAXI-REVERS',category:'Coat',season:'CW26',retailPrice:179,salePrice:114,markdownPct:36.3,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P49',type:'Manteco',brand:'Fortela',name:'Fortela Giacca Renny',category:'Jacket',season:'CW26',retailPrice:859,salePrice:510,markdownPct:40.6,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P50',type:'Control',brand:'H&M',name:'CAPPOTTO A MANTELLA IN MISTO LANA DOPPIATA',category:'Coat',season:'CW26',retailPrice:299,salePrice:299,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P51',type:'Control',brand:'H&M',name:'MAXI CAPPOTTO IN LANA CON COLLO SCIALLATO',category:'Coat',season:'CW26',retailPrice:279,salePrice:279,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P52',type:'Control',brand:'H&M',name:'CAPPOTTO OVERSIZE MISTO LANA',category:'Coat',season:'CW26',retailPrice:79.99,salePrice:79.99,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P53',type:'Control',brand:'COS',name:'CAPPOTTO DOPPIOPETTO LUNGO OVERSIZE IN LANA',category:'Coat',season:'FW25',retailPrice:299,salePrice:299,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P54',type:'Control',brand:'COS',name:'CAPPOTTO SARTORIALE IN TWILL DI LANA CON CINTURA',category:'Coat',season:'CW26',retailPrice:279,salePrice:279,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P55',type:'Control',brand:'Mango',name:'CAPPOTTO LANA DOPPIA ABBOTTONATURA',category:'Coat',season:'CW26',retailPrice:199.99,salePrice:89.99,markdownPct:55.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P56',type:'Control',brand:'Mango',name:'CAPPOTTO LANA REVERS',category:'Coat',season:'CW26',retailPrice:239.99,salePrice:199.99,markdownPct:16.7,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P57',type:'Control',brand:'Zara',name:'CAPPOTTO CORTO MISTO LANA CON COLLO ALTO',category:'Coat',season:'CW26',retailPrice:65.95,salePrice:45.95,markdownPct:30.3,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P58',type:'Control',brand:'Aritzia',name:'The Embrace Double-Faced Coat - Luxe (Re)Wool',category:'Coat',season:'CW26',retailPrice:458,salePrice:458,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P59',type:'Control',brand:'Fortela',name:'Scotland Giacca Classica In Lana A Quadri',category:'Jacket',season:'CW26',retailPrice:950,salePrice:950,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P60',type:'Control',brand:'Selected',name:'CAPPOTTO IN MISTO LANA',category:'Coat',season:'CW26',retailPrice:239.99,salePrice:239.99,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P61',type:'Control',brand:'Selected',name:'CAPPOTTO',category:'Coat',season:'CW26',retailPrice:189.99,salePrice:189.99,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
-  {id:'P62',type:'Control',brand:'Zara',name:'ORIGINS WOOL JACKET WITH ZIP',category:'Coat',season:'CW26',retailPrice:149,salePrice:149,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'#'},
+  {id:'P43',type:'Manteco',brand:'H&M',name:'CAPPOTTO A DOPPIO PETTO IN TWEED DI MISTO LANA',category:'Coat',season:'CW26',retailPrice:149,salePrice:119,markdownPct:20.1,resalePrice:null,residualPct:null,fabric:'',url:'https://www2.hm.com/it_it/productpage.1229568001.html'},
+  {id:'P44',type:'Manteco',brand:'SELECTED',name:'MISCELA DI LANA',category:'Coat',season:'CW26',retailPrice:279,salePrice:279,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.zalando.it/selected-femme-slfmadeline-manteco-coat-cappotto-classico-brown-se521u0c0-o11.html'},
+  {id:'P45',type:'Manteco',brand:'Mango',name:'CAPPOTTO LANA MANTECO COLLO PELLICCIA',category:'Coat',season:'CW26',retailPrice:199,salePrice:149,markdownPct:25.1,resalePrice:null,residualPct:null,fabric:'',url:'https://shop.mango.com/it/it/p/donna/cappotti/cappotti/cappotto-lana-manteco-collo-pelliccia_27031309'},
+  {id:'P46',type:'Manteco',brand:'Zara',name:'GIUBBOTTO MISTO LANA MANTECO ORIGINS',category:'Coat',season:'CW26',retailPrice:179,salePrice:179,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.zara.com/it/it/giubbotto-misto-lana-manteco--origins-p04101570.html'},
+  {id:'P47',type:'Manteco',brand:'Zara',name:'CAPPOTTO MISTO LANA MANTECO ZW COLLECTION LIMITED EDITION',category:'Coat',season:'CW26',retailPrice:179,salePrice:179,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.zara.com/it/it/cappotto-misto-lana-manteco-zw-collection-limited-edition-p02100762.html'},
+  {id:'P48',type:'Manteco',brand:'Mango',name:'CAPPOTTO LANA MANTECO MAXI-REVERS',category:'Coat',season:'CW26',retailPrice:179,salePrice:114,markdownPct:36.3,resalePrice:null,residualPct:null,fabric:'',url:'https://www.mangooutlet.com/it/it/p/donna/cappotti/cappotti/cappotto-lana-manteco-maxi-revers_87070453'},
+  {id:'P49',type:'Manteco',brand:'Fortela',name:'Fortela Giacca Renny',category:'Jacket',season:'CW26',retailPrice:859,salePrice:510,markdownPct:40.6,resalePrice:null,residualPct:null,fabric:'',url:'https://closetbyhamilton.it/en/fortela-giacca-renny.html'},
+  {id:'P50',type:'Control',brand:'H&M',name:'CAPPOTTO A MANTELLA IN MISTO LANA DOPPIATA',category:'Coat',season:'CW26',retailPrice:299,salePrice:299,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://shop.mango.com/it/it/p/donna/cappotti/cappotti/cappotto-lana-manteco-cintura_27011307'},
+  {id:'P51',type:'Control',brand:'H&M',name:'MAXI CAPPOTTO IN LANA CON COLLO SCIALLATO',category:'Coat',season:'CW26',retailPrice:279,salePrice:279,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www2.hm.com/it_it/productpage.1296699001.html'},
+  {id:'P52',type:'Control',brand:'H&M',name:'CAPPOTTO OVERSIZE MISTO LANA',category:'Coat',season:'CW26',retailPrice:79.99,salePrice:79.99,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www2.hm.com/it_it/productpage.1319850001.html'},
+  {id:'P53',type:'Control',brand:'COS',name:'CAPPOTTO DOPPIOPETTO LUNGO OVERSIZE IN LANA',category:'Coat',season:'FW25',retailPrice:299,salePrice:299,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.cos.com/it-it/women/womenswear/coatsjackets/coats/product/oversized-double-breasted-wool-coat-dark-green-1245359004'},
+  {id:'P54',type:'Control',brand:'COS',name:'CAPPOTTO SARTORIALE IN TWILL DI LANA CON CINTURA',category:'Coat',season:'CW26',retailPrice:279,salePrice:279,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.cos.com/it-it/women/womenswear/coatsjackets/coats/product/tailored-belted-wool-twill-coat-charcoal-1322684001'},
+  {id:'P55',type:'Control',brand:'Mango',name:'CAPPOTTO LANA DOPPIA ABBOTTONATURA',category:'Coat',season:'CW26',retailPrice:199.99,salePrice:89.99,markdownPct:55.0,resalePrice:null,residualPct:null,fabric:'',url:'https://shop.mango.com/it/it/p/donna/cappotti/cappotti/cappotto-lana-doppia-abbottonatura_17098289'},
+  {id:'P56',type:'Control',brand:'Mango',name:'CAPPOTTO LANA REVERS',category:'Coat',season:'CW26',retailPrice:239.99,salePrice:199.99,markdownPct:16.7,resalePrice:null,residualPct:null,fabric:'',url:'https://shop.mango.com/it/it/p/donna/cappotti/cappotti/cappotto-lana-revers_17036361'},
+  {id:'P57',type:'Control',brand:'Zara',name:'CAPPOTTO CORTO MISTO LANA CON COLLO ALTO',category:'Coat',season:'CW26',retailPrice:65.95,salePrice:45.95,markdownPct:30.3,resalePrice:null,residualPct:null,fabric:'',url:'https://www.zara.com/us/en/long-wool-blend-coat-zw-collection-limited-edition-p08491260.html'},
+  {id:'P58',type:'Control',brand:'Aritzia',name:'The Embrace Double-Faced Coat - Luxe (Re)Wool',category:'Coat',season:'CW26',retailPrice:458,salePrice:458,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.aritzia.com/intl/en/product/the-embrace-double-faced-coat/128590.html'},
+  {id:'P59',type:'Control',brand:'Fortela',name:'Scotland Giacca Classica In Lana A Quadri',category:'Jacket',season:'CW26',retailPrice:950,salePrice:950,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.aritzia.com/us/en/product/the-only-double-faced-coat/127750.html'},
+  {id:'P60',type:'Control',brand:'Selected',name:'CAPPOTTO IN MISTO LANA',category:'Coat',season:'CW26',retailPrice:239.99,salePrice:239.99,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.selected.com/p/16098105'},
+  {id:'P61',type:'Control',brand:'Selected',name:'CAPPOTTO',category:'Coat',season:'CW26',retailPrice:189.99,salePrice:189.99,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.selected.com/catalogue/women/outerwear/wool-coats'},
+  {id:'P62',type:'Control',brand:'Zara',name:'ORIGINS WOOL JACKET WITH ZIP',category:'Coat',season:'CW26',retailPrice:149,salePrice:149,markdownPct:0.0,resalePrice:null,residualPct:null,fabric:'',url:'https://www.zara.com/it/it/giubbotto-lana-cerniera-origins-p08491400.html'},
 ];
 
 // ── Tier brand sets ────────────────────────────────────────────
@@ -678,7 +673,7 @@ let PAIRS = [
   {pairId:'PA10',brand:'H&M',tier:'Fast Fashion Premium',category:'Coat',season:'CW26',mantecoId:'P43',controlId:'P52',mRetail:149,cRetail:79.99,premiumDollar:69.01,premiumPct:86.3},
   {pairId:'PA11',brand:'COS',tier:'Contemporary Premium',category:'Coat',season:'FW25',mantecoId:'P33',controlId:'P53',mRetail:299,cRetail:299,premiumDollar:0,premiumPct:0.0},
   {pairId:'PA12',brand:'COS',tier:'Contemporary Premium',category:'Coat',season:'CW26',mantecoId:'P34',controlId:'P54',mRetail:449,cRetail:279,premiumDollar:170,premiumPct:60.9},
-  {pairId:'PA13',brand:'Woolrich',tier:'Contemporary Premium',category:'Coat',season:'CW26',mantecoId:'P15',controlId:'P16',mRetail:1320,cRetail:295,premiumDollar:1025,premiumPct:347.5},
+  {pairId:'PA13',brand:'Woolrich',tier:'Contemporary Premium',category:'Coat',season:'CW26',mantecoId:'P15',controlId:'P16',mRetail:1320,cRetail:1265,premiumDollar:55,premiumPct:4.35},
   {pairId:'PA14',brand:'Karen Millen',tier:'Contemporary Premium',category:'Coat',season:'CW26',mantecoId:'P17',controlId:'P18',mRetail:188,cRetail:509,premiumDollar:-321,premiumPct:-63.1},
   {pairId:'PA15',brand:'Aritzia',tier:'Contemporary Premium',category:'Coat',season:'CW26',mantecoId:'P29',controlId:'P58',mRetail:378,cRetail:458,premiumDollar:-80,premiumPct:-17.5},
   {pairId:'PA16',brand:'Fortela',tier:'Contemporary Premium',category:'Coat',season:'CW26',mantecoId:'P07',controlId:'P59',mRetail:800,cRetail:950,premiumDollar:-150,premiumPct:-15.8},
@@ -690,29 +685,29 @@ let PAIRS = [
 
 let MARKDOWN = [
   // 10 pairs with Manteco sale data. deltaPp = M MD% minus C MD% (negative = Manteco held price better)
-  {pairId:'PA05',brand:'Mango',mRetail:299.99,mSale:179.99,mMdPct:40.0,cRetail:199.99,cSale:null,cMdPct:null,deltaPp:null,mSaleUrl:'#',cSaleUrl:'#'},
-  {pairId:'PA06',brand:'Mango',mRetail:329.99,mSale:249,mMdPct:24.5,cRetail:239.99,cSale:119,cMdPct:50.4,deltaPp:-25.9,mSaleUrl:'#',cSaleUrl:'#'},
-  {pairId:'PA07',brand:'Mango',mRetail:399,mSale:279,mMdPct:30.1,cRetail:199.99,cSale:99.99,cMdPct:50.0,deltaPp:-19.9,mSaleUrl:'#',cSaleUrl:'#'},
-  {pairId:'PA09',brand:'H&M',mRetail:279,mSale:195,mMdPct:30.1,cRetail:279,cSale:null,cMdPct:null,deltaPp:null,mSaleUrl:'#',cSaleUrl:'#'},
-  {pairId:'PA10',brand:'H&M',mRetail:149,mSale:119,mMdPct:20.1,cRetail:79.99,cSale:null,cMdPct:null,deltaPp:null,mSaleUrl:'#',cSaleUrl:'#'},
-  {pairId:'PA13',brand:'Woolrich',mRetail:1320,mSale:925,mMdPct:29.9,cRetail:295,cSale:149,cMdPct:49.5,deltaPp:-19.6,mSaleUrl:'#',cSaleUrl:'#'},
-  {pairId:'PA14',brand:'Karen Millen',mRetail:188,mSale:48,mMdPct:74.5,cRetail:509,cSale:305,cMdPct:40.1,deltaPp:34.4,mSaleUrl:'#',cSaleUrl:'#'},
-  {pairId:'PA15',brand:'Aritzia',mRetail:378,mSale:118,mMdPct:68.8,cRetail:458,cSale:null,cMdPct:null,deltaPp:null,mSaleUrl:'#',cSaleUrl:'#'},
-  {pairId:'PA17',brand:'Selected',mRetail:279.99,mSale:111.95,mMdPct:60.0,cRetail:239.99,cSale:null,cMdPct:null,deltaPp:null,mSaleUrl:'#',cSaleUrl:'#'},
+  {pairId:'PA05',brand:'Mango',mRetail:299.99,mSale:179.99,mMdPct:40.0,cRetail:199.99,cSale:null,cMdPct:null,deltaPp:null,mSaleUrl:'https://shop.mango.com/us/en/p/women/coats/coats/manteco-wool-coat-with-belt_27011306',cSaleUrl:'#'},
+  {pairId:'PA06',brand:'Mango',mRetail:329.99,mSale:249,mMdPct:24.5,cRetail:239.99,cSale:119,cMdPct:50.4,deltaPp:25.9,mSaleUrl:'https://shop.mango.com/us/en/p/women/coats/coats/manteco-wool-coat-with-fur-collar_27031309',cSaleUrl:'https://shop.mango.com/us/en/p/women/coats/coats/double-breasted-wool-coat_17036363'},
+  {pairId:'PA07',brand:'Mango',mRetail:399,mSale:279,mMdPct:30.1,cRetail:199.99,cSale:99.99,cMdPct:50.0,deltaPp:19.9,mSaleUrl:'https://shop.mango.com/us/en/p/men/coats/coats/manteco-wool-coat-with-lapels_27061172',cSaleUrl:'https://shop.mango.com/us/en/p/men/coats/coats/lightweight-recycled-wool-coat_27041177'},
+  {pairId:'PA09',brand:'H&M',mRetail:279,mSale:195,mMdPct:30.1,cRetail:279,cSale:null,cMdPct:null,deltaPp:null,mSaleUrl:'https://www2.hm.com/it_it/productpage.1288164001.html',cSaleUrl:'#'},
+  {pairId:'PA10',brand:'H&M',mRetail:149,mSale:119,mMdPct:20.1,cRetail:79.99,cSale:null,cMdPct:null,deltaPp:null,mSaleUrl:'https://www2.hm.com/it_it/productpage.1229568001.html',cSaleUrl:'#'},
+  {pairId:'PA13',brand:'Woolrich',mRetail:1320,mSale:925,mMdPct:29.9,cRetail:1265,cSale:149,cMdPct:88.2,deltaPp:58.3,mSaleUrl:'https://www.woolrich.com/us/en/2-in-1-sideline-parka-in-manteco-recycled-wool-blend-CFWWOU0944FRUT3492_7391.html',cSaleUrl:'#'},
+  {pairId:'PA14',brand:'Karen Millen',mRetail:188,mSale:48,mMdPct:74.5,cRetail:509,cSale:305,cMdPct:40.1,deltaPp:-34.4,mSaleUrl:'#',cSaleUrl:'https://www.karenmillen.com/us/product/karen-millen-italian-wool-double-breasted-military-midi-coat_bkk21259'},
+  {pairId:'PA15',brand:'Aritzia',mRetail:378,mSale:118,mMdPct:68.8,cRetail:458,cSale:null,cMdPct:null,deltaPp:null,mSaleUrl:'https://www.aritzia.com/intl/en/product/portfolio-double-face-coat/111630.html',cSaleUrl:'#'},
+  {pairId:'PA17',brand:'Selected',mRetail:279.99,mSale:111.95,mMdPct:60.0,cRetail:239.99,cSale:null,cMdPct:null,deltaPp:null,mSaleUrl:'https://www.selected.com/p/100-wool-jacket/16098105_SkyCaptain',cSaleUrl:'#'},
   {pairId:'PA19',brand:'Zara',mRetail:269,mSale:null,mMdPct:null,cRetail:65.95,cSale:45.95,cMdPct:30.3,deltaPp:null,mSaleUrl:'#',cSaleUrl:'#'},
-  {pairId:'PA20',brand:'Mango',mRetail:349.99,mSale:149.99,mMdPct:57.1,cRetail:199.99,cSale:99.99,cMdPct:50.0,deltaPp:-7.1,mSaleUrl:'#',cSaleUrl:'#'},
+  {pairId:'PA20',brand:'Mango',mRetail:349.99,mSale:149.99,mMdPct:57.1,cRetail:199.99,cSale:99.99,cMdPct:50.0,deltaPp:-7.1,mSaleUrl:'https://shop.mango.com/us/en/p/women/coats/coats/manteco-wool-coat-with-lapels_17016360',cSaleUrl:'https://shop.mango.com/us/en/p/women/coats/coats/woollen-coat-with-belt_27044438'},
 ];
 
 let RESALE = [
   // 7 Manteco + 4 Control listings. residualPct in percentage units.
-  {pairId:'PA03',side:'Manteco',platform:'Vinted',originalRetail:269,resalePrice:26.95,residualPct:10.0,age:'',condition:'Very Good',date:'',listingUrl:'#'},
+  {pairId:'PA03',side:'Manteco',platform:'Vinted',originalRetail:269,resalePrice:26.95,residualPct:10.0,age:'',condition:'Very Good',date:'',listingUrl:'https://poshmark.com/listing/ZARA-MANTECO-WOOL-COAT-65a8d33f2fbf1a83625644ec'},
   {pairId:'PA04',side:'Manteco',platform:'Vinted',originalRetail:179,resalePrice:47.95,residualPct:26.8,age:'',condition:'Excellent',date:'',listingUrl:'#'},
   {pairId:'PA04',side:'Control',platform:'Vinted',originalRetail:149,resalePrice:50,residualPct:33.6,age:'',condition:'Excellent',date:'',listingUrl:'#'},
-  {pairId:'PA05',side:'Manteco',platform:'Vinted',originalRetail:299.99,resalePrice:158,residualPct:52.7,age:'',condition:'Excellent',date:'',listingUrl:'#'},
+  {pairId:'PA05',side:'Manteco',platform:'Vinted',originalRetail:299.99,resalePrice:158,residualPct:52.7,age:'',condition:'Excellent',date:'',listingUrl:'https://poshmark.com/listing/Mango-Belted-Manteco-wool-coat-67905392dc8a4ec417fb389b'},
   {pairId:'PA05',side:'Control',platform:'Vinted',originalRetail:199.99,resalePrice:77,residualPct:38.5,age:'',condition:'Excellent',date:'',listingUrl:'#'},
-  {pairId:'PA06',side:'Manteco',platform:'eBay',originalRetail:329,resalePrice:220,residualPct:66.9,age:'',condition:'Excellent',date:'',listingUrl:'#'},
-  {pairId:'PA06',side:'Control',platform:'Vinted',originalRetail:239.99,resalePrice:70,residualPct:29.2,age:'',condition:'Very Good',date:'',listingUrl:'#'},
-  {pairId:'PA11',side:'Manteco',platform:'Vestiaire Collective',originalRetail:299,resalePrice:179,residualPct:59.9,age:'',condition:'Excellent',date:'',listingUrl:'#'},
+  {pairId:'PA06',side:'Manteco',platform:'eBay',originalRetail:329,resalePrice:220,residualPct:66.9,age:'',condition:'Excellent',date:'',listingUrl:'https://poshmark.com/listing/Mango-Handmade-oversized-wool-coat-Medium-663f80da9a76efd7b6944286'},
+  {pairId:'PA06',side:'Control',platform:'Vinted',originalRetail:239.99,resalePrice:70,residualPct:29.2,age:'',condition:'Very Good',date:'',listingUrl:'https://poshmark.com/listing/MANGO-Handmade-wool-coat-64ce9ea3c9a228ef8c579822'},
+  {pairId:'PA11',side:'Manteco',platform:'Vestiaire Collective',originalRetail:299,resalePrice:179,residualPct:59.9,age:'',condition:'Excellent',date:'',listingUrl:'https://poshmark.com/listing/COS-grey-oversized-double-breasted-wool-coat-size-XXS-6777744a693ff7cf29cd567a'},
   {pairId:'PA11',side:'Control',platform:'Vinted',originalRetail:299,resalePrice:155,residualPct:51.8,age:'',condition:'Excellent',date:'',listingUrl:'#'},
   {pairId:'PA13',side:'Manteco',platform:'Vestiaire Collective',originalRetail:1320,resalePrice:611,residualPct:46.3,age:'',condition:'Very Good',date:'',listingUrl:'#'},
   {pairId:'PA15',side:'Manteco',platform:'eBay',originalRetail:378,resalePrice:100,residualPct:26.5,age:'',condition:'Very Good',date:'',listingUrl:'#'},
@@ -893,9 +888,23 @@ function buildBrandsChart(){
   destroyChart('chart-prod-brands');
   const ctx = document.getElementById('chart-prod-brands');
   if(!ctx) return;
-  const brands = ['Zara','Mango','H&M','COS','Selected','Woolrich','Fortela','Karen Millen','Aritzia','EAVES'];
-  const mCounts = brands.map(b=>PRODUCTS.filter(p=>p.brand===b&&p.type==='Manteco').length);
-  const cCounts = brands.map(b=>PRODUCTS.filter(p=>p.brand===b&&p.type==='Control').length);
+  // key = normalized brand (lowercase, no spaces/punctuation) for matching; label = display name
+  const brandDefs = [
+    {key:'hm',        label:'H&M'},
+    {key:'zara',      label:'Zara'},
+    {key:'mango',     label:'Mango'},
+    {key:'cos',       label:'COS'},
+    {key:'selected',  label:'Selected'},
+    {key:'fortela',   label:'Fortela'},
+    {key:'aritzia',   label:'Aritzia'},
+    {key:'karenmillen',label:'Karen Millen'},
+    {key:'woolrich',  label:'Woolrich'},
+    {key:'closed',    label:'Closed'},
+  ];
+  const norm = s => s.toLowerCase().replace(/[^a-z0-9]/g,'');
+  const mCounts = brandDefs.map(({key})=>PRODUCTS.filter(p=>norm(p.brand)===key&&p.type==='Manteco').length);
+  const cCounts = brandDefs.map(({key})=>PRODUCTS.filter(p=>norm(p.brand)===key&&p.type==='Control').length);
+  const brands = brandDefs.map(b=>b.label);
   charts['chart-prod-brands'] = new Chart(ctx,{
     type:'bar',
     data:{
@@ -937,11 +946,11 @@ function renderS2Table(){
       <td><span class="brand-pill">${esc(p.brand)}</span></td>
       <td><span style="font-size:11px;color:var(--ink3)">${esc(p.tier)}</span></td>
       <td>${esc(p.category)}</td>
-      <td class="t-name">${mp?esc(mp.name):'—'}</td>
-      <td class="t-name">${cp?esc(cp.name):'—'}</td>
+      <td class="t-name">${mp?(mp.url&&mp.url!=='#'?`<a href="${esc(mp.url)}" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:none" title="View product page">${esc(mp.name)} ↗</a>`:esc(mp.name)):'—'}</td>
+      <td class="t-name">${cp?(cp.url&&cp.url!=='#'?`<a href="${esc(cp.url)}" target="_blank" rel="noopener" style="color:var(--ink2);text-decoration:none" title="View product page">${esc(cp.name)} ↗</a>`:esc(cp.name)):'—'}</td>
       <td class="t-num t-mono">${usd(p.mRetail)}</td>
       <td class="t-num t-mono">${usd(p.cRetail)}</td>
-      <td class="t-num t-mono">+${usd(p.premiumDollar)}</td>
+      <td class="t-num t-mono">${p.premiumDollar>=0?'+':''}${usd(p.premiumDollar)}</td>
       <td class="t-num ${cls}" style="font-weight:500">${pct(p.premiumPct,1)}</td>
       <td>${statusBadge(p.premiumPct)}</td>
     </tr>`;
@@ -986,26 +995,51 @@ function renderS2BrandsTable(){
 function renderS3Table(){
   const t = document.getElementById('table-s3');
   if(!t) return;
-  const sorted = [...MARKDOWN].sort((a,b)=>(b.mMdPct||0)-(a.mMdPct||0));
+  // Build a map of MARKDOWN entries by pairId for quick lookup
+  const mdMap = {};
+  MARKDOWN.forEach(function(m){ mdMap[m.pairId] = m; });
+  // Merge all pairs with markdown data, sorted by mMdPct desc then no-data pairs
+  const rows = PAIRS.map(function(p){
+    const m = mdMap[p.pairId] || {};
+    return {
+      pairId:   p.pairId,
+      brand:    p.brand,
+      mRetail:  m.mRetail != null ? m.mRetail : p.mRetail,
+      mSale:    m.mSale   != null ? m.mSale   : null,
+      mMdPct:   m.mMdPct  != null ? m.mMdPct  : null,
+      cRetail:  m.cRetail != null ? m.cRetail : p.cRetail,
+      cSale:    m.cSale   != null ? m.cSale   : null,
+      cMdPct:   m.cMdPct  != null ? m.cMdPct  : null,
+      deltaPp:  m.deltaPp != null ? m.deltaPp : null,
+      mSaleUrl: m.mSaleUrl || '#',
+      cSaleUrl: m.cSaleUrl || '#',
+    };
+  }).sort(function(a,b){
+    if(a.mMdPct!=null && b.mMdPct!=null) return b.mMdPct - a.mMdPct;
+    if(a.mMdPct!=null) return -1;
+    if(b.mMdPct!=null) return 1;
+    return 0;
+  });
   t.innerHTML = `<thead><tr>
     <th>Pair</th><th>Brand</th>
     <th class="t-num">M: Retail</th><th class="t-num">M: Sale</th><th class="t-num">M: MD%</th>
     <th class="t-num">C: Retail</th><th class="t-num">C: Sale</th><th class="t-num">C: MD%</th>
-    <th class="t-num">Delta (pp)</th>
-  </tr></thead><tbody>`+sorted.map(m=>{
+    <th class="t-num">Delta (M−C)</th>
+  </tr></thead><tbody>`+rows.map(function(m){
     const hasDelta = m.deltaPp!==null && m.deltaPp!==undefined;
-    const dc = !hasDelta?'':m.deltaPp>0?'t-pct-neg':m.deltaPp<0?'t-pct-pos':'t-pct-neut';
-    const sign = hasDelta&&m.deltaPp>0?'+':'';
+    const display = hasDelta ? -m.deltaPp : null;
+    const dc = !hasDelta?'':display>0?'t-pct-neg':display<0?'t-pct-pos':'t-pct-neut';
+    const sign = hasDelta&&display>0?'+':'';
     return `<tr>
       <td><span class="t-id">${esc(m.pairId)}</span></td>
       <td><span class="brand-pill">${esc(m.brand)}</span></td>
       <td class="t-num t-mono">${usd(m.mRetail)}</td>
-      <td class="t-num t-mono" style="color:var(--red)">${usd(m.mSale)}</td>
+      <td class="t-num t-mono" style="color:var(--red)">${m.mSale!=null?(m.mSaleUrl&&m.mSaleUrl!=='#'?`<a href="${esc(m.mSaleUrl)}" target="_blank" rel="noopener" style="color:var(--red);text-decoration:underline dotted">${usd(m.mSale)}</a>`:usd(m.mSale)):'—'}</td>
       <td class="t-num" style="color:var(--red);font-weight:500">${m.mMdPct!=null?m.mMdPct.toFixed(1)+'%':'—'}</td>
       <td class="t-num t-mono">${usd(m.cRetail)}</td>
-      <td class="t-num t-mono" style="color:var(--red)">${m.cSale!=null?usd(m.cSale):'—'}</td>
+      <td class="t-num t-mono" style="color:var(--red)">${m.cSale!=null?(m.cSaleUrl&&m.cSaleUrl!=='#'?`<a href="${esc(m.cSaleUrl)}" target="_blank" rel="noopener" style="color:var(--red);text-decoration:underline dotted">${usd(m.cSale)}</a>`:usd(m.cSale)):'—'}</td>
       <td class="t-num" style="color:var(--red);font-weight:500">${m.cMdPct!=null?m.cMdPct.toFixed(1)+'%':'—'}</td>
-      <td class="t-num ${dc}" style="font-weight:500">${hasDelta?sign+m.deltaPp.toFixed(1)+'pp':'—'}</td>
+      <td class="t-num ${dc}" style="font-weight:500">${hasDelta?sign+display.toFixed(1)+'%':'—'}</td>
     </tr>`;
   }).join('')+'</tbody>';
 }
@@ -1122,12 +1156,17 @@ function buildChartsForView(name){
 // CSV FETCH (CORS-safe) + PARSING
 // ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
-/** fetchCSV: direct fetch first, then two CORS proxies for file:// origins */
+/** fetchCSV: local /sheet/ endpoints fetch directly; Google Sheets go via proxy */
 async function fetchCSV(url) {
-  // Always use the relative /csv-proxy endpoint — works on localhost and any deployed domain.
-  var proxyUrl = '/csv-proxy?url=' + encodeURIComponent(url);
+  var fetchUrl;
+  if (url.startsWith('/')) {
+    fetchUrl = url;
+  } else {
+    var bustUrl = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    fetchUrl = '/csv-proxy?url=' + encodeURIComponent(bustUrl);
+  }
   try {
-    var r = await fetch(proxyUrl);
+    var r = await fetch(fetchUrl, {cache: 'no-store'});
     if (r.ok) return r.text();
   } catch(e) {}
   throw new Error('CSV fetch failed — is the server running?');
@@ -1153,14 +1192,15 @@ function parseCSV(text){
     }
   }
   if(field||row.length){row.push(field.trim());if(row.some(function(v){return v!=='';}))lines.push(row);}
-  if(lines.length<2)return[];
+  if(lines.length<3)return[];
   var seen={};
-  var headers=lines[0].map(function(h){
+  // Row 0 is the sheet title; row 1 has the actual column headers.
+  var headers=lines[1].map(function(h){
     var base=h.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'')||'col';
     if(seen[base]===undefined){seen[base]=0;return base;}
     seen[base]++;return base+seen[base];
   });
-  return lines.slice(1).map(function(r){
+  return lines.slice(2).map(function(r){
     var obj={};headers.forEach(function(h,i){obj[h]=r[i]!==undefined?r[i]:'';});return obj;
   });
 }
@@ -1264,7 +1304,7 @@ function renderKPIs(){
   var cMdR=MARKDOWN.filter(function(m){return m.cMdPct!==null;});
   var bothMd=MARKDOWN.filter(function(m){return m.mMdPct!==null&&m.cMdPct!==null;});
   var avgMMd=mMdR.length?avg(mMdR.map(function(m){return m.mMdPct;})):null;
-  var avgCMd=cMdR.length?avg(cMdR.map(function(m){return m.cMdPct;})):null;
+  var avgCMd=bothMd.length?avg(bothMd.map(function(m){return m.cMdPct;})):null;
   var avgDelta=bothMd.length?avg(bothMd.map(function(m){return m.deltaPp;})):null;
   var mRes=RESALE.filter(function(r){return r.side==='Manteco'&&r.residualPct!==null;});
   var cRes=RESALE.filter(function(r){return r.side==='Control'&&r.residualPct!==null;});
@@ -1292,9 +1332,11 @@ function renderKPIs(){
   // Lifecycle
   el('lc-s2-metric',sgn(avgPrem));
   el('lc-s2-desc','Average retail premium across '+PAIRS.length+' matched pairs. '+passN+' of '+PAIRS.length+' pairs ('+passPct+'%) meet or exceed the 10% benchmark. Fast Fashion avg: '+sgn(ffAvg)+'.');
-  el('lc-s3-metric',avgDelta!==null?sgn(avgDelta,1,'pp'):'—');
+  var ctrlDeeperN=bothMd.filter(function(m){return m.deltaPp>0;}).length;
+  el('lc-s3-metric',avgDelta!==null?sgn(-avgDelta,1):'—');
+  el('lc-s3-desc','Avg Manteco MD% '+(avgMMd!==null?avgMMd.toFixed(1)+'%':'—')+' vs Control '+(avgCMd!==null?avgCMd.toFixed(1)+'%':'—')+' ('+bothMd.length+' paired). Controls discount deeper in '+ctrlDeeperN+' of '+bothMd.length+' pairs — Manteco holds price better on average. Karen Millen (PA14) is the outlier at +34.4%.');
   el('lc-s4-metric',avgMRes!==null?avgMRes.toFixed(1)+'%':'—');
-  el('lc-s4-desc',mRes.length+' Manteco listings avg '+( avgMRes!==null?avgMRes.toFixed(1)+'%':'—')+(avgCRes!==null?' vs '+avgCRes.toFixed(1)+'% Control ('+resDiff.toFixed(1)+'pp diff)':'')+'. '+pairedR.length+' pairs with both sides.');
+  el('lc-s4-desc',mRes.length+' Manteco listings avg '+(avgMRes!==null?avgMRes.toFixed(1)+'%':'—')+(avgCRes!==null?' vs '+avgCRes.toFixed(1)+'% Control (+'+resDiff.toFixed(1)+'% diff)':'')+'. '+pairedR.length+' pairs with both sides.');
   // Tier cards
   el('tier-ff-prem',sgn(ffAvg));
   el('tier-ff-meta',ffP.length+' pairs \u00b7 '+ffPass+'/'+ffP.length+' \u226510% \u00b7 Brands: Zara, Mango, H&M');
@@ -1313,13 +1355,13 @@ function renderKPIs(){
   // Stage 3
   el('s3-kpi-m-md',avgMMd!==null?avgMMd.toFixed(1)+'%':'—');
   el('s3-kpi-c-md',avgCMd!==null?avgCMd.toFixed(1)+'%':'—');
-  el('s3-kpi-delta',avgDelta!==null?sgn(avgDelta,1,'pp'):'—');
+  el('s3-kpi-delta',avgDelta!==null?sgn(-avgDelta,1):'—');
   el('s3-kpi-coverage',bothMd.length+' / '+PAIRS.length);
   // Stage 4
   el('s4-kpi-m-res',avgMRes!==null?avgMRes.toFixed(1)+'%':'—');
   el('s4-kpi-m-res-sub',mRes.length+' Manteco listings');
   el('s4-kpi-c-res',avgCRes!==null?avgCRes.toFixed(1)+'%':'—');
-  el('s4-kpi-diff',resDiff!==null?sgn(resDiff,1,'pp'):'—');
+  el('s4-kpi-diff',resDiff!==null?sgn(resDiff,1):'—');
   el('s4-kpi-paired',pairedR.length);
   // Topbar
   el('topbar-products',PRODUCTS.length);
@@ -1333,7 +1375,7 @@ function renderKPIs(){
 var syncInterval=null, lastUpdatedAt=null, agoTimer=null;
 var prevRowCounts={products:0,pairs:0,markdown:0,resale:0};
 
-function configIsSet(){ return !!(SHEET_CONFIG.products&&SHEET_CONFIG.products.indexOf('docs.google.com')>=0); }
+function configIsSet(){ return !!(SHEET_CONFIG.products); }
 
 async function fetchAllSheets(){
   var u=SHEET_CONFIG;
@@ -1485,7 +1527,12 @@ function clearSheetUrls(){
 function loadSettingsFromStorage(){
   try {
     var saved=JSON.parse(localStorage.getItem('manteco_sheet_cfg')||'{}');
-    ['products','pairs','markdown','resale'].forEach(function(k){ var el=document.getElementById('cfg-'+k); if(el&&saved[k]){el.value=saved[k];SHEET_CONFIG[k]=saved[k];} });
+    ['products','pairs','markdown','resale'].forEach(function(k){
+      var el=document.getElementById('cfg-'+k);
+      if(el&&saved[k]) el.value=saved[k];
+      // Local /sheet/ endpoints are always the default; saved URLs only apply if
+      // the user explicitly clicks Save & Connect in this session.
+    });
   } catch(e){}
 }
 
